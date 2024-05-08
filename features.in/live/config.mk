@@ -15,6 +15,7 @@ _OFF = anacron blk-availability bridge clamd dhcpd dmeventd dnsmasq \
 use/live: use/stage2 sub/rootfs@live sub/stage2@live \
 	use/services/lvm2-disable
 	@$(call add_feature)
+	@$(call add,LIVE_PACKAGES,livecd-no-ldconfig-service)
 	@$(call add,CLEANUP_BASE_PACKAGES,'installer*')
 	@$(call add,DEFAULT_SERVICES_ENABLE,$(_ON))
 	@$(call add,DEFAULT_SERVICES_DISABLE,$(_OFF))
@@ -28,7 +29,8 @@ use/live/no-cleanup: \
 	use/cleanup/live-no-cleanupdb \
 	use/cleanup/live-no-cleanup-docs; @:
 
-use/live/base: use/live/.base use/net use/deflogin/live use/grub/live.cfg
+use/live/base: use/live/.base use/net use/deflogin/live \
+	 use/syslinux/live.cfg  use/grub/live.cfg
 	@$(call add,LIVE_LISTS,$(call tags,base network))
 
 use/live/rw: use/live use/syslinux/live_rw.cfg use/grub/live_rw.cfg; @:
@@ -103,6 +105,14 @@ endif
 use/live/rescue: use/live use/grub/live-rescue.cfg use/syslinux/live-rescue.cfg
 	@$(call add,LIVE_PACKAGES,livecd-rescue-utility)
 	@$(call add,LIVE_LISTS,tagged/base+rescue)
+
+use/live/rescue/extra: use/live/rescue
+	@$(call add,LIVE_LISTS,\
+	$(call tags,(base || extra || server || misc || fs) \
+		&& !x11 && (rescue || comm || network || security || archive)))
+
+use/live/rescue/rw: use/live/rescue \
+	use/syslinux/live-rescue_rw.cfg use/grub/live-rescue_rw.cfg; @:
 
 # for kiosks
 use/live/runapp: use/live
