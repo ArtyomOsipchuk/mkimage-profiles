@@ -3,7 +3,8 @@
 +installer: use/install2/full; @:
 
 use/install2: use/stage2 sub/stage2@install2 use/metadata \
-	use/cleanup/installer use/install2/autoinstall use/grub/install2.cfg
+	use/cleanup/installer use/install2/autoinstall \
+	use/syslinux/install2.cfg use/grub/install2.cfg
 	@$(call add_feature)
 	@$(call add,INSTALL2_PACKAGES,installer-common-stage2)
 	@$(call try,INSTALLER,regular)	# might be replaced later
@@ -19,7 +20,7 @@ use/install2: use/stage2 sub/stage2@install2 use/metadata \
 	@$(call xport,INSTALL2_CLEANUP_KDRIVERS)
 	@$(call add,INSTALL2_PACKAGES,lsof)
 	@$(call add,INSTALL2_PACKAGES,mdadm)
-	@$(call add,BASE_PACKAGES,mdadm)
+	@$(call add,BASE_PACKAGES,e2fsprogs mdadm)
 
 # doesn't use/install2/fs on purpose (at least so far)
 use/install2/full: \

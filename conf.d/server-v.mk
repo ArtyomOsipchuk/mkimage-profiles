@@ -64,7 +64,7 @@ distro/.server-v-base: distro/.base distro/.installer \
 	+systemd-optimal \
 	use/services use/control \
 	use/l10n/default/ru_RU \
-	use/isohybrid \
+	use/isohybrid use/luks \
 	use/install2/vnc/full \
 	use/install2/xfs use/install2/fat use/install2/stage3 \
 	use/kernel/server use/kernel/drm \
@@ -105,11 +105,11 @@ distro/server-v: distro/.server-v-base +installer \
 	use/vmguest
 	@$(call add,RESCUE_BOOTARGS,nomodeset vga=0)
 	@$(call add,STAGE2_BOOTARGS,mpath)
-	@$(call set,IMAGE_FLAVOUR,$(subst alt-10.2-,,$(IMAGE_NAME)))
-	@$(call set,META_VOL_ID,ALT Server-V 10.2.0 $(ARCH))
+	@$(call set,IMAGE_FLAVOUR,$(subst alt-$(DISTRO_VERSION)-,,$(IMAGE_NAME)))
+	@$(call set,META_VOL_ID,ALT Server-V $(DISTRO_VERSION) $(ARCH))
 	@$(call set,META_PUBLISHER,BaseALT Ltd)
 	@$(call set,META_VOL_SET,ALT)
-	@$(call set,META_APP_ID,ALT Server-V 10.2.0 $(ARCH) $(shell date +%F))
+	@$(call set,META_APP_ID,ALT Server-V $(DISTRO_VERSION) $(ARCH) $(shell date +%F))
 	@$(call set,DOCS,alt-server-v)
 	@$(call add,BASE_LISTS,virt/base.pkgs)
 	@$(call add,MAIN_LISTS,virt/extra.pkgs)
@@ -142,7 +142,7 @@ endif
 	@$(call add,DEFAULT_SERVICES_DISABLE,ahttpd alteratord)
 	@$(call add,DEFAULT_SERVICES_ENABLE,pve-manager pve-cluster pveproxy pvedaemon pvestatd \
 		pve-firewall pvefw-logger pve-guests pve-ha-crm pve-ha-lrm spiceproxy \
-		lxc lxcfs lxc-net lxc-monitord qmeventd pvescheduler pve-lxc-syscalld)
+		lxc lxcfs lxc-net lxc-monitord qmeventd pvescheduler pve-lxc-syscalld ksmtuned)
 	@$(call add,SERVICES_ENABLE,multipathd)
 # Instead of installer-feature-sudo-enable-by-default:
 #	@$(call add,CONTROL,sudoers:relaxed)
