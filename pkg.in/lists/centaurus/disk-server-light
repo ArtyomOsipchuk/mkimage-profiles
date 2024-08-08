@@ -45,7 +45,6 @@ sdparm
 sg3_utils
 
 # network tools
-arpwatch
 iftop
 mtr
 nmap
@@ -71,8 +70,8 @@ syslinux@X86
 
 # kernel
 kernel-build-tools
-kernel-doc-std
-kernel-doc-un@!E2K
+kernel-doc-std@!loongarch64
+kernel-doc-un@!E2K,loongarch64
 ###kernel-headers-modules-@KERNEL_MOD@
 ###kernel-headers-@KERNEL_MOD@
 
@@ -93,7 +92,6 @@ libzmalloc
 # etc
 apt-rsync
 bash-completion
-bind-doc
 cfdisk
 dnet
 expat

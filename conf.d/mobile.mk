@@ -34,7 +34,9 @@ mixin/phosh: use/services +nm-gtk4 +nm-native
 	@$(call add,DEFAULT_SERVICES_ENABLE,phosh)
 	@$(call set,DEFAULT_SESSION,phosh)
 	@$(call add,THE_PACKAGES,dconf-epiphany-mobile-user-agent)
-	@$(call add,THE_PACKAGES,dconf-clapper-playbin3)
+
+mixin/mobile-ad:
+	@$(call add,THE_LISTS,mobile/AD)
 
 ifeq (vm,$(IMAGE_CLASS))
 vm/.phosh: vm/systemd mixin/mobile-base mixin/phosh +systemd \
@@ -44,6 +46,8 @@ vm/.phosh: vm/systemd mixin/mobile-base mixin/phosh +systemd \
 
 vm/alt-mobile-phosh-un-def: vm/.phosh mixin/uboot-extlinux-efi use/tty/S0
 	@$(call set,KFLAVOURS,un-def)
+
+vm/alt-mobile-phosh-un-def-ad: vm/alt-mobile-phosh-un-def mixin/mobile-ad; @:
 
 ifeq (aarch64,$(ARCH))
 mixin/mobile-pine: mixin/uboot-extlinux use/tty/S2
@@ -55,13 +59,31 @@ mixin/mobile-mp: mixin/uboot-extlinux use/tty/S0
 
 mixin/mobile-lt11i: mixin/uboot-extlinux use/tty/S0
 	@$(call set,KFLAVOURS,lt11i)
+	@$(call add,THE_PACKAGES,lt11i-bluetooth)
+	@$(call add,THE_PACKAGES,firmware-lt11i)
 
 mixin/mobile-nxp: mixin/uboot-extlinux use/tty/S0
 	@$(call set,KFLAVOURS,nxp)
+
+mixin/mobile-rocknix: mixin/uboot-extlinux use/tty/S0
+	@$(call set,KFLAVOURS,rocknix)
+	@$(call add,THE_PACKAGES,u-boot-rockchip)
+	@$(call add,THE_PACKAGES,rg552-hw-control)
+	@$(call add,THE_PACKAGES,udev-rules-goodix-touchpad)
+	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,rg552-fancontrol.service)
+	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,rg552-wifi.service)
 
 vm/alt-mobile-phosh-pine: vm/.phosh mixin/mobile-pine; @:
 vm/alt-mobile-phosh-mp: vm/.phosh mixin/mobile-mp; @:
 vm/alt-mobile-phosh-lt11i: vm/.phosh mixin/mobile-lt11i; @:
 vm/alt-mobile-phosh-nxp: vm/.phosh mixin/mobile-nxp; @:
+vm/alt-mobile-phosh-rocknix: vm/.phosh mixin/mobile-rocknix; @:
+
+# AD
+vm/alt-mobile-phosh-pine-ad: vm/alt-mobile-phosh-pine mixin/mobile-ad; @:
+vm/alt-mobile-phosh-mp-ad: vm/alt-mobile-phosh-mp mixin/mobile-ad; @:
+vm/alt-mobile-phosh-lt11i-ad: vm/alt-mobile-phosh-lt11i mixin/mobile-ad; @:
+vm/alt-mobile-phosh-nxp-ad: vm/alt-mobile-phosh-nxp mixin/mobile-ad; @:
+vm/alt-mobile-phosh-rocknix-ad: vm/alt-mobile-phosh-rocknix mixin/mobile-ad; @:
 endif
 endif

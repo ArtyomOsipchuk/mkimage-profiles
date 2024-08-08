@@ -18,6 +18,7 @@ mixin/alt-server: +installer +systemd \
 	use/control use/services \
 	use/install2/stage3 \
 	use/install2/vnc use/install2/xfs use/install2/fat \
+	use/install2/oem \
 	use/volumes/alt-server \
 	use/apt-conf/branch \
 	use/fonts/install2 \
@@ -42,6 +43,11 @@ ifeq (,$(filter-out i586 x86_64 aarch64,$(ARCH)))
 	@$(call add,MAIN_GROUPS,centaurus/token)
 	@$(call add,MAIN_PACKAGES,mate-reduced-resource)
 endif
+ifeq (,$(filter-out loongarch64,$(ARCH)))
+	@$(call set,KFLAVOURS,loongarch)
+	@$(call add,MAIN_GROUPS,centaurus/token)
+	@$(call add,MAIN_PACKAGES,mate-reduced-resource)
+endif
 	@$(call add,MAIN_KMODULES,$(server_main_kmodules))
 	@$(call add,BASE_LISTS,centaurus/base)
 	@$(call add,BASE_LISTS,centaurus/base-server)
@@ -56,7 +62,8 @@ endif
 	@$(call add,MAIN_LISTS,centaurus/disk)
 	@$(call add,THE_PROFILES,centaurus-10-server)
 	@$(call add,THE_PROFILES,centaurus-20-serverDC)
-ifeq (,$(filter-out i586 x86_64 aarch64 e2k%,$(ARCH)))
+	@$(call add,THE_PROFILES,centaurus-40-docker)
+ifeq (,$(filter-out i586 x86_64 aarch64 loongarch64 e2k%,$(ARCH)))
 	@$(call add,THE_PROFILES,centaurus-30-desktop)
 endif
 	@$(call add,THE_PROFILES,minimal)
@@ -77,7 +84,7 @@ endif
 	@$(call add,INSTALL2_PACKAGES,xorg-conf-synaptics)
 	@$(call add,COMMON_PACKAGES,vim-console)
 	@$(call add,DEFAULT_SERVICES_ENABLE,rpcbind sshd bind)
-	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,systemd-networkd.service)
+	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,systemd-networkd.service systemd-resolved.service)
 	@$(call add,SYSTEMD_SERVICES_MASK,suspend.target hibernate.target)
 	@$(call add,DEFAULT_SERVICES_ENABLE,alteratord ahttpd libvirtd qemu-kvm)
 	@$(call add,DEFAULT_SERVICES_ENABLE,virtualbox openntpd bacula-fd daytime-tcp)
@@ -92,7 +99,7 @@ endif
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,nfs-server.service bind.service)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,cpufreq-simple.service)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,getty@tty1.service)
-	@$(call set,META_VOL_ID,ALT Server 10.2 $(ARCH))
+	@$(call set,META_VOL_ID,ALT Server 11.0ALPHA2 $(ARCH))
 	@$(call set,META_PUBLISHER,BaseALT Ltd)
 	@$(call set,META_VOL_SET,ALT)
-	@$(call set,META_APP_ID,ALT Server 10.2 $(ARCH) $(shell date +%F))
+	@$(call set,META_APP_ID,ALT Server 11.0ALPHA2 $(ARCH) $(shell date +%F))

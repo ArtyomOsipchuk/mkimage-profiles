@@ -7,10 +7,14 @@ distro/alt-server: server_groups_primary = $(addprefix centaurus/,\
 ifeq (,$(filter-out x86_64 ppc64le aarch64,$(ARCH)))
 distro/alt-server: server_groups_virtipa = $(addprefix centaurus/,\
 	freeipa-server)
+
+distro/alt-server: server_groups_container = $(addprefix centaurus/,\
+	200-container docker podman kubernetes-master kubernetes-node \
+	rootless-kubernetes trivy)
 endif
 endif
 
-ifeq (,$(filter-out i586 x86_64 ppc64le aarch64 e2k%,$(ARCH)))
+ifeq (,$(filter-out i586 x86_64 ppc64le aarch64 loongarch64 e2k%,$(ARCH)))
 distro/alt-server: server_groups_desktop = $(addprefix centaurus/,\
         80-desktop emulators freenx-server mate office pidgin xorg scanning samba)
 endif
@@ -34,6 +38,7 @@ distro/alt-server:: distro/.base mixin/alt-server use/vmguest/base \
 	@$(call set,DOCS,alt-server)
 	@$(call add,MAIN_GROUPS,$(server_groups_primary))
 	@$(call add,MAIN_GROUPS,$(server_groups_virtipa))
+	@$(call add,MAIN_GROUPS,$(server_groups_container))
 	@$(call add,MAIN_GROUPS,$(server_groups_desktop))
 	@$(call add,MAIN_GROUPS,$(server_groups_virtualbox))
 	@$(call add,MAIN_LISTS,centaurus/disk-dvd)
@@ -70,7 +75,7 @@ ifeq (,$(filter-out x86_64 i586,$(ARCH)))
 distro/alt-server:: use/memtest; @:
 endif
 
-ifeq (,$(filter-out x86_64 aarch64,$(ARCH)))
+ifeq (,$(filter-out x86_64 aarch64 loongarch64,$(ARCH)))
 distro/alt-server:: +efi; @:
 endif
 
