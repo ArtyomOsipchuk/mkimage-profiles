@@ -2,8 +2,6 @@
 
 #altlinux-release
 
-1c-preinstall@X86
-
 #apache2-mod_.*
 
 fonts-ttf-tempora
@@ -16,8 +14,8 @@ etckeeper
 
 #kernel
 kernel-build-tools
-kernel-doc-std
-kernel-doc-un@!E2K
+kernel-doc-std@!loongarch64
+kernel-doc-un@!E2K,loongarch64
 
 c-icap
 virt-viewer
@@ -30,7 +28,6 @@ perl-Crypt-Rijndael
 
 ffmpeg
 dvgrab
-transcode
 jackd
 
 osec-mailreport
@@ -70,8 +67,8 @@ lsb@X86
 python3-module-Crypto
 
 postgresql-jdbc
-postgresql14-1C-server
-postgresql14-1C-contrib
+postgresql16-1C-server
+postgresql16-1C-contrib
 
 mariadb-server
 mariadb@META
@@ -81,8 +78,6 @@ php8.2-calendar
 php8.2-sockets
 php8.2-pgsql
 php8.2-ldap
-
-xprobe2
 
 libqt4-sql-mysql
 libqt4-sql-postgresql
@@ -125,13 +120,14 @@ dnsmasq
 
 mate-screensaver-screenkeyboard
 
-# gostcrypo repo component is needed
-openvpn-gostcrypto
-openvpn-plugins-gostcrypto
+nginx-spnego
 
-openssh-gostcrypto
-openssh-common-gostcrypto
-openssh-askpass-common-gostcrypto
-openssh-clients-gostcrypto
-openssh-server-control-gostcrypto
-openssh-server-gostcrypto
+systemd-settings-enable-kill-user-processes
+
+# gostcrypo repo component is needed
+openssh-gostcrypto@!loongarch64
+openssh-common-gostcrypto@!loongarch64
+openssh-askpass-common-gostcrypto@!loongarch64
+openssh-clients-gostcrypto@!loongarch64
+openssh-server-control-gostcrypto@!loongarch64
+openssh-server-gostcrypto@!loongarch64

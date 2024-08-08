@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -efu
 # add regular user(s) assigning passwords and attributes of power
 
 # NB: care that the utilities exist; shadow-utils is warranted
@@ -23,6 +23,10 @@ set_sudo() {
 	[ ! -w "/etc/sudoers" ] ||
 		echo "$1	ALL=(ALL) ALL" >> "/etc/sudoers"
 }
+
+# workarround for sysusers
+# Link: https://lists.altlinux.org/pipermail/devel/2024-June/218787.html
+chmod u+w /etc/gshadow{,-}
 
 # chpasswd is intended for batch use but that would be less comprehensible
 [ -z "$GLOBAL_USERS" ] ||

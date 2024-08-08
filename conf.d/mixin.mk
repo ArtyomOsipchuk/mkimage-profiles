@@ -141,6 +141,11 @@ mixin/regular-gnome: use/x11/gnome use/fonts/ttf/redhat +nm-gtk4
 	@$(call add,THE_PACKAGES,power-profiles-daemon)
 	@$(call add,THE_PACKAGES,gnome-terminal)
 	@$(call add,THE_PACKAGES,gnome-software)
+	@$(call add,THE_PACKAGES,gnome-tour)
+ifeq (,$(filter-out sisyphus,$(BRANCH)))
+	@$(call add,THE_PACKAGES,gnome-extensions-app)
+endif
+	@$(call add,THE_PACKAGES,evince)
 	@$(call add,PINNED_PACKAGES,gnome-terminal:Required)
 	@$(call add,THE_PACKAGES,chrome-gnome-shell)
 	@$(call add,THE_PACKAGES,qt5-wayland qt6-wayland)
