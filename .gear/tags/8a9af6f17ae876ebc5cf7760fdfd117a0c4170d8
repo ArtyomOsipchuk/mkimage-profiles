@@ -1,0 +1,15 @@
+object 59c2169950d693e061f568a723043b8d0d9ecce1
+type commit
+tag v1.6.7
+tagger Anton Midyukov <antohami@altlinux.org> 1724767362 +0300
+
+v1.6.7
+
+- base+rescue: add livecd-rescue-utility, flashrom
+- firmware: add mellanox, mrvl, qcom to disk of server
+- luks: add use/luks/touchscreen, add alterator-luks to
+  distro targets only
+- fixes for kde6 support; rename kde5 -> kde in targets
+- kernel: add all drivers hid to initrd
+- grub: drop BOOTVGA parameter from kernel cmdline
+- init: do not add apt-conf-ignore-systemd when use/init/sysv
