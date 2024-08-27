@@ -122,9 +122,13 @@ use/x11/gdm2.20: \
 	use/x11/%: use/x11/dm
 	@$(call set,THE_DISPLAY_MANAGER,$*)
 
-use/x11/kde5-display-manager-lightdm: \
+use/x11/kde-display-manager-lightdm: \
 	use/x11/%: use/x11/dm
-	@$(call set,THE_DISPLAY_MANAGER,$*)
+ifeq (,$(filter-out sisyphus,$(BRANCH)))
+	@$(call set,THE_DISPLAY_MANAGER,kde-display-manager-7-lightdm)
+else
+	@$(call set,THE_DISPLAY_MANAGER,kde5-display-manager-7-lightdm)
+endif
 	@$(call set,THE_DM_SERVICE,lightdm)
 
 use/x11/gdm use/x11/sddm use/x11/lxdm: \
@@ -202,10 +206,16 @@ use/x11/dwm: use/x11
 use/x11/leechcraft: use/x11
 	@$(call add,THE_PACKAGES,leechcraft)
 
-use/x11/kde5: use/x11/xorg +pipewire
+use/x11/kde: use/x11/xorg +pipewire
+ifeq (,$(filter-out sisyphus p11,$(BRANCH)))
+	@$(call add,THE_PACKAGES,kde)
+	@$(call add,THE_PACKAGES,kde-volume-control-7-pipewire)
+	@$(call add,PINNED_PACKAGES,kde-volume-control-7-pipewire)
+else
 	@$(call add,THE_PACKAGES,kde5)
 	@$(call add,THE_PACKAGES,kde5-volume-control-4-pipewire)
 	@$(call add,PINNED_PACKAGES,kde5-volume-control-4-pipewire)
+endif
 
 ## screensavers
 use/x11/xscreensaver:

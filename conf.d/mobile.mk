@@ -5,11 +5,11 @@ ifneq (,$(filter-out riscv64,$(ARCH)))
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,hkdm)
 endif
 
-mixin/mobile-base: use/ntp/chrony use/repo use/branding/notes use/x11-autostart \
+mixin/mobile-base:: use/ntp/chrony use/repo use/branding/notes use/x11-autostart \
 	use/deflogin/privileges use/deflogin/xgrp use/deflogin/hardware \
 	use/deflogin/root use/l10n/ru_RU use/xdg-user-dirs \
 	use/drm use/firmware mixin/ttyescape +plymouth +pipewire \
-	use/services/bluetooth-enable
+	use/services/bluetooth-enable use/luks/touchscreen
 ifeq (sisyphus,$(BRANCH))
 	@$(call set,BRANDING,alt-mobile-sisyphus)
 else
@@ -27,6 +27,7 @@ endif
 	@$(call set,LOCALE,ru_RU)
 	@$(call add,CONTROL,fusermount:public)
 	@$(call add,CONTROL,libnss-role:disabled)
+	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,waked.service)
 
 mixin/phosh: use/services +nm-gtk4 +nm-native
 	@$(call add,THE_BRANDING,phosh-settings)
@@ -35,8 +36,10 @@ mixin/phosh: use/services +nm-gtk4 +nm-native
 	@$(call set,DEFAULT_SESSION,phosh)
 	@$(call add,THE_PACKAGES,dconf-epiphany-mobile-user-agent)
 
-mixin/mobile-ad:
+ifneq (sisyphus,$(BRANCH))
+mixin/mobile-base::
 	@$(call add,THE_LISTS,mobile/AD)
+endif
 
 ifeq (vm,$(IMAGE_CLASS))
 vm/.phosh: vm/systemd mixin/mobile-base mixin/phosh +systemd \
@@ -61,6 +64,7 @@ mixin/mobile-lt11i: mixin/uboot-extlinux use/tty/S0
 	@$(call set,KFLAVOURS,lt11i)
 	@$(call add,THE_PACKAGES,lt11i-bluetooth)
 	@$(call add,THE_PACKAGES,firmware-lt11i)
+	@$(call add,THE_PACKAGES,blacklist-lt11i-camera)
 
 mixin/mobile-nxp: mixin/uboot-extlinux use/tty/S0
 	@$(call set,KFLAVOURS,nxp)
@@ -78,12 +82,5 @@ vm/alt-mobile-phosh-mp: vm/.phosh mixin/mobile-mp; @:
 vm/alt-mobile-phosh-lt11i: vm/.phosh mixin/mobile-lt11i; @:
 vm/alt-mobile-phosh-nxp: vm/.phosh mixin/mobile-nxp; @:
 vm/alt-mobile-phosh-rocknix: vm/.phosh mixin/mobile-rocknix; @:
-
-# AD
-vm/alt-mobile-phosh-pine-ad: vm/alt-mobile-phosh-pine mixin/mobile-ad; @:
-vm/alt-mobile-phosh-mp-ad: vm/alt-mobile-phosh-mp mixin/mobile-ad; @:
-vm/alt-mobile-phosh-lt11i-ad: vm/alt-mobile-phosh-lt11i mixin/mobile-ad; @:
-vm/alt-mobile-phosh-nxp-ad: vm/alt-mobile-phosh-nxp mixin/mobile-ad; @:
-vm/alt-mobile-phosh-rocknix-ad: vm/alt-mobile-phosh-rocknix mixin/mobile-ad; @:
 endif
 endif
