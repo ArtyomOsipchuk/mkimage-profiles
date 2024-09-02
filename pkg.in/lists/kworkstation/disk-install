@@ -11,10 +11,10 @@ gnupg2
 # 1C
 #1c-preinstall-full@X86 # ms-fonts license
 1c-preinstall@X86
-postgresql15-1C
-postgresql15-1C-server
-postgresql15-1C-contrib
-haspd@IA32
+postgresql16-1C
+postgresql16-1C-server
+postgresql16-1C-contrib
+#haspd@IA32
 # VipNet CSP
 vipnetcsp4-preinstall
 libjcpkcs11
@@ -38,12 +38,11 @@ libp11-kit
 # misc preinstalls
 kesl10-preinstall
 # FSIN
-openssh-gostcrypto
 openssh-clients-gostcrypto openssh-askpass-common-gostcrypto
 openssh-server-gostcrypto openssh-server-control-gostcrypto
 openssh-common-gostcrypto
 #
-openvpn-gostcrypto openvpn-plugins-gostcrypto alterator-openvpn-server
+#openvpn-gostcrypto openvpn-plugins-gostcrypto alterator-openvpn-server ### removed from repo
 #
 alterator-openvpn-server alterator-ca
 #
@@ -51,16 +50,13 @@ freeipa-server freeipa-server-dns
 #
 alt-customize-branding
 task-samba-dc bind-utils tdb-utils installer-feature-sambaDC-stage3
-admc admx-basealt admx-samba admx-chromium admx-firefox admx-msi-setup
 #
-alterator-kiosk
+alterator-kiosk kiosk-profiles
 alterator-net-domain
 #
 # KDE
-#kde5-maxi@META
-kde5-kfloppy
-#kde5-telepathy
 # MISC
+dnf
 exim
 admc
 vsftpd

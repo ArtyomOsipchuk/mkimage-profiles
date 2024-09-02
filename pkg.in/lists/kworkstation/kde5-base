@@ -1,4 +1,6 @@
 
+firsttime-lightdm-kde
+
 sysctl-conf-userns
 firmware-alsa-sof
 firmware-wireless-regdb
@@ -10,6 +12,7 @@ pavucontrol
 plasma5-discover-packagekit@META
 
 alt-kworkstation-addon
+alterator-audit
 alterator-roles-common
 alterator-standalone
 alterator-auth
@@ -28,7 +31,8 @@ alterator-net-routing
 alterator-net-shares
 alterator-notes
 alterator-osec
-alterator-ports-access
+alterator-usbguard
+alterator-usbmount
 alterator-quota
 alterator-secsetup
 alterator-services
@@ -48,7 +52,6 @@ apt-rsync
 apt-repo
 apt-scripts
 arj
-audit
 avahi-daemon
 bash-completion
 bc
@@ -89,16 +92,14 @@ pciutils
 pcmciautils
 pinfo
 pm-utils
-polkit-rule-admin-root
+#polkit-rule-admin-root
 power-profiles-daemon
-pulseaudio-bluez
 quota
 rpminstall
 rng-tools
 screen
 smartmontools
 strace
-sudo
 system-report
 systemd-analyze
 tcpdump
@@ -121,7 +122,6 @@ xinput
 xfsprogs
 xorg-conf-synaptics
 xorg-conf-libinput-touchpad
-xsetup
 
 libva-driver-intel@X86
 libva-intel-media-driver@x86_64
@@ -132,12 +132,12 @@ vulkan-amdgpu@X86
 orca at-spi2-core
 
 ca-certificates-digital.gov.ru
-chromium-gost
+yandex-browser-stable
 
-openvpn-gostcrypto
 kde5-display-manager-lightdm
+#openvpn-gostcrypto ### removed from repo
 kde5-network-manager-etcnet
-openssh openssh-clients openssh-askpass-common openssh-server openssh-common openssh-server-control
+openssh-clients openssh-askpass-common openssh-server openssh-common openssh-server-control
 systemd-ssh-agent
 NetworkManager-ssh
 kde5-network-manager-nm

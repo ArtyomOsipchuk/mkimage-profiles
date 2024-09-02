@@ -3,7 +3,8 @@ ifeq (distro,$(IMAGE_CLASS))
 
 mixin/kworkstation-common-deps: \
 	use/kernel/desktop use/kernel/net use/kernel/laptop \
-	use/live/x11 use/live use/live/sound use/live/repo/online \
+	use/live/x11 use/live use/live/sound \
+	use/live/rescue \
 	use/syslinux/ui/gfxboot use/plymouth/full \
 	use/efi/grub use/efi/shell \
 	use/x11/xorg \
@@ -21,13 +22,12 @@ mixin/kworkstation-common-deps: \
 	use/x11/intel use/x11/radeon use/x11/amdgpu use/x11/nvidia \
 	use/x11/kde-display-manager-lightdm use/x11/wacom \
 	use/memtest \
-	use/init/systemd \
 	use/cleanup/live-no-cleanupdb \
 	use/stage2/ata use/stage2/fs use/stage2/hid use/stage2/md \
 	use/stage2/mmc use/stage2/net use/stage2/net-nfs use/stage2/cifs \
 	use/stage2/rtc use/stage2/sbc use/stage2/scsi use/stage2/usb \
 	use/alternatives/xvt/konsole \
-	+wireless +pulse +plymouth +systemd-optimal +wireless +vmguest +efi +nm \
+	+wireless +pipewire +plymouth +systemd +systemd-optimal +wireless +vmguest +efi +nm \
 	use/stage2/kms/nvidia
 
 mixin/kworkstation-common-opts:
@@ -38,7 +38,8 @@ ifeq (,$(filter-out i586 x86_64,$(ARCH)))
 endif
 	@$(call set,GRUBTHEME,branding-xalt-kworkstation)
 	@$(call set,DOCS,alt-kworkstation)
-	@$(call try,THE_BROWSER,chromium-gost)
+	@$(call add,PINNED_PACKAGES,systemd)
+	@$(call try,THE_BROWSER,yandex-browser-stable)
 	@$(call add,BASE_KMODULES,kvm virtualbox)
 	@$(call add,THE_KMODULES,staging)
 	@$(call add,BASE_PACKAGES,os-prober)
@@ -47,8 +48,6 @@ endif
 	@$(call add,THE_PACKAGES,systemd-presets-kdesktop)
 	@$(call add,THE_PACKAGES,systemd-oomd-defaults)
 	@$(call add,THE_PACKAGES,etcnet-defaults-desktop)
-	@$(call add,THE_PACKAGES,btrfs-progs)
-	@$(call set,INSTALL2_FONTS,fonts-ttf-google-croscore-arimo)
 	@$(call set,LIVECD_FONTS,fonts-ttf-google-noto-sans)
 	@$(call add,THE_PACKAGES,fonts-ttf-dejavu)
 	@$(call add,THE_PACKAGES,fonts-ttf-google-noto-sans)
@@ -56,6 +55,8 @@ endif
 	@$(call add,THE_PACKAGES,fonts-ttf-google-noto-sans-mono)
 	@$(call add,THE_PACKAGES,fonts-ttf-google-crosextra-caladea)
 	@$(call add,THE_PACKAGES,fonts-ttf-google-crosextra-carlito)
+	@$(call add,THE_PACKAGES,fonts-otf-google-noto-sans-cjk-hk)
+	@$(call add,THE_PACKAGES,fonts-otf-google-noto-sans-mono-cjk-hk)
 	@$(call add,THE_PACKAGES,fonts-ttf-google-noto-sans-symbols)
 	@$(call add,THE_PACKAGES,fonts-ttf-google-noto-sans-symbols2)
 	@$(call add,THE_PACKAGES,fonts-ttf-material-icons)
@@ -108,49 +109,44 @@ endif
 	@$(call set,META_APP_ID,ALT Workstation K $(DISTRO_VERSION)$(STATUS) $(ARCH) $(shell date +%F))
 
 mixin/kworkstation-install-deps: \
-	distro/.installer mixin/desktop-installer \
-	use/install2/suspend use/install2/net use/install2 use/install2/stage3 use/install2/vnc \
-	use/install2/vmguest \
-	use/stage2/net-install \
+	distro/.base \
+	use/x11/xorg use/x11-autostart \
+	use/stage2/net-install-live \
 	use/grub/localboot_bios.cfg \
-	+installer
+	use/live-install/vnc/listen \
+	use/live-install/suspend \
+	use/live/no-cleanup \
+	+net-eth +vmguest +live-installer-pkg
 
 mixin/kworkstation-install-opts:
 	@$(call set,GRUB_DEFAULT,harddisk)
-	@$(call set,INSTALLER,centaurus)
+	@$(call set,INSTALLER,kworkstation)
 	@$(call add,STAGE1_MODLISTS,stage2-ntfs)
 	@$(call add,STAGE2_KMODULES,drm-nouveau)
-	@$(call add,THE_PACKAGES,installer-feature-nfs-client-stage3)
-	@$(call add,BASE_PACKAGES,plasma5-welcome)
-	@$(call add,INSTALL2_PACKAGES,ntfs-3g)
-	@$(call add,INSTALL2_PACKAGES,btrfs-progs)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-samba-usershares-kde-stage2)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-samba-automount-stage2)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-weak-passwd)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-desktop-disable-remote-stage2)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-desktop-etcissue)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-kdesktop-tmpfs)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-kdesktop-services)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-vmservices)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-online-repo)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-set-tz)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-rootgtktheme-stage2)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-alterator-setup-stage2)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-lightdm-kde)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-packagekit-setup)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-xprofile-clear)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-systemd-oomd)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-webterminal-setup)
-	@$(call add,INSTALL2_PACKAGES,installer-feature-remove-xorgconf)
-	@$(call add,INSTALL2_PACKAGES,apt-scripts-nvidia)
-	@$(call add,INSTALL2_PACKAGES,volumes-profile-kdesktop)
-	@$(call add,INSTALL2_PACKAGES,udev-rules-ioschedulers)
-	@$(call add,INSTALL2_PACKAGES,passwdqc-utils)
-	@$(call add,INSTALL2_CLEANUP_PACKAGES,xorg-dri-nouveau xorg-drv-nouveau)
-	@$(call add,INSTALL2_CLEANUP_PACKAGES,icon-theme-adwaita fonts-ttf-dejavu fonts-bitmap-misc)
-	@$(call add,INSTALL2_CLEANUP_PACKAGES,libdconf dconf colord)
-	@$(call add,INSTALL2_CLEANUP_PACKAGES,shared-mime-info glib-networking libgtk+3-schemas gtk-update-icon-cache libgtk+3)
-	@$(call add,INSTALL2_CLEANUP_PACKAGES,libat-spi2-core at-spi2-core at-spi2-atk)
+	@$(call add,BASE_PACKAGES,installer-feature-nfs-client-stage3)
+	@$(call add,BASE_PACKAGES,alt-welcome-k)
+	@$(call add,LIVE_PACKAGES,installer-feature-samba-usershares-kde-stage2)
+	@$(call add,LIVE_PACKAGES,installer-feature-samba-automount-stage2)
+	@$(call add,LIVE_PACKAGES,installer-feature-weak-passwd)
+	@$(call add,LIVE_PACKAGES,installer-feature-desktop-disable-remote-stage2)
+	@$(call add,LIVE_PACKAGES,installer-feature-desktop-etcissue)
+	@$(call add,LIVE_PACKAGES,installer-feature-kdesktop-tmpfs)
+	@$(call add,LIVE_PACKAGES,installer-feature-kdesktop-services)
+	@$(call add,LIVE_PACKAGES,installer-feature-vmservices)
+	@$(call add,LIVE_PACKAGES,installer-feature-online-repo)
+	@$(call add,LIVE_PACKAGES,installer-feature-set-tz)
+	@$(call add,LIVE_PACKAGES,installer-feature-rootgtktheme-stage2)
+	@$(call add,LIVE_PACKAGES,installer-feature-alterator-setup-stage2)
+	@$(call add,LIVE_PACKAGES,installer-feature-packagekit-setup)
+	@$(call add,LIVE_PACKAGES,installer-feature-xprofile-clear)
+	@$(call add,LIVE_PACKAGES,installer-feature-systemd-oomd)
+	@$(call add,LIVE_PACKAGES,installer-feature-webterminal-setup)
+	@$(call add,LIVE_PACKAGES,installer-feature-remove-xorgconf)
+	@$(call add,LIVE_PACKAGES,installer-feature-swapfile)
+	@$(call add,LIVE_PACKAGES,apt-scripts-nvidia)
+	@$(call add,LIVE_PACKAGES,volumes-profile-kdesktop)
+	@$(call add,LIVE_PACKAGES,udev-rules-ioschedulers)
+	@$(call add,LIVE_PACKAGES,passwdqc-utils)
 	@$(call add,MAIN_GROUPS,$(kworkstation_groups))
 	@$(call add,THE_PROFILES,kworkstation/10-workstation)
 	@$(call add,THE_PROFILES,kworkstation/20-webterminal)
@@ -163,7 +159,6 @@ mixin/kworkstation-install-opts:
 	@$(call add,LIVE_LISTS,$(call tags,rescue x11))
 	@$(call add,LIVE_LISTS,$(call tags,rescue extra))
 	@$(call add,LIVE_LISTS,$(call tags,rescue crypto))
-	@$(call add,LIVE_LISTS,sound/pulseaudio)
 	@$(call add,LIVE_LISTS,kworkstation/live-rescue)
 	@$(call add,LIVE_LISTS,kworkstation/printing)
 	@$(call add,LIVE_LISTS,kworkstation/scanning)
@@ -171,7 +166,7 @@ mixin/kworkstation-install-opts:
 	@$(call add,SERVICES_ENABLE,sshd)
 
 mixin/kworkstation-live-deps: \
-	distro/.base use/rescue \
+	distro/.base \
 	use/x11/xorg use/x11-autostart \
 	use/live/no-cleanup \
 	use/grub/live_rw.cfg \
@@ -186,10 +181,8 @@ mixin/kworkstation-live-opts:
 	@$(call set,SYSLINUX_DEFAULT,session)
 	@$(call add,LIVE_LISTS,kworkstation/kde5-base)
 	@$(call add,LIVE_LISTS,kworkstation/kde5)
-	@$(call add,LIVE_LISTS,kworkstation/emulators)
 	@$(call add,LIVE_LISTS,kworkstation/graphics-editing)
 	@$(call add,LIVE_LISTS,kworkstation/printing)
-	@$(call add,LIVE_LISTS,kworkstation/publishing)
 	@$(call add,LIVE_LISTS,kworkstation/scanning)
 	@$(call add,LIVE_LISTS,kworkstation/remote-desktop)
 	@$(call add,LIVE_LISTS,kworkstation/sound-editing)
@@ -202,14 +195,10 @@ mixin/kworkstation-live-opts:
 
 distro/kworkstation-install: \
 	kworkstation_groups = $(addprefix kworkstation/,\
-	kde5 \
-	games \
-	emulators remote-desktop \
-	printing publishing scanning \
-	video-editing sound-editing graphics-editing \
+	kde5 games emulators printing scanning \
 	z00-add-3dparty 3dparty-flatpak 3dparty-snap \
 	z01-add-clients clients-ad clients-ipa clients-backup clients-cloud clients-monitor \
-	z02-add-additional add-oem add-tablet add-webterminal add-no4k-screen)
+	z02-add-additional add-adm add-oem add-tablet add-webterminal add-no4k-screen)
 
 distro/kworkstation-install: \
 	mixin/kworkstation-install-deps \
@@ -240,7 +229,7 @@ mixin/kworkstation-fsin-opts:
 	@$(call add,THE_PACKAGES,openssl-gost-engine)
 	@$(call add,THE_PACKAGES,openvpn-gostcrypto openvpn-plugins-gostcrypto alterator-openvpn-server)
 	@$(call add,THE_PACKAGES,alt-customize-branding)
-	@$(call add,THE_PACKAGES,alterator-kiosk)
+	@$(call add,THE_PACKAGES,alterator-kiosk kiosk-profiles)
 	@$(call add,SERVICES_ENABLE,kiosk)
 
 distro/kworkstation-install-fsin: \
