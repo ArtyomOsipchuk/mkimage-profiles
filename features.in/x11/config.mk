@@ -95,7 +95,7 @@ use/x11/nvidia/optimus:: use/x11/nvidia; @:
 
 ifeq (,$(filter-out i586 x86_64 aarch64,$(ARCH)))
 use/x11/nvidia:: use/drm/nvidia
-	@$(call set,NVIDIA_PACKAGES,nvidia-settings nvidia-xconfig)
+	@$(call set,NVIDIA_PACKAGES,nvidia-settings)
 
 use/x11/nvidia/optimus:: use/drm/nvidia/optimus
 	@$(call add,NVIDIA_PACKAGES,bumblebee)
@@ -207,7 +207,7 @@ use/x11/leechcraft: use/x11
 	@$(call add,THE_PACKAGES,leechcraft)
 
 use/x11/kde: use/x11/xorg +pipewire
-ifeq (,$(filter-out sisyphus p11,$(BRANCH)))
+ifeq (,$(filter-out sisyphus,$(BRANCH)))
 	@$(call add,THE_PACKAGES,kde)
 	@$(call add,THE_PACKAGES,kde-volume-control-7-pipewire)
 	@$(call add,PINNED_PACKAGES,kde-volume-control-7-pipewire)

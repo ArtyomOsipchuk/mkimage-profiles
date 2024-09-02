@@ -277,7 +277,7 @@ htop
 avplay
 cabextract
 cheese
-libsqlite
+libsqlite3
 lm_sensors3-utils
 man-pages-ru
 media-player-info
@@ -289,7 +289,7 @@ system-report
 zbar
 audit
 vixie-cron
-screenfetch
+neofetch
 debhelper
 xdg-user-dirs-gtk
 libgtk2-engine-adwaita
@@ -330,3 +330,6 @@ xauthority-hostname-updater
 
 # Additional repositories
 apt-conf-r7@x86_64
+
+# Yandex Browser
+yandex-browser-stable@x86_64
