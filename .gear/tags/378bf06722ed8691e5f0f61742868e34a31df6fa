@@ -1,0 +1,14 @@
+object 498c6f76b86d11b1f4a2643a110bb1528fe37c15
+type commit
+tag v1.6.8
+tagger Anton Midyukov <antohami@altlinux.org> 1725293898 +0300
+
+v1.6.8
+
+- lib/{distro,ve,vm}.mk: add branding notes with licenses
+- x11: fix condition for kde on p11
+- x11: exclude nvidia-xconfig
+- live: add mokutil, pesign for rescue mode on x86_64
+- education: add latests commits from cas@, fix build on p11
+- kworkstation: add latests commits from zerg@, fix build on p11
+- alt-server: add latests commits from jqt4@
