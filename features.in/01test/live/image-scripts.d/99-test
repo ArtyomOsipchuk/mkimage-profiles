@@ -1,0 +1,10 @@
+#!/bin/sh
+mkdir -p /home/altlinux/tests
+echo "pwd" > /home/altlinux/tests/1.txt 
+pwd >> /home/altlinux/tests/1.txt 
+echo "ls" > /home/altlinux/tests/2.txt 
+ls >> /home/altlinux/tests/2.txt 
+echo "ls .." > /home/altlinux/tests/3.txt 
+ls .. >> /home/altlinux/tests/3.txt 
+echo "ls /home/altlinux" > /home/altlinux/tests/4.txt
+ls /home/altlinux > /home/altlinux/tests/4.txt

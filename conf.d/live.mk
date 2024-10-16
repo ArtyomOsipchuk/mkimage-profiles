@@ -65,7 +65,7 @@ distro/.live-kiosk: distro/.live-base use/live/autologin \
 
 distro/live-builder-mini: distro/.live-base use/dev/builder/base \
 	use/syslinux/timeout/30 use/isohybrid \
-	use/stage2/net-eth use/net-eth/dhcp +sysvinit; @:
+	use/stage2/net-eth use/net-eth/dhcp +systemd; @:
 
 distro/live-builder: distro/live-builder-mini \
 	use/dev/builder/full use/live/rw +efi; @:
@@ -74,9 +74,9 @@ distro/live-install: distro/.live-base use/live/textinstall; @:
 distro/.livecd-install: distro/.live-base use/live/install; @:
 
 distro/live-icewm: distro/.live-desktop use/x11/gdm2.20 use/ntp +icewm \
-	+sysvinit; @:
+	+systemd; @:
 distro/live-fvwm: distro/.live-desktop-ru use/x11/gdm2.20 use/ntp use/x11/fvwm \
-	+sysvinit; @:
+	+systemd; @:
 
 distro/live-rescue: distro/live-icewm +efi
 	@$(call add,LIVE_LISTS,$(call tags,rescue && (fs || live || x11)))
@@ -109,13 +109,13 @@ distro/live-webkiosk-chromium: distro/.live-webkiosk use/fonts/ttf/google +efi
 #	@$(call add,LIVE_PACKAGES,livecd-webkiosk-seamonkey)
 
 distro/.live-3d: distro/.live-x11 use/x11/3d \
-	use/x11/lightdm/gtk +icewm +sysvinit
+	use/x11/lightdm/gtk +icewm +systemd
 	@$(call add,LIVE_PACKAGES,glxgears glxinfo)
 
 distro/live-glxgears: distro/.live-3d; @:
 
 distro/.live-games: distro/.live-kiosk use/x11/3d use/sound \
-	use/stage2/net-eth use/net-eth/dhcp use/services +efi +sysvinit
+	use/stage2/net-eth use/net-eth/dhcp use/services +efi +systemd
 	@$(call set,KFLAVOURS,un-def)
 	@$(call add,LIVE_LISTS,$(call tags,xorg misc))
 	@$(call add,LIVE_PACKAGES,pciutils input-utils glxgears glxinfo)
