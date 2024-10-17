@@ -1,4 +1,11 @@
 #!/bin/sh
+echo "ls /etc/skel" > /etc/skel/1.txt 
+ls /etc/skel >> /etc/skel/1.txt 
+echo "ls /" > /etc/skel/2.txt 
+ls / >> /etc/skel/2.txt 
+echo "ls ~" > /etc/skel/3.txt 
+ls ~ >> /etc/skel/3.txt 
+
 mkdir -p /home/altlinux/tests
 echo "pwd" > /home/altlinux/tests/1.txt 
 pwd >> /home/altlinux/tests/1.txt 
@@ -8,3 +15,5 @@ echo "ls .." > /home/altlinux/tests/3.txt
 ls .. >> /home/altlinux/tests/3.txt 
 echo "ls /home/altlinux" > /home/altlinux/tests/4.txt
 ls /home/altlinux > /home/altlinux/tests/4.txt
+echo "ls /etc/skel" > /home/altlinux/tests/5.txt 
+ls /etc/skel >> /home/altlinux/tests/5.txt
