@@ -1,0 +1,6 @@
+#%PAM-1.0
+auth		required	pam_userpass.so
+auth		include		common-login-use_first_pass
+account		include		common-login
+password	include		common-login
+session		include		common-login

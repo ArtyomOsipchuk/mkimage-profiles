@@ -1,0 +1,7 @@
+#!/bin/bash -u
+
+v="$("$UDEVD" --version)" ||:
+[ -n "${v##*[!0-9]*}" ] || v="$("$UDEVADM" --version)" ||:
+[ -n "${v##*[!0-9]*}" ] || v="0"
+
+echo "$v"

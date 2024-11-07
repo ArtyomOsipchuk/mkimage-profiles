@@ -1,0 +1,66 @@
+#!/bin/sh
+#
+# mount-efivars		Mount /sys/firmware/efi/efivars
+#
+# chkconfig: - 34 67
+# description:	Mount /sys/firmware/efi/efivars
+# config: /etc/sysfs.conf
+#
+### BEGIN INIT INFO
+# Provides:          mount-efivars
+# Required-Start:
+# Should-Start:      udev
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: Mount /sys/firmware/efi/efivars
+# Description:       Mount /sys/firmware/efi/efivars
+
+### END INIT INFO
+
+# Source function library.
+. /etc/init.d/functions
+
+LOCKFILE=/var/lock/subsys/mount-efivars
+RETVAL=0
+EFIVARS=/sys/firmware/efi/efivars
+
+mount_efivars () {
+	echo -n "Mount /sys/firmware/efi/efivars..."
+	mount | grep " $EFIVARS" >/dev/null 2>&1 && return 0
+	[ ! -d "$EFIVARS" ] && return 0
+	mount -t efivarfs none $EFIVARS || return 1
+	return 0
+}
+
+case "$1" in
+	start|reload|restart)
+		mount_efivars && echo_success || echo_failure
+		echo
+		RETVAL=$?
+		[ "$RETVAL" = 0 ] && touch $LOCKFILE
+		;;
+	condrestart|condreload)
+		if [ -e "$LOCKFILE" ]; then
+			mount_efivars && echo_success || echo_failure
+			echo
+			RETVAL=$?
+			[ "$RETVAL" = 0 ] && touch $LOCKFILE
+		fi
+		;;
+	status)
+		echo -n "Subsystem was "
+		[ -f "$LOCKFILE" ] || echo -n "not "
+		echo "activated."
+		RETVAL=$?
+		;;
+	stop|condstop)
+		umount $EFIVARS
+		rm -f "$LOCKFILE"
+		;;
+	*)
+		msg_usage "${0##*/} {start|stop|reload|restart|condstop|condrestart|condreload|status}"
+		RETVAL=1
+esac
+
+exit $RETVAL

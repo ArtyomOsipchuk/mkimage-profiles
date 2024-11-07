@@ -1,0 +1,13 @@
+#%PAM-1.0
+auth		sufficient	pam_rootok.so
+# Uncomment the following line to implicitly trust users in the "wheel" group.
+#auth		sufficient	pam_wheel.so debug use_uid group=wheel trust
+# Uncomment the following line to require a user to be in the "wheel" group.
+#auth		required	pam_wheel.so debug use_uid group=wheel
+# Uncomment the following line to implicitly trust users with same user id.
+#auth		sufficient	pam_sameuid.so debug
+auth		include		system-auth
+account		include		system-auth
+password	required	pam_deny.so
+session		include		system-auth
+session		optional	pam_xauth.so

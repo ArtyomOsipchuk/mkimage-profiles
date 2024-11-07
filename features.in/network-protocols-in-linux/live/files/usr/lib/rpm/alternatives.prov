@@ -1,0 +1,48 @@
+#!/bin/sh -efu
+
+. /usr/lib/rpm/functions
+
+AlternativesProv()
+{
+	local f="$1"; shift
+	local link to rest weight=0
+	while read -r link to rest; do
+		case "${link-}" in
+			'<group' | '<option' )
+				Info "$f: old file format (SKIP)"
+				return 0 ;;
+		esac
+		case "${link-}" in
+			/*/*) ;;
+			*) continue ;;
+		esac
+		case "${to-}" in
+			/*/*) ;;
+			*) continue ;;
+		esac
+		case "${rest-}" in
+			[0-9]*) weight="$rest" ;;
+		esac
+		if [ -n "${RPM_BUILD_ROOT-}" ]; then
+			if PackagedFiles |grep -F -qs -x "$to"; then
+				Verbose "$f: $to provides $link"
+				echo "$link = $weight"
+			elif [ -e "$RPM_BUILD_ROOT$to" -o -L "$RPM_BUILD_ROOT$to" ]; then
+				Info "$f: $to for $link is in another subpackage"
+			else
+				Info "$f: $to for $link not found under RPM_BUILD_ROOT"
+			fi
+		else
+			if rpmquery --list -f "$f" |grep -F -qs -x "$to"; then
+				Verbose "$f: $to provides $link"
+				echo "$link = $weight"
+			elif [ -e "$to" ]; then
+				Info "$f: $to for $link is packaged elsewhere"
+			else
+				Info "$f: $to for $link not found"
+			fi
+		fi
+	done <"$f"
+}
+
+ArgvFileAction AlternativesProv "$@"

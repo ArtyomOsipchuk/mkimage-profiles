@@ -1,0 +1,23 @@
+#!/bin/bash
+
+. shell-error
+. /.initrd/initenv
+
+PROG="poll: $PROG"
+
+while [ -z "${eof-}" ]; do
+	read -r fsdev fsdir _ ||
+		eof=1
+
+	[ -n "$fsdev" ] && [ -d "$fsdir" ] ||
+		continue
+
+	if [ -n "${ROOTONLY-}" ]; then
+		[ "$fsdir" = "$rootmnt" ] ||
+			continue
+	fi
+
+	mountpoint -q "$fsdir" ||
+		fatal "$fsdir: Not mounted"
+
+done < /etc/fstab

@@ -1,0 +1,23 @@
+#! /bin/sh
+
+VIM=/usr/bin/vim
+DOCDIR=
+
+[ -x "$VIM" ] || exit 1
+[ -z "$RPM_INSTALL_NAME" ] || exit 0
+
+if [ -n "$1" ]; then
+  if [ -d "$1" -a -w "$1" ]; then
+    DOCDIR="$1"
+  fi
+else
+  if [ -d /usr/share/vim/vimfiles/doc -a -w /usr/share/vim/vimfiles/doc ]; then
+    DOCDIR="/usr/share/vim/vimfiles/doc"
+  elif [ -d "$HOME/.vim/doc" -a -w "$HOME/.vim/doc" ]; then
+    DOCDIR="$HOME/.vim/doc"
+  fi
+fi
+
+[ -n "$DOCDIR" ] || exit 1
+
+echo ":helptags $DOCDIR" | $VIM -E -s -X -N -n -i NONE -u NONE -U NONE ||:

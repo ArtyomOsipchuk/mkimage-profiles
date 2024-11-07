@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+/etc/chroot.d/resolv.lib "$@"
+/etc/chroot.d/resolv.conf "$@"

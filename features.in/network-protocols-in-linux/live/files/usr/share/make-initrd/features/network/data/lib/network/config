@@ -1,0 +1,20 @@
+#!/bin/bash -efu
+
+. shell-error
+
+lock="/tmp/$PROG.lock"
+while ! mkdir -- "$lock" >/dev/null 2>&1; do
+	sleep 0.1
+done
+unlock() { rmdir "$lock"; }
+trap unlock EXIT
+
+. network-sh-functions
+
+PROG="$PROG: $NET_IF"
+message_time=1
+
+for n in $net_event_list; do
+	message "create event: network.$NET_EV_TYPE.$NET_EV_ACTION -> network.$n.$NET_EV_ACTION"
+	net_event "network.$n.$NET_EV_ACTION" "$NET_IF"
+done

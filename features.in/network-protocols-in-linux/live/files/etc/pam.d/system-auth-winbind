@@ -1,0 +1,33 @@
+#%PAM-1.0
+
+auth		[success=4 perm_denied=ignore default=die]	pam_localuser.so
+auth		[success=1 default=bad]	pam_succeed_if.so uid >= 500 quiet
+auth		[default=1]	pam_permit.so
+auth		substack	system-auth-winbind-only
+auth		[default=1]	pam_permit.so
+auth		substack	system-auth-local-only
+auth		substack	system-auth-common
+
+account		[success=4 perm_denied=ignore default=die]	pam_localuser.so
+account		[success=1 default=bad]	pam_succeed_if.so uid >= 500 quiet
+account		[default=1]	pam_permit.so
+account		substack	system-auth-winbind-only
+account		[default=1]	pam_permit.so
+account		substack	system-auth-local-only
+account		substack	system-auth-common
+
+password	[success=4 perm_denied=ignore default=die]	pam_localuser.so
+password	[success=1 default=bad]	pam_succeed_if.so uid >= 500 quiet
+password	[default=1]	pam_permit.so
+password	substack	system-auth-winbind-only
+password	[default=1]	pam_permit.so
+password	substack	system-auth-local-only
+password	substack	system-auth-common
+
+session		[success=4 perm_denied=ignore default=die]	pam_localuser.so
+session		[success=1 default=bad]	pam_succeed_if.so uid >= 500 quiet
+session		[default=1]	pam_permit.so
+session		substack	system-auth-winbind-only
+session		[default=1]	pam_permit.so
+session		substack	system-auth-local-only
+session		substack	system-auth-common

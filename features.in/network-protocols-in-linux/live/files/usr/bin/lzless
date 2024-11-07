@@ -1,0 +1,4 @@
+#!/bin/sh -e
+eval $(lesspipe)
+export FILENAME_IS_COMPRESSED_BY_LZMA=1
+exec /usr/bin/less "$@"

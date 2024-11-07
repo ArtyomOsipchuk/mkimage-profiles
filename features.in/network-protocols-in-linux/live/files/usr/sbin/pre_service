@@ -1,0 +1,39 @@
+#!/bin/sh -efu
+#
+# Stop the service and queue its start at the end of rpm transaction.
+#
+# Copyright (C) 2021  Vladimir D. Seleznev <vseleznv@altlinux.org>
+# Copyright (C) 2021  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2021  Vitaly Chikunov <vt@altlinux.org>
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+fatal()
+{
+	printf '%s\n' "$*" >&2
+	exit 1
+}
+
+[ $# -eq 1 ] ||
+	fatal 'usage: pre_service <service>'
+
+[ -n "${1##*/*}" ] ||
+        fatal "${0##*/}: $1: invalid service name"
+
+[ "${RPM_INSTALL_ARG1-}" -ge 1 ] 2>/dev/null ||
+	fatal "${0##*/}: RPM_INSTALL_ARG1: invalid or undefined variable"
+
+[ "$RPM_INSTALL_ARG1" -ge 2 ] ||
+	exit 0
+
+service "$1" status >/dev/null &&
+service "$1" stop ||
+	exit 0
+
+umask 077
+RUNDIR=/run/service
+mkdir -p "$RUNDIR"
+{
+	flock 1
+	printf '%s\n' "$1"
+} >> "$RUNDIR/postponed_start"

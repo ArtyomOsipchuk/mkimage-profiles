@@ -1,0 +1,20 @@
+#!/bin/sh
+
+STATUS_DIR=/var/run/control
+
+for FACILITY in "$@"; do
+	FACILITY="${FACILITY//\//_}"
+
+	FILE="$STATUS_DIR/$FACILITY"
+	if [ -s "$FILE" ]; then
+		STATUS="`cat "$FILE"`"
+		if [ -n "$STATUS" -a "$STATUS" != unknown ]; then
+			/usr/sbin/control "$FACILITY" "$STATUS"
+		else
+			echo "${0##*/}: Status \"$STATUS\" for \"$FACILITY\" facility cannot be restored" >&2
+		fi
+	else
+		echo "${0##*/}: No status available for \"$FACILITY\" facility" >&2
+	fi
+	rm -f "$FILE"
+done

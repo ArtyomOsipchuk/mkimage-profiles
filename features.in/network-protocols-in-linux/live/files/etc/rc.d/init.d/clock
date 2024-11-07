@@ -1,0 +1,101 @@
+#!/bin/sh
+#
+# /etc/init.d/clock - initialize system clock / sync hardware clock
+#
+
+WITHOUT_RC_COMPAT=1
+
+# Source function library.
+. /etc/init.d/functions
+
+# Set the system clock.
+ARC=false
+SRM=false
+UTC=false
+HWCLOCK_SET_TIME_AT_START=true
+HWCLOCK_SET_AT_HALT=false
+HWCLOCK_ADJUST=false
+
+CLOCKMODE=
+if SourceIfNotEmpty /etc/sysconfig/clock; then
+	# convert old style clock config to new values
+	if [ "$CLOCKMODE" = GMT ]; then
+		UTC=true
+	elif [ "$CLOCKMODE" = ARC ]; then
+		ARC=true
+	fi
+fi
+
+RETVAL=0
+
+CLOCKFLAGS=
+CLOCKDEF=
+
+if is_yes "$UTC"; then
+	CLOCKFLAGS="$CLOCKFLAGS --utc"
+	CLOCKDEF="$CLOCKDEF (utc)"
+elif is_no "$UTC"; then
+	CLOCKFLAGS="$CLOCKFLAGS --localtime"
+	CLOCKDEF="$CLOCKDEF (localtime)"
+fi
+
+if is_yes "$ARC"; then
+	CLOCKFLAGS="$CLOCKFLAGS --arc"
+	CLOCKDEF="$CLOCKDEF (arc)"
+fi
+
+if is_yes "$SRM"; then
+	CLOCKFLAGS="$CLOCKFLAGS --srm"
+	CLOCKDEF="$CLOCKDEF (srm)"
+fi
+
+set_date()
+{
+	action "Setting system clock$CLOCKDEF:" hwclock --hctosys $CLOCKFLAGS
+	RETVAL=$?
+	action "Today's date: `date`" true
+	return $RETVAL
+}
+
+tzupdate=/usr/sbin/tzupdate
+
+case "$1" in
+	set)
+		set_date
+		;;
+	tzset)
+		action 'Setting timezone information' "$tzupdate"
+		;;
+	start)
+		if [ -x "$tzupdate" ]; then
+			"$tzupdate"
+		fi
+		if is_yes "$HWCLOCK_ADJUST" && [ -s /etc/adjtime ]; then
+			action "Adjusting hardware clock:" hwclock --adjust
+		fi
+		is_no "$HWCLOCK_SET_TIME_AT_START" ||
+			set_date
+		;;
+	sync)
+		action "Setting hardware clock$CLOCKDEF: `date`" hwclock --systohc $CLOCKFLAGS
+		RETVAL=$?
+		;;
+	stop)
+		if is_yes "$HWCLOCK_SET_AT_HALT" && clock_unsynced; then
+			# action cannot be used in this context.
+			echo -n "Setting hardware clock$CLOCKDEF: `date` "
+			hwclock --systohc $CLOCKFLAGS && echo_success || echo_failure
+			RETVAL=$?
+			echo
+		fi
+		;;
+	status)
+		hwclock --show
+		;;
+	*)
+		msg_usage "${0##*/} {set|tzset|start|sync|stop|status}"
+		RETVAL=1
+		;;
+esac
+
+exit $RETVAL

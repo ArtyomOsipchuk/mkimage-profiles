@@ -1,0 +1,2 @@
+# Source color settings depending on your terminal type.
+source	~/.mutt/color.`~/.mutt/color-select`/color

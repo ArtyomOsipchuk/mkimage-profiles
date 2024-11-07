@@ -1,0 +1,101 @@
+#!/bin/sh -e
+
+# Rescp - secure copy with reget. Command line syntax is similar to scp.
+# Copyright (c) 1997 by Solar Designer
+# Modifications by Dmitry V. Levin <ldv@fandra.org>, 1998-2000
+
+PROG="$(basename "$0")"
+
+function usage() {
+	RETVAL=$?
+	echo "Usage: $PROG [options] [user@]host:file file"
+	if [ -n "$1" ]; then
+		exit "$1"
+	else
+		exit $RETVAL
+	fi
+}
+
+VERBOSE=
+while getopts "CP:c:i:o:vV" OPT; do
+	[ "$OPT" != "?" ] || usage 0
+
+	case "$OPT" in
+		P)
+			OPT="p"
+			;;
+		V)
+			VERBOSE=1
+			;;
+		v)
+			VERBOSE=1
+			OPTS="$OPTS -$OPT"
+			;;
+		*)
+			OPTS="$OPTS -$OPT"
+			if [ -n "$OPTARG" ]; then
+				OPTS="$OPTS $OPTARG"
+			fi
+			;;
+	esac
+done
+
+[ $OPTIND -eq $[$#-1] ] || usage
+
+shift $[$OPTIND-1]
+
+USER="$(echo "$1" |sed -n "s/@.*//p")"
+HOST="$(echo "$1" |sed -ne "s/[^@]*@//" -e "s/:.*//p")"
+R_FILE="$(echo "$1" |sed -n "s/[^:]*://p")"
+
+[ -n "$USER" ] || USER="$LOGNAME"
+
+[ -n "$HOST" -a -n "$R_FILE" ] || usage
+
+if [ -d "$2" ]; then
+	L_FILE="$2/$(basename $R_FILE)"
+else
+	L_FILE="$2"
+fi
+
+if [ ! -f "$L_FILE" -o ! -r "$L_FILE" -o ! -w "$L_FILE" ]; then
+	echo "$PROG: Destination file should exist and be both readable and writable"
+	exit 1
+fi
+
+SIZE=$[$(wc -c "$L_FILE" |sed -e "s/[ ]*//" -e "s/ .*//") / 1024]
+
+echo "$PROG: Restarting at $[$SIZE * 1024]"
+
+: ${SSH:=ssh}
+"$SSH" -a -x $OPTS -l "$USER" "$HOST" \
+  "dd if=$R_FILE bs=1k count=$SIZE 2>>/dev/null |md5sum;" \
+  "dd if=$R_FILE bs=1k skip=$SIZE count=1024k 2>>/dev/null" |
+(
+	if read; then
+		L_SUM="$(dd if="$L_FILE" bs=1k count=$SIZE 2>>/dev/null |md5sum |sed -n "s/ .*//p")"
+		R_SUM="$(echo "$REPLY" |sed -n "s/ .*//p")"
+
+		if [ "$L_SUM" != "$R_SUM" ]; then
+			echo "$PROG: Checksum doesn't match"
+			exit 1
+		fi
+		if [ -n "$VERBOSE" ]; then
+			echo "$PROG: Received checksum"
+		fi
+	else
+		echo "$PROG: No checksum received"
+		exit 1
+	fi
+
+	dd of="$L_FILE" bs=1k seek=$SIZE count=1024k 2>>/dev/null
+)
+
+RETVAL=$?
+
+if [ -n "$VERBOSE" ]; then
+	NEW_SIZE=$[$(wc -c "$L_FILE" |sed -e "s/[ ]*//" -e "s/ .*//") / 1024]
+	echo "$PROG: Received $[NEW_SIZE-SIZE]k"
+fi
+
+exit $RETVAL

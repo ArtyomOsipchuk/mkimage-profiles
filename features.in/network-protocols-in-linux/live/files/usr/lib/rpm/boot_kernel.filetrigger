@@ -1,0 +1,164 @@
+#!/bin/sh -f
+#
+# RPM filetrigger for kernel install.
+
+# nothing to do if either /proc or /sys is not mounted
+[ -d /proc/sys -a -d /sys/class ] ||
+	exit 0
+
+BOOTDIR=/boot
+VMLINUZ_PREFIX=/boot/vmlinuz
+MODULES_PREFIX=/lib/modules
+UCODE_PREFIX=/lib/firmware
+INITRD_AUTOUPDATE=
+
+. /etc/sysconfig/installkernel
+
+INSTALLKERNEL_ARGS=
+KEEP_INITRD=
+
+if [ -z "$INITRD_AUTOUPDATE" ]; then
+	INITRD_AUTOUPDATE=default
+elif [ "$INITRD_AUTOUPDATE" = none ]; then
+	KEEP_INITRD=--keep-initrd
+fi
+
+if [ -d /sys/firmware/devicetree -a ! -d /sys/firmware/efi ]; then
+	WITH_UBOOT=--uboot
+	INSTALLKERNEL_ARGS="$INSTALLKERNEL_ARGS ${WITH_UBOOT}"
+fi
+
+update_default_kernel()
+{
+	local SUFFIX= LINK= PATTERN= DEFAULT= INITRD= NEW= VERSION=
+	SUFFIX="$1"; shift
+	LINK="$VMLINUZ_PREFIX$SUFFIX"
+	PATTERN="$VMLINUZ_PREFIX-$1"; shift
+
+	DEFAULT=$(readlink -e "$LINK")
+	# default kernel still exists -> nothing to do
+	[ -z "$DEFAULT" ] || return 0
+
+	# remove stale files
+	INITRD="/boot/initrd${LINK#$VMLINUZ_PREFIX}.img"
+	rm -f "$LINK" "$INITRD"
+	if [ -n "$WITH_UBOOT" ]; then
+		UIMAGE="/boot/uimage${LINK#$VMLINUZ_PREFIX}"
+		UINITRD="/boot/uinitrd${LINK#$VMLINUZ_PREFIX}"
+		rm -f $UIMAGE $UINITRD
+	fi
+
+	NEW=$(set +f; ls -c $PATTERN 2> /dev/null | head -1)
+	# no candidates found -> nothing to do
+	[ -f "$NEW" ] || return 0
+
+	VERSION=${NEW#$VMLINUZ_PREFIX-}
+	if [ -n "$SUFFIX" ]; then
+		# non-empty suffix -> changing the flavour:
+		# avoid changing default (/boot/vmlinuz) symlink,
+		# keep already generated initrd image unchanged
+		/sbin/installkernel $INSTALLKERNEL_ARGS --keep-initrd --nodefault "$VERSION"
+	else
+		# change default (/boot/vmlinuz) symlink
+		/sbin/installkernel $INSTALLKERNEL_ARGS $KEEP_INITRD "$VERSION"
+	fi
+}
+
+kernel_versions_handled=
+handle_kernel()
+{
+	local f= VERSION= KFLAVOUR=
+	f="$1"; shift
+	# filename format: $VMLINUZ_PREFIX-<kversion>-<kflavour>-<krelease>
+	VERSION=${f#$VMLINUZ_PREFIX-}
+	KFLAVOUR=${VERSION#*-}; KFLAVOUR=${KFLAVOUR%-*}
+	kernel_versions_handled="$kernel_versions_handled $VERSION"
+	if [ -f "$f" ]; then
+		# file exists -> install kernel
+		/sbin/installkernel $INSTALLKERNEL_ARGS "$VERSION"
+	else
+		# file does not exist -> uninstall kernel
+		/sbin/installkernel $INSTALLKERNEL_ARGS -r "$VERSION"
+
+		# update default kernel if necessary
+		update_default_kernel "" "[0-9].*-alt*"
+
+		# update per-flavour default kernel if necessary
+		update_default_kernel "-$KFLAVOUR" "[0-9].*-$KFLAVOUR-*"
+	fi
+}
+
+module_versions_handled=
+last_added=
+handle_module()
+{
+	local f= VERSION=
+	f="$1"; shift
+	# filename format: $MODULES_PREFIX/<version>/*
+	VERSION=${f#$MODULES_PREFIX/}
+	VERSION=${VERSION%%/*}
+	[ "$last_added" = "$VERSION" ] ||
+		module_versions_handled="$module_versions_handled
+$VERSION"
+	last_added="$VERSION"
+}
+
+is_kernel_version_handled()
+{
+	local v="$1"; shift
+	for k in $kernel_versions_handled; do
+		if [ "$k" = "$v" ]; then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+ucode_detected=
+while read f; do
+	case "$f" in
+		$VMLINUZ_PREFIX-[0-9].*-*-*)
+			handle_kernel "$f"
+			;;
+		$MODULES_PREFIX/*-*-*/*/*.ko*)
+			handle_module "$f"
+			;;
+		$UCODE_PREFIX/*-ucode/*)
+			ucode_detected=1
+			;;
+	esac
+done
+
+if [ -n "$ucode_detected" ] && [ "$INITRD_AUTOUPDATE" != none ]; then
+	if [ "$INITRD_AUTOUPDATE" = all ]; then
+		set +f
+		ls -c $VMLINUZ_PREFIX-[0-9].*-*-* 2> /dev/null | while read f; do
+			VERSION=${f#$VMLINUZ_PREFIX-}
+			if is_kernel_version_handled "$VERSION"; then
+				continue
+			fi
+			# regenerate initrd image without updating symlinks
+			/sbin/installkernel $INSTALLKERNEL_ARGS --nodefault --noflavour "$VERSION"
+		done
+		set -f
+	else # $INITRD_AUTOUPDATE = default
+		# regenerate initrd image for default kernel without updating symlinks
+		VERSION="$(readlink -e /boot/vmlinuz)"
+		VERSION="${VERSION#$VMLINUZ_PREFIX-}"
+		is_kernel_version_handled "$VERSION" ||
+			/sbin/installkernel $INSTALLKERNEL_ARGS --nodefault --noflavour "$VERSION"
+	fi
+fi
+
+if [ -n "$module_versions_handled" ]; then
+	module_versions_handled="$(printf '%s\n' "$module_versions_handled" |sort -u)"
+	for m in $module_versions_handled; do
+		if is_kernel_version_handled "$m"; then
+			continue
+		fi
+		if [ -f "$BOOTDIR/System.map-$m" ]; then
+			/sbin/depmod -a -F "$BOOTDIR/System.map-$m" "$m"
+		fi
+	done
+fi

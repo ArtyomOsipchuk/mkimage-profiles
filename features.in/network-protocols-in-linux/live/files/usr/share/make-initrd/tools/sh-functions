@@ -1,0 +1,65 @@
+#!/bin/bash -efu
+
+if [ -z "${__included_make_initrd_sh_functions-}" ]; then
+__included_make_initrd_sh_functions=1
+
+. shell-error
+
+# shellcheck disable=SC2153
+export verbose="${VERBOSE:+-v}"
+
+export workdir="${WORKDIR:?Work directory required}"
+export rootdir="${ROOTDIR:?Root directory required}"
+export guessdir="${GUESSDIR:?Autodetect directory required}"
+export reportdir="${REPORTDIR:?Bug report directory required}"
+export imagefile="${IMAGEFILE-}"
+export modules_ignore=" ${MODULES_IGNORE-} "
+
+export compress_method="${COMPRESS-}"
+export outfile="$workdir/initrd.img"
+export kernel="${KERNEL:?}"
+export kernel_modules_dir="${KERNEL_MODULES_DIR:?}"
+
+kernel_major="${kernel%%.*}"
+kernel_minor="${kernel#*.}"
+kernel_minor="${kernel_minor%%.*}"
+kernel_patch="${kernel#*.*.}"
+kernel_patch="${kernel_patch%%[!0-9]*}"
+
+export kernel_major kernel_minor kernel_patch
+
+if [ -z "${kernel_major##*[!0-9]*}" ] ||
+   [ -z "${kernel_minor##*[!0-9]*}" ] ||
+   [ -z "${kernel_patch##*[!0-9]*}" ]
+then
+	fatal "Invalid kernel version \"$kernel\""
+fi
+
+[ -d "$kernel_modules_dir" ] ||
+	fatal "Directory \"$kernel_modules_dir\" doesn't exist or not accessible."
+
+get_majmin() {
+	local v devnode
+
+	devnode="$(readlink -ev "$1" 2>/dev/null)" ||
+		return 1
+
+	v="$(stat -c '%02t:%02T' "$devnode")" &&
+		printf '%d:%d\n' "0x${v%:*}" "0x${v#*:}" ||
+		return 1
+}
+
+readline() {
+	local __v=
+	# shellcheck disable=SC2162
+	read __v < "$2" ||:
+	eval "$1=\"\$__v\""
+}
+
+list_libs() {
+	local ldconfig
+	ldconfig="$(type -P ldconfig)" || return 0
+	$ldconfig -p | sed -n -e 's,.* => ,,p'
+}
+
+fi #__included_make_initrd_sh_functions

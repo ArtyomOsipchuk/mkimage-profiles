@@ -1,0 +1,12 @@
+# This file is part of systemd.
+#
+# Used by systemd --user instances.
+
+account		include		common-login
+-account	sufficient	pam_systemd_home.so
+-session	optional	pam_selinux.so close
+-session	optional	pam_selinux.so nottys open
+session		include		common-login
+session		required	pam_loginuid.so
+session		optional	pam_keyinit.so force revoke
+-session	optional	pam_systemd_home.so

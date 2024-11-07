@@ -1,0 +1,10 @@
+#INITRD_GENERATOR=make-initrd
+MKINITRD=/usr/sbin/mkinitrd-make-initrd
+# INITRD_AUTOUPDATE values:
+# none: Never update initrd.
+# default: Update initrd for default kernel on ucode update and
+#          when default kernel is changed  (e.g. old default kernel
+#          is removed).
+# all: Update initrds for all kernels on ucode update.
+# Empty INITRD_AUTOUPDATE means 'default'.
+#INITRD_AUTOUPDATE=default

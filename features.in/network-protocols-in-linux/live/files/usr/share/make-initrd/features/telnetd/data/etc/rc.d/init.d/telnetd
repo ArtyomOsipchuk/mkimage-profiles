@@ -1,0 +1,29 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          telnetd
+# Required-Start:    network-up
+# Default-Start:     3 4 5
+### END INIT INFO
+
+. /etc/init.d/template
+
+NAME=telnetd
+PIDFILE=/var/run/$NAME.pid
+ARGS="--lockfile $LOCKFILE --pidfile $PIDFILE --displayname $NAME"
+EXTRA_ARGS=
+
+SourceIfNotEmpty /etc/$NAME/$NAME.conf
+
+start() {
+	start_daemon --make-pidfile $ARGS -- $NAME -F -K $EXTRA_ARGS
+	RETVAL=$?
+	return $RETVAL
+}
+
+stop() {
+	stop_daemon $ARGS -- $NAME
+	RETVAL=$?
+	return $RETVAL
+}
+
+switch "${1-}"

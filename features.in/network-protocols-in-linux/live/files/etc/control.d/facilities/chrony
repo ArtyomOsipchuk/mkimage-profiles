@@ -1,0 +1,26 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+CONFIG=/etc/chrony.conf
+EXE=/etc/init.d/chrony
+
+new_subst server \
+	'^[[:space:]]*allow[[:space:]]' \
+	's,^#\([[:space:]]*allow[[:space:]].*\),allow all,'
+new_subst client \
+	'^[[:space:]]*#allow[[:space:]]' \
+	's,^\([[:space:]]*allow[[:space:]]\),#\1,'
+
+new_help client "Disable access to the chrony server by commenting \"allow \" directive, see man 5 chrony.conf"
+new_help server "Enable access to the chrony server by uncommenting or adding \"allow all\" directive, see man 5 chrony.conf"
+
+new_summary "Network Time Protocol daemon Chrony"
+
+is_builtin_mode "$*" ||
+	[ "$*" != "`control_subst "$CONFIG" status`" ] || exit 0
+
+control_subst "$CONFIG" "$*" || exit 1
+
+is_builtin_mode "$*" ||
+	[ ! -x "$EXE" ] || "$EXE" condrestart || exit 0

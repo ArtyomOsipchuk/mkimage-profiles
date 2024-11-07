@@ -1,0 +1,19 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+CONFIG=/etc/openssh/sshd_config
+
+new_subst enabled \
+	'^Subsystem[[:space:]]+sftp[[:space:]]+/usr/lib/openssh/sftp-server\>' \
+	's,^#\(Subsystem[[:space:]]\+sftp[[:space:]]\+/usr/lib/openssh/sftp-server\>\),\1,'
+new_subst disabled \
+	'^#Subsystem[[:space:]]+sftp[[:space:]]+/usr/lib/openssh/sftp-server\>' \
+	's,^\(Subsystem[[:space:]]\+sftp[[:space:]]\+/usr/lib/openssh/sftp-server\>\),#\1,'
+
+new_help enabled 'Enable SFTP subsystem'
+new_help disabled 'Disable SFTP subsystem'
+
+new_summary 'OpenSSH SFTP server subsystem'
+
+control_subst "$CONFIG" "$*"

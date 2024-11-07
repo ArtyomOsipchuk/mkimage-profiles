@@ -1,0 +1,75 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+PING_DIR=/usr/libexec/ping/
+
+_filter_name_list()
+{
+	local nlist= name=
+	for name in $(control_list); do
+		case "$name" in
+			ping_*) continue;;
+			*) nlist="$nlist${nlist:+ }$name";;
+		esac
+	done
+	printf "%s\n" "$nlist"
+}
+
+new_help public "Any user can execute ping command"
+new_help netadmin "Only \"netadmin\" group members can execute ping command"
+new_help restricted "Only root can execute ping command"
+new_help public_caps "Any user can execute ping command (for containers only)"
+new_help netadmin_caps "Only \"netadmin\" group members can execute ping command (for containers only)"
+
+new_summary 'check if host is up'
+
+new_fmode public 711 root netadmin
+new_fmode netadmin 710 root netadmin
+new_fmode restricted 700 root netadmin
+new_fmode ping_caps 2711 root iputils 'cap_net_raw=p cap_net_admin=p'
+new_fmode ping_nocaps 2711 root iputils
+
+case "$*" in
+	status|'')
+		STATUS1="$(control_fmode "$PING_DIR" status)"
+		RC=$?
+		if [ "$STATUS1" != 'public' ] && [ "$STATUS1" != 'netadmin' ]; then
+			printf "%s\n" "$STATUS1"
+			exit $RC
+		fi
+		STATUS2="$(control_fmode "$PING_DIR"/ping status)"
+		case "$STATUS2" in
+			ping_caps)
+				printf "%s_%s\n" "$STATUS1" caps
+				exit 0
+				;;
+			ping_nocaps)
+				printf "%s\n" "$STATUS1"
+				exit 0
+				;;
+			*)
+				printf "%s\n" "$STATUS2"
+				exit 1
+				;;
+		esac
+		;;
+	public_caps)
+		control_fmode "$PING_DIR" public || exit 1
+		control_fmode "$PING_DIR"/ping ping_caps || exit 1
+		;;
+	netadmin_caps)
+		control_fmode "$PING_DIR" netadmin || exit 1
+		control_fmode "$PING_DIR"/ping ping_caps || exit 1
+		;;
+	help)
+		control_help $(_filter_name_list)
+		;;
+	list)
+		_filter_name_list
+		;;
+	*)
+		control_fmode "$PING_DIR"/ping ping_nocaps || exit 1
+		control_fmode "$PING_DIR" "$*" || exit 1
+		;;
+esac

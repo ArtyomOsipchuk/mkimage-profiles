@@ -1,0 +1,51 @@
+# macros for use with pesign
+#
+# this makes it possible to invoke your build as:
+# rpmbuild --define 'pe_signing_token test2' --define "pe_signing_cert signing key for test2" -ba shim.spec
+# and then in the spec do:
+# %pesign -s -i shim.orig -o shim.efi
+# And magically get the right thing.
+
+%__pesign_token %{nil}%{?pe_signing_token:-t "%{pe_signing_token}"}
+%__pesign_cert %{!?pe_signing_cert:"Red Hat Test Certificate"}%{?pe_signing_cert:"%{pe_signing_cert}"}
+
+%__pesign_client_token %{!?pe_signing_token:"Fedora Signer (OpenSC Card)"}%{?pe_signing_token:"%{pe_signing_token}"}
+%__pesign_client_cert %{!?pe_signing_cert:"/CN=Fedora Secure Boot Signer"}%{?pe_signing_cert:"%{pe_signing_cert}"}
+
+# -i <input filename>
+# -o <output filename>
+# -C <output cert filename>
+# -e <output sattr filename>
+# -c <input certificate filename>	# rhel only
+# -n <input certificate name>		# rhel only
+# -a <input ca cert filename>		# rhel only
+# -s 					# perform signing
+%pesign(i:o:C:e:c:n:a:s)						\
+  if [ '%{_target_cpu}' == 'x86_64' ]; then                            \
+    out="%{-o*}%{!-o:`mktemp pesign-XXXXXXX.efi`}"                     \
+    if [ -S /var/run/pesign/socketdir/socket ]; then                   \
+      pesign-client -c 'ALT Linux UEFI SB Signer'                      \\\
+		    %{-i} -o "$out" %{-e} %{-s} %{-C}                   \
+    else								\
+      pesign %{__pesign_token} %{__pesign_cert}                                \\\
+	     %{-i} -o "$out" %{-e} %{-s} %{-C} ||:                      \
+    fi									\
+  else									\
+    if [ -n "%{-i*}" -a -n "%{-o*}" ]; then				\
+      mv "%{-i*}" "%{-o*}"                                             \
+    elif [ -n "%{-i*}" -a -n "%{-e*}" ]; then				\
+      touch "%{-e*}"                                                   \
+    fi									\
+  fi									\
+  if [ -s "$out" ]; then                                               \
+     chmod 644 "$out"                                                  \
+     if [ -z "%{-o*}" -o "%{-i*}" = "%{-o*}" ]; then                   \
+       mv "$out" "%{-i*}"                                              \
+     fi                                                                \
+  else									\
+    if [ -e "$out" ]; then                                             \
+      rm -f "$out"                                                     \
+    fi									\
+    echo "pesign failed"                                               \
+  fi ;
+

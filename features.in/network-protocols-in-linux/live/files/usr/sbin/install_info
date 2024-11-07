@@ -1,0 +1,2 @@
+#!/bin/sh -e
+echo >&2 "${0##*/}: WARNING: Invocation from $RPM_INSTALL_NAME %post script ignored."

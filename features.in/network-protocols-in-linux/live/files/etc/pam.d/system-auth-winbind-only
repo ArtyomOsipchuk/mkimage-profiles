@@ -1,0 +1,5 @@
+#%PAM-1.0
+auth		required	pam_winbind.so krb5_auth
+account		required	pam_winbind.so
+password	required	pam_winbind.so
+session		required	pam_winbind.so

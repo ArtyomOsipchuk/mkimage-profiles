@@ -1,0 +1,43 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+CONFIG=/etc/pam.d/su
+BINARY=/bin/su
+
+new_subst public \
+	'^#auth[[:space:]]+required[[:space:]]+(/lib/security/)?pam_wheel\.so' \
+	's,^\(auth[[:space:]]\+required[[:space:]]\+\(/lib/security/\)\?pam_wheel\.so\),#\1,'
+new_fmode public 4711 root root
+new_subst wheel \
+	'^auth[[:space:]]+required[[:space:]]+(/lib/security/)?pam_wheel\.so' \
+	's,^#\(auth[[:space:]]\+required[[:space:]]\+\(/lib/security/\)\?pam_wheel\.so\),\1,'
+new_fmode wheelonly 4710 root wheel
+new_fmode restricted 700 root root
+
+new_help public "Any user can execute $BINARY"
+new_help wheel "Any user can execute $BINARY, but only \"wheel\" group members can switch to superuser"
+new_help wheelonly "Only \"wheel\" group members can execute $BINARY"
+new_help restricted "Only root can execute $BINARY"
+
+case "$*" in
+status|'')
+	STATUS="`control_fmode "$BINARY" status`" || exit 1
+	if [ "$STATUS" = "public" ]; then
+		control_subst "$CONFIG" status || exit 1
+	else
+		test -z "$STATUS" || echo "$STATUS"
+	fi
+	;;
+public|wheel)
+	control_fmode "$BINARY" public || exit 1
+	control_subst "$CONFIG" "$*" || exit 1
+	;;
+wheelonly|restricted)
+	control_fmode "$BINARY" "$*" || exit 1
+	control_subst "$CONFIG" public || exit 1
+	;;
+*)
+	control_fmode "$BINARY" "$*" || exit 1
+	;;
+esac

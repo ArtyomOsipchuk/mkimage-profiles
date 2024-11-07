@@ -1,0 +1,8 @@
+#!/bin/sh -efu
+
+trust extract --format=pem-bundle --filter=ca-anchors --overwrite \
+	--comment --purpose server-auth $EXTRACT_DIR/pem/tls-ca-bundle.pem
+trust extract --format=pem-bundle --filter=ca-anchors --overwrite \
+	--comment --purpose email $EXTRACT_DIR/pem/email-ca-bundle.pem
+trust extract --format=pem-bundle --filter=ca-anchors --overwrite \
+	--comment --purpose code-signing $EXTRACT_DIR/pem/objsign-ca-bundle.pem

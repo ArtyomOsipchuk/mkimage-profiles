@@ -1,0 +1,244 @@
+#!/bin/bash -efu
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+. shell-error
+. shell-getopt
+. shell-args
+
+PROG="${0##*/}"
+TEMPDIR=
+BOOTDIR="/boot"
+SYSFS_PATH="${SYSFS_PATH:-/sys}"
+PROCFS_PATH="${PROCFS_PATH:-/proc}"
+KERNEL="$(uname -r)"
+VERBOSE=
+FEATURE_NAMES=
+no_depmod=
+no_checks=
+config=
+
+print_version() {
+	cat <<-EOF
+	make-initrd version 2.31.0
+	Written by Alexey Gladkov, Kirill Shutemov.
+
+	Copyright (C) 2009,2010  Alexey Gladkov <gladkov.alexey@gmail.com>
+	Copyright (C) 2009,2010  Kirill A. Shutemov <kirill@shutemov.name>
+	This is free software; see the source for copying conditions.  There is NO
+	warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	EOF
+	exit
+}
+
+show_help() {
+	cat <<-EOF
+
+	Usage: make-initrd [<option>]
+	   or: make-initrd guess-modules [<device>|<directory>]
+	   or: make-initrd guess-config
+	   or: make-initrd bug-report
+
+	make-initrd is a new, uevent-driven initramfs
+	infrastructure based around udev.
+
+	Without options, the program generates images
+	for all the configuration files.
+
+	bug-report
+	               makes the archive for developers
+	               when bug happens;
+
+	guess-config
+	               guesses the current configuration
+	               and generates the config file;
+
+	guess-modules [<device>|<directory>]
+	               shows kernel module needed to mount
+	               specified mountpoint or block device;
+
+	feature-info [name [name1...]]
+	               shows information about feature;
+
+	Options:
+	   -D, --no-depmod        don't recreate a list of module dependencies;
+	   -N, --no-checks        don't check /dev, /proc and the kernel
+	                          modules directory;
+	   -c, --config=FILE      set custom config file;
+	   -b, --bootdir=DIR      set boot directory (default: /boot);
+	   -k, --kernel=VERSION   set kernel version (default: currently
+	                          running kernel);
+	   -v, --verbose          print a message for each action;
+	   -V, --version          output version information and exit;
+	   -h, --help             display this help and exit.
+
+	Report bugs to authors.
+
+	EOF
+	exit
+}
+
+exit_handler() {
+	trap - EXIT
+	[ -z "$TEMPDIR" ] || rmdir -- "$TEMPDIR" 2>/dev/null ||:
+	exit $1
+}
+
+# Check WORKDIR for 'noexec' mount option.
+check_noexec() {
+	local rc=0
+	printf '#!/bin/sh\nexit 0\n' > "$TEMPDIR/check"
+
+	if ! chmod 700 -- "$TEMPDIR/check"; then
+		rc=1
+	fi
+
+	if [ "$rc" = 0 ] && [ ! -x "$TEMPDIR/check" ]; then
+		message "$WORKDIR: Unable to check executable bit"
+		rc=1
+	fi
+
+	if [ "$rc" = 0 ] && ! "$TEMPDIR/check"; then
+		message "$WORKDIR: Unable to execute script in this directory"
+		rc=1
+	fi
+
+	rm -f -- "$TEMPDIR/check"
+	return $rc
+}
+
+TEMP=`getopt -n "$PROG" -o 'b:,c:,k:,D,N,h,v,V' -l 'bootdir:,config:,kernel:,no-depmod,no-checks,help,verbose,version' -- "$@"` ||
+	show_usage
+eval set -- "$TEMP"
+
+while :; do
+	case "$1" in
+		-b|--bootdir) shift
+			BOOTDIR="$(opt_check_dir --bootdir "$1")"
+			;;
+		-c|--config) shift
+			config="$(opt_check_read --config "$1")"
+			;;
+		-k|--kernel) shift
+			[ -z "$1" ] || KERNEL="$1"
+			;;
+		-D|--no-depmod)
+			no_depmod=1
+			;;
+		-N|--no-checks)
+			no_checks=1
+			;;
+		-h|--help)
+			show_help
+			;;
+		-v|--verbose)
+			VERBOSE=1
+			;;
+		-V|--version)
+			print_version
+			;;
+		--) shift
+			break
+			;;
+		*)
+			fatal "Unknown option: $1"
+			;;
+	esac
+	shift
+done
+
+case "${1-}" in
+	guess-config|bug-report)
+		;;
+	guess-modules)
+		[ "$#" -eq 2 ] ||
+			fatal "More arguments required"
+
+		INITRD_CONFIG=/dev/null
+		GUESS_MOUNTPOINTS=
+		DEVICES=
+
+		if [ -d "$2" ]; then
+			GUESS_MOUNTPOINTS="$2"
+		elif [ -b "$2" ]; then
+			DEVICES="$2"
+		else
+			fatal "$2: argument type unsupported"
+		fi
+
+		export GUESS_MOUNTPOINTS DEVICES INITRD_CONFIG
+
+		set -- "$1"
+		;;
+	feature-info)
+		shift
+		FEATURE_NAMES="$*"
+		set -- feature-info
+		;;
+esac
+
+if [ -z "$no_checks" ]; then
+	[ -r "/lib/modules/$KERNEL" ] ||
+		fatal "/lib/modules/$KERNEL: Not readable"
+
+	[ -d "/lib/modules/$KERNEL" ] ||
+		fatal "/lib/modules/$KERNEL: Not a directory"
+
+	[ -e "/dev/null" ] ||
+		fatal "/dev: Not available"
+
+	[ -r "$PROCFS_PATH/mounts" ] ||
+		fatal "$PROCFS_PATH/mounts: Not readable"
+
+	grep -qs " $SYSFS_PATH sysfs " "$PROCFS_PATH/mounts" ||
+		fatal "$SYSFS_PATH: Not mounted"
+else
+	export IGNORE_PRIV_CHECKS=1
+fi
+
+TMPDIR="$(readlink -ev "${TMPDIR-/tmp}")"
+
+WORKDIR="${INITRD_WORKDIR-}"
+WORKDIR="${WORKDIR:-${TMPDIR-}}"
+WORKDIR="${WORKDIR:-/tmp}"
+
+[ -d "$WORKDIR" ] ||
+	fatal "$WORKDIR: Not a directory"
+
+trap 'exit_handler $?' EXIT
+trap 'exit_handler  1' HUP PIPE INT QUIT TERM
+TEMPDIR="$(mktemp -d "$WORKDIR/$PROG.XXXXXXXXX")"
+
+if ! check_noexec; then
+	message "Perhaps 'noexec' mount option used?"
+	rm -rf -- "$TEMPDIR"
+	exit 1
+fi
+
+[ -z "$config" ] ||
+	export INITRD_CONFIG_LIST="$config"
+
+[ -z "$no_depmod" ] ||
+	export IGNORE_DEPMOD=1
+
+if ldconfig=$(type -P ldconfig 2>/dev/null); then
+	LIB_DIRS="$($ldconfig -p | sed -n -e 's,.* => \(/.*\)/[^/]\+$,\1,p' | sort -u)"
+	export LIB_DIRS
+fi
+
+export TMPDIR TEMPDIR KERNEL BOOTDIR VERBOSE FEATURE_NAMES
+unset MAKELEVEL
+
+read -r make_version <<EOF
+`make --version`
+EOF
+
+output_sync=
+case "$make_version" in
+	'GNU Make '[0-3].*) ;;
+	'GNU Make '*)
+		output_sync='--output-sync=target'
+		;;
+esac
+
+make $output_sync --no-print-directory -r \
+	-f /usr/share/make-initrd/mk/make-initrd.mk -- "$@" 4>&1 >&2

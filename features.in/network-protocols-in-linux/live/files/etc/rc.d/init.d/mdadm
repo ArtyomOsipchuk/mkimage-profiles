@@ -1,0 +1,75 @@
+#!/bin/sh
+#
+# mdadm	This starts, stops, and reloads the mdadm-based
+#	software RAID monitoring and management facility
+#
+# chkconfig: 2345 15 85
+# description: software RAID monitoring and management
+# processname: mdadm
+# config: /etc/mdadm.conf
+# pidfile: /var/run/mdadm.pid
+#
+
+# Source function library.
+WITHOUT_RC_COMPAT=1
+. /etc/init.d/functions
+
+MDADM_MONITOR_ARGS=""
+SourceIfNotEmpty /etc/sysconfig/mdadm
+
+PIDFILE=/var/run/mdadm.pid
+LOCKFILE=/var/lock/subsys/mdadm
+CONFFILE=/etc/mdadm.conf
+EXPECTUSER=root
+RETVAL=0
+
+call()
+{
+	local fn=$1; shift
+	$fn --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user "$EXPECTUSER" -- mdadm "$@"
+	RETVAL=$?; return $RETVAL
+}
+
+need_start()
+{
+	grep -iwqs noraidtab /proc/cmdline && return 1
+	# Make sure configuration file exists and has information we can use
+	# At least MAILADDR or PROGRAM must be set in order to run mdadm --monitor
+	grep -qs '^[[:space:]]*\(MAILADDR\|PROGRAM\)[[:space:]]\+[^[:space:]]' "$CONFFILE" || return
+	grep -qs '^md[0-9]\+[[:space:]]*:' /proc/mdstat || return
+}
+
+start()
+{
+	need_start || return 0
+	call start_daemon --monitor --scan --daemonise --pid-file=$PIDFILE "$MDADM_MONITOR_ARGS"
+}
+
+stop()
+{
+	call stop_daemon
+}
+
+restart()
+{
+	stop
+	start
+}
+
+case "$1" in
+	start|stop)
+		$1 ;;
+	restart|reload)
+		restart ;;
+	status)
+		call status ;;
+	condstop)
+		[ -e "$LOCKFILE" ] && stop ;;
+	condrestart|condreload)
+		[ -e "$LOCKFILE" ] && restart ;;
+	*)
+		msg_usage "${0##*/} {start|stop|status|restart|condrestart|condstop}"
+		RETVAL=1 ;;
+esac
+
+exit $RETVAL

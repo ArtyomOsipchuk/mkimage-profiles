@@ -1,0 +1,239 @@
+#!/bin/bash
+# Copyright (C) 2008 Vladimir V. Kamarzin <vvk@altlinux.org>
+# Copyright (C) 2020-2023 Vitaly Chikunov <vt@altlinux.org>
+#
+# Remove all kernels except current
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+
+PROG=${0##*/}
+message() {
+	echo >&2 "$PROG: $*"
+}
+
+fatal() {
+	message "$@"
+	exit 1
+}
+
+show_usage()
+{
+	[ -z "$*" ] || message "$*"
+	echo >&2 "Try \`$PROG --help' for more information."
+	exit 1
+}
+
+show_help()
+{
+        cat <<EOF
+Usage: $PROG [options]
+Valid options are:
+	-f, -y, --force   do not ask for removal confirmation (default is to ask)
+	-n, --dry-run     just simulate removal
+	-t, --type        remove old kernels for the specified flavour (un-def, std-def, etc)
+	-a, --all         remove old kernels for all flavours
+	-A                like -a but do not keep other flavours at all
+			  Note: currently booted and backup kernels won't be removed in any case.
+			  Backup kernel is the latest kernel with uptime of more than a day.
+	-B, --no-backup	  Disable logic which keeps backup kernel (i.e. remove it too).
+	-h, --help        show this text and exit
+EOF
+exit 0
+}
+
+#parse command line options
+TEMP=$(getopt -n "$PROG" -o f,B,y,n,t:,h,a,A,v -l force,no-backup,dry-run,type:,help,all,verbose -- "$@") || show_help
+eval set -- "$TEMP"
+
+while :; do
+        case "$1" in
+                --) shift; break
+                        ;;
+                -f|-y|--force) force="-y"
+                        ;;
+		-B|--no-backup)
+			nobackuplogic=1
+			;;
+		-n|--dry-run) dryrun="--no-remove"
+			;;
+		-t|--type) shift ; kernel_flavour="$1"
+			;;
+		-a|--all) all=1
+			;;
+		-A) all=2
+			;;
+		-v|--verbose) verbose=1
+			;;
+                -h|--help) show_help
+        esac
+	shift
+done
+
+if [ -n "$verbose" ]; then
+	V() { echo >&2 "+ $*"; "$@"; }
+else
+	V() { "$@"; }
+fi
+
+cr=$'\n'
+# set colors on tty
+if [ -t 1 ]; then
+        RED=$'\e[1;31m'
+        GREEN=$'\e[1;32m'
+	YELLOW=$'\e[1;33m'
+        MAGENTA=$'\e[1;35m'
+        BRIGHT=$'\e[1m'
+        NORM=$'\e[0m'
+else
+        RED=
+        GREEN=
+	YELLOW=
+        MAGENTA=
+        BRIGHT=
+        NORM=
+fi
+
+uname_r=$(uname -r)
+
+# get running kernel version
+current_kernel_package=$(rpmquery -qf "/lib/modules/$uname_r/kernel" 2>/dev/null)
+if [ -n "$current_kernel_package" ] ; then
+    current_kernel_pkgname=$(rpmquery --queryformat "%{NAME}-%{VERSION}-%{RELEASE}\n" -q "$current_kernel_package")
+    echo "Currently booted kernel package: $BRIGHT$current_kernel_pkgname$NORM"
+    unset current_kernel_pkgname
+else
+    echo "Running kernel version: $BRIGHT$uname_r$NORM (package not found)"
+fi
+
+# set kernel flavour. if not defined with -t option, use current
+current_kernel_flavour="$uname_r"
+current_kernel_flavour="${current_kernel_flavour#*-}"
+current_kernel_flavour="${current_kernel_flavour%-*}"
+if [ -n "$all" ] ; then
+	flavours="$(rpm -qa --queryformat '%{NAME}\n' 'kernel-image-*' | grep -v -w -e domU -e debuginfo | sort -u | cut -d- -f3-)"
+else
+	flavours="${kernel_flavour:-$current_kernel_flavour}"
+fi
+
+# Get the latest kernel with uptime >=1 day
+if [ -z "$nobackuplogic" ] && [ -f "/var/log/wtmp" ]; then
+	good_kernel=$(LC_ALL=C last -a reboot | awk '$ 10 ~ /+/ {print $10,$11; exit }')
+	good_kernel_days=${good_kernel%% *}
+	good_kernel=${good_kernel##* }
+	good_kernel_days=${good_kernel_days#(}
+	good_kernel_days=${good_kernel_days%%+*}
+else
+	good_kernel=
+	good_kernel_days=
+fi
+good_kernel_package=
+if [ -n "$good_kernel" ]; then
+	if [ "$good_kernel" != "$uname_r" ]; then
+		tver=${good_kernel%%-*}
+		trel=${good_kernel##*-}
+		tflv=${good_kernel#"$tver"-}
+		tflv=${tflv%-"$trel"}
+		good_kernel=kernel-image-$tflv-$tver-$trel
+		good_kernel_package=$(rpm -q "$good_kernel" 2>/dev/null)
+		unset tver trel tflv
+		echo "Previous kernel with uptime $good_kernel_days days: $BRIGHT$good_kernel$NORM (backup)"
+		if [ -z "$good_kernel_package" ]; then
+			echo "${RED}Warning: Package for the backup kernel not found.$NORM"
+		fi
+	else
+		echo "Backup kernel is the same as booted kernel (uptime $good_kernel_days days)."
+	fi
+else
+	echo "${YELLOW}Warning: Backup kernel is not determined.$NORM"
+fi
+
+# Sort the kernels
+[ -z "$kernel_flavour" ] && kernel_flavour=$current_kernel_flavour
+other_flavours=
+keep_kernels=
+for flavour in $flavours; do
+	all_kernels="$(rpm -qa "kernel-image-$flavour" | sort -V)"
+	newest_kernel=$(echo "$all_kernels" | tail -1)
+	for kernel in $all_kernels; do
+		reason=
+		if [ "$all" = "2" ] && [ "$kernel_flavour" != "$flavour" ]; then
+			:
+		elif [ "$kernel" = "$newest_kernel" ]; then
+			reason="$reason, latest for $flavour"
+			[ "$kernel_flavour" != "$flavour" ] && other_flavours=y
+		fi
+		if [ "$kernel" = "$current_kernel_package" ]; then
+			reason="$reason, currently booted"
+		fi
+		if [ "$kernel" = "$good_kernel_package" ]; then
+			reason="$reason, with uptime $good_kernel_days days"
+		fi
+		if [ -n "$reason" ]; then
+			keep_kernels="$keep_kernels   $GREEN$kernel$NORM (${reason#, })$cr"
+		else
+			remove_kernels="$remove_kernels   $MAGENTA$kernel$NORM$cr"
+			apt_args_list="$apt_args_list $(rpm -q --queryformat '%{NAME}=%{EPOCH}:%{VERSION}-%{RELEASE}\n' "$kernel" \
+				| sed -e "s,(none):,,g")"
+		fi
+	done
+done
+howmuch=$(echo "$keep_kernels" | grep -c .)
+if [ "$howmuch" -gt 0 ]; then
+	[ "$howmuch" -eq 1 ] && phrase="this kernel" || phrase="these $BRIGHT$howmuch$NORM kernels"
+	echo "Keeping $phrase (with the reason why):"
+	printf "%s" "$keep_kernels"
+	[ -n "$other_flavours" ] && echo "Specify -A to remove all kernels of other flavours than $kernel_flavour."
+	echo
+fi
+
+if [ -z "$apt_args_list" ] ; then
+	echo "Nothing to remove."
+	exit 0
+fi
+
+howmuch=$(echo "$remove_kernels" | grep -c .)
+[ "$howmuch" -eq 1 ] && phrase="this kernel" || phrase="these $BRIGHT$howmuch$NORM kernels"
+echo "Will be removing $phrase:"
+echo "$remove_kernels"
+
+if [ "$UID" != "0" ]; then
+	echo >&2 "${RED}Warning: This program requires root privileges.$NORM"
+fi
+
+echo -n "Confirm" ${dryrun:+--dry-run} "uninstall action for $phrase [Y/n]? "
+if [ -n "$force" ]; then
+	echo "yes"
+else
+	while true; do
+		read -r || { echo "Aborting"; exit 1; }
+		shopt -s nocasematch
+		case "$REPLY" in
+			n|no|q) exit 0 ;;
+			y|ye|yes|'') break ;;
+			*) ;;
+		esac
+		echo -n "[Y/n] "
+		shopt -u nocasematch
+	done
+fi
+
+
+# shellcheck disable=SC2086
+V apt-get -y $dryrun remove $apt_args_list
+
+# Mask non-zero apt exit code on dry run:
+if [ -n "$dryrun" ]; then
+    exit 0
+fi

@@ -1,0 +1,53 @@
+#!/bin/bash -efu
+
+. shell-error
+. network-sh-functions
+
+PROG="$PROG: $NET_IF"
+message_time=1
+
+update()
+{
+	get_iface_confdir &&
+		iface_state_changed "$NET_IF" "iplink" ||
+		return 0
+
+	__handler()
+	{
+		ip_cmd link "$@" dev "$NET_IF"
+	}
+
+	#
+	# `ip link ...` may but should not change the name of the interface.
+	#
+	cd "/sys/class/net/$NET_IF"
+
+	cat_config "$confdir/iplink" __handler &&
+		ip_cmd link set dev "$NET_IF" up ||
+		return 0
+
+	printf '%s mac %s\n' "$NET_IF" "$(cat ./address)" > "$confdir/iftab"
+
+	add_iface_state "$NET_IF" "iplink"
+	add_iface_state "$NET_IF" "iftab"
+
+	if wait_for_link_up "$NET_IF"; then
+		message "create event: network.$NET_EV_TYPE.$NET_EV_ACTION -> network.link.updated"
+		net_event "network.link.updated" "$NET_IF"
+	fi
+}
+
+remove()
+{
+	ip_cmd link set dev "$NET_IF" down ||
+		exit
+
+	del_iface_state "$NET_IF" "iplink"
+
+	message "create event: network.$NET_EV_TYPE.$NET_EV_ACTION -> network.link.removed"
+	net_event "network.link.removed" "$NET_IF"
+}
+
+case "$NET_EV_ACTION" in
+	update|remove) "$NET_EV_ACTION" ;;
+esac

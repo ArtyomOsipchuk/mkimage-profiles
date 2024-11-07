@@ -1,0 +1,9 @@
+#!/bin/sh
+
+SYS_SOURCE_PATH='/usr/share/pki/ca-trust-source'
+ADM_SOURCE_PATH='/etc/pki/ca-trust/source'
+HOOKS_PATH='/usr/libexec/ca-trust/update\.d'
+
+LC_ALL=C grep -Eqs "^($SYS_SOURCE_PATH|$ADM_SOURCE_PATH|$HOOKS_PATH)/" || exit 0
+
+update-ca-trust extract ||:

@@ -1,0 +1,2 @@
+# Pass extra arguments to chronyd
+#CHRONYD_ARGS=

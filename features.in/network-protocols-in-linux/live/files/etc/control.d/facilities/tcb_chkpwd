@@ -1,0 +1,17 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+BINARY=/usr/lib/chkpwd/tcb_chkpwd
+
+new_fmode traditional 4711 root root
+new_fmode tcb 2711 root shadow
+new_fmode restricted 700 root root
+
+new_help tcb "Any user can be authenticated using $BINARY privileged helper when tcb scheme is enabled"
+new_help traditional "Any user can be authenticated using $BINARY privileged helper when tcb scheme is disabled"
+new_help restricted "Only root can be authenticated using $BINARY"
+
+new_summary "tcb authentication helper"
+
+control_fmode "$BINARY" "$*" || exit 1

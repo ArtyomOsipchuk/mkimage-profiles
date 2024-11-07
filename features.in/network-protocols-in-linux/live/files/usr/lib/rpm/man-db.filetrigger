@@ -1,0 +1,5 @@
+#!/bin/sh -efu
+
+if grep -qs '^/usr/share/man/'; then
+	MAN_NO_LOCALE_WARNING=1 mandb -q
+fi

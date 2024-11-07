@@ -1,0 +1,18 @@
+#!/bin/bash -efu
+
+. /.initrd/initenv
+. initrd-sh-functions
+
+mkdir -p -- /.initrd/pipeline/waitdev
+cd /.initrd/pipeline/waitdev
+
+i=0
+while [ "$i" -lt "${WAITDEV:-0}" ]; do
+	eval "spec=\"\${WAITDEV$i-}\""
+
+	if [ -n "$spec" ] && get_dev dev "$spec"; then
+		printf '%s\n' "$dev" > "$i"
+	fi
+
+	i=$(($i + 1))
+done

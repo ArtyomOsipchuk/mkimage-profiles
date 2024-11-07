@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+
+LC_ALL=C grep -E -qs '^/(lib|etc)/udev/rules.d/.+\.rules' && udevadm control --reload >/dev/null 2>&1 ||:

@@ -1,0 +1,4 @@
+# crond config file for limited(8).
+
+NICE_PRIORITY=10
+IONICE_PRIORITY=3

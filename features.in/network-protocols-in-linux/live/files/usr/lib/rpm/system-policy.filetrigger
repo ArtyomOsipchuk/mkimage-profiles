@@ -1,0 +1,13 @@
+#!/bin/sh
+
+LC_ALL=C grep -Eqs '^/etc/pam\.d/system-policy-.' || exit 0
+
+POLICY="$(control system-policy)"
+
+if [ ! -e "/etc/pam.d/system-policy-$POLICY" ]; then
+	if [ "$(control system-auth)" = "local" ]; then
+		control system-policy local
+	else
+		control system-policy remote
+	fi
+fi

@@ -1,0 +1,17 @@
+/var/log/conntrackd.log {
+    missingok
+    nocreate
+    sharedscripts
+    postrotate
+	service conntrackd condrestart >/dev/null 2>&1
+    endscript
+}
+
+/var/log/conntrackd-stats.log {
+    missingok
+    nocreate
+    sharedscripts
+    postrotate
+	service conntrackd condrestart >/dev/null 2>&1
+    endscript
+}

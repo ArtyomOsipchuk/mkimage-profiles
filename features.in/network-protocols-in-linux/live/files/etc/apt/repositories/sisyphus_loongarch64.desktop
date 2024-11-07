@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Icon=sisyphus
+Terminal=false
+Name=ALT Linux Sisyphus (loongarch64)
+X-Sign=sisyphus-loongarch64
+X-Path=/ports/loongarch64/Sisyphus
+X-Has-Noarch=yes
+X-Has-Arepo=no
+X-Components=classic
+X-Has-Arches=loongarch64

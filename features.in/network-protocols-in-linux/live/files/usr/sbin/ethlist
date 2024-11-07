@@ -1,0 +1,85 @@
+#!/bin/bash
+### This file is covered by the GNU General Public License version 2 or later
+### or same of ethtool ⟨http://www.kernel.org/pub/software/network/ethtool/⟩
+###
+### Copyright (C) 2023  ALT Linux Team
+### Author: Sergey Afonin <asy@altlinux.org>
+
+dirs=(/sys/class/net/*/device)
+#     12345678901234567890123
+if [ ${#dirs} -lt 24 ]; then
+    echo "hardware ethernet devices not found"
+    exit 1
+fi
+
+BUS_L=12
+ETH_L=0 # calculated dynamically
+LINK_L=0 # calculated dynamically
+SPEED_L=0 # calculated dynamically
+DUPLEX_L=22
+
+OUT=
+
+for ETH in `ls -d /sys/class/net/*/device | awk -F "/" '{print $5}' | sed "s/\([a-z]*\)\([0-9]\+\)/\1.\2/" | sort -n -t . -k 2.1 | sed "s/\.//"`; do
+
+    if [ -d /sys/class/net/$ETH/device/ieee80211 ]; then # WiFi device
+        continue
+    fi
+
+    ETHTOOL=`ethtool $ETH 2>/dev/null`
+    ETHTOOL_I=`ethtool -i $ETH 2>/dev/null`
+
+    if [[ $ETHTOOL =~ ^.*(Speed:[[:space:]][!/a-zA-Z0-9]+).*(Duplex:[[:space:]][!a-zA-Z0-9]+).*(Link[[:space:]]detected:[[:space:]][a-zA-Z]+) ]]; then
+        SPEED=${BASH_REMATCH[1]}
+        DUPLEX=${BASH_REMATCH[2]}
+        LINK=${BASH_REMATCH[3]}
+    else
+        echo "error parse output of \"ethtool\" for $ETH" >&2
+        SPEED=" "
+        DUPLEX=" "
+        LINK="unsupported by ethtool"
+    fi
+
+    if [[ $ETHTOOL_I =~ ^driver:[[:space:]]([a-zA-Z0-9]+).*bus-info:[[:space:]]([.:/a-zA-Z0-9]+).* ]]; then
+        DRIVER=${BASH_REMATCH[1]}
+        BUS=${BASH_REMATCH[2]}
+    else
+        echo "error parse output of \"ethtool -i\" for $ETH" >&2
+        DRIVER=`ls -dl /sys/class/net/$ETH/device/driver | sed "s|.*/||"`
+        BUS=`ls -dl /sys/class/net/$ETH/device | sed "s|.*/||"`
+    fi
+
+    STR="$ETH ($DRIVER)"
+    if [ ${#STR} -gt $ETH_L ]; then
+        ETH_L=${#STR}
+    fi
+
+    if [ ${#LINK} -gt $LINK_L ]; then
+        LINK_L=${#LINK}
+    fi
+
+    if [ ${#SPEED} -gt $SPEED_L ]; then
+        SPEED_L=${#SPEED}
+    fi
+
+    OUT=${OUT}"$BUS,$ETH ($DRIVER),$LINK,$SPEED,$DUPLEX;"
+
+done
+
+if [ ${#OUT} -eq 0 ]; then
+    echo "ethernet devices not found"
+    exit 1
+fi
+
+B_IFS=$IFS
+IFS=";"
+
+for LINE in $OUT; do
+    if [[ $LINE =~ ([^,]+),([^,]+),([^,]+),([^,]+),([^,]+) ]]; then
+        printf "%-${BUS_L}s  %-${ETH_L}s :  %-${LINK_L}s  %-${SPEED_L}s  %-${DUPLEX_L}s\n" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}" "${BASH_REMATCH[4]}" "${BASH_REMATCH[5]}"
+    fi
+done
+
+IFS=$B_IFS
+
+exit 0

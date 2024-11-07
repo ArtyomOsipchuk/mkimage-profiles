@@ -1,0 +1,38 @@
+#!/bin/bash
+
+if [ -z "${__uevent_sh_functions-}" ]; then
+__uevent_sh_functions=1
+
+. shell-error
+
+uevent_confdb='/.initrd/uevent/confdb'
+
+debugdir='/.initrd/uevent/debug'
+filterdir='/.initrd/uevent/queues'
+ueventdir='/.initrd/uevent/events'
+
+# backward compatibility
+eventdir='/.initrd/uevent/events/udev'
+
+extendir='/lib/uevent/extenders'
+handlerdir='/lib/uevent/handlers'
+
+make_event() {
+	mktemp "$filterdir/${1:-udev}/.tmp/.XXXXXXXXX"
+}
+
+publish_event() {
+	mv -f -- "$2" "${2%/.tmp/*}/$1"
+}
+
+release_event() {
+	local num dummy
+	num=$(/sbin/monotonic-timestamp raw)
+	publish_event "$1.${num:-0.0}${2##*/}" "$2"
+}
+
+done_event() {
+	rm -f -- "$1"
+}
+
+fi

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+. shell-error
+. /.initrd/initenv
+
+PROG="poll: $PROG"
+
+chrooted "$rootmnt" test -e "$INIT" ||
+	fatal "Unable to mount root"

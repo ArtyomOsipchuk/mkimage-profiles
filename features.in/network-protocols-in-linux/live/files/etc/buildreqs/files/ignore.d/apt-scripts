@@ -1,0 +1,4 @@
+^/etc/apt/apt[.]conf[.]d/dedup[.]conf
+^/etc/apt/apt[.]conf[.]d/list-extras[.]conf
+^/etc/apt/apt[.]conf[.]d/list-nodeps[.]conf
+^/etc/apt/apt[.]conf[.]d/list-unreleased[.]conf

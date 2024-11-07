@@ -1,0 +1,17 @@
+# The sudoers security policy requires that most users authenticate themselves
+# before they can use sudo. A password is not required if the invoking user is
+# root, if the target user is the same as the invoking user, or if the policy
+# has disabled authentication for the user or command.
+
+# Unlike su(1), when sudoers requires authentication, it validates the invoking
+# user's credentials, not the target user's (or root's) credentials.
+# This can be changed via the rootpw, targetpw and runaspw flags.
+
+# User account type of credentials that are verified during sudo authentication:
+# - by default: ask for the password of the invoking user;
+# - rootpw:     ask for the password of the root;
+# - targetpw:   ask for the password of the target user;
+# - runaspw:    ask for the password of the special user defined by the
+#               runas_default option (defaults to root).
+
+# Defaults userpw # Flag of user account type of credentials for authentication.

@@ -1,0 +1,27 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+CONFIG_COMMON=/etc/pam.d/system-auth-common
+CONFIG_SYSTEM=/etc/pam.d/system-auth
+
+if [ -f "$CONFIG_COMMON" ]; then
+	CONFIG="$CONFIG_COMMON"
+else
+	CONFIG="$(readlink -e "$CONFIG_SYSTEM")" ||
+	CONFIG="$CONFIG_SYSTEM"
+fi
+
+new_summary "pam_mktemp support in system authentication"
+
+new_subst enabled \
+        '^(account|session)[[:space:]]+required[[:space:]]+pam_mktemp.so[[:space:]]*$' \
+        's,^#\(\(account\|session\)[[:space:]]\+required[[:space:]]\+pam_mktemp.so[[:space:]]*\)$,\1,'
+new_subst disabled \
+        '^#(account|session)[[:space:]]+required[[:space:]]+pam_mktemp.so[[:space:]]*$' \
+        's,^\(\(account\|session\)[[:space:]]\+required[[:space:]]\+pam_mktemp.so[[:space:]]*\)$,#\1,'
+
+new_help enabled "Enable pam_mktemp support"
+new_help disabled "Disable pam_mktemp support"
+
+control_subst "$CONFIG" "$*"

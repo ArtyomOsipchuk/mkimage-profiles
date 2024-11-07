@@ -1,0 +1,57 @@
+#!/bin/bash -efu
+
+. sh-functions
+. "$SYSFS_PATH/dev/block/$1/uevent"
+
+[ -n "${DEVNAME-}" ] ||
+	fatal "unable to find device name in \`$SYSFS_PATH/dev/block/$1/uevent'"
+
+MD_UUID=
+MD_CONTAINER=
+# shellcheck disable=SC2046
+eval $(mdadm --detail --export "/dev/$DEVNAME")
+
+[ -z "$MD_CONTAINER" ] || eval "$(mdadm --detail --export "$MD_CONTAINER")"
+
+[ -n "$MD_UUID" ] ||
+	fatal "UUID not found for /dev/$DEVNAME"
+
+uuid="${MD_UUID//:}"
+
+mkdir -p -- "$WORKDIR/root/etc/initrd/md"
+:> "$WORKDIR/root/etc/initrd/md/$uuid"
+
+rules="$WORKDIR/root/etc/udev/rules.d/64-md-raid-assembly-$uuid.rules"
+
+mkdir -p -- "${rules%/*}"
+
+cat > "$rules" <<EOF
+SUBSYSTEM!="block", GOTO="md_inc_end"
+ENV{ID_FS_TYPE}=="linux_raid_member", GOTO="md_inc"
+
+IMPORT{cmdline}="noiswmd"
+IMPORT{cmdline}="nodmraid"
+
+ENV{nodmraid}=="?*", GOTO="md_inc_end"
+ENV{ID_FS_TYPE}=="ddf_raid_member", GOTO="md_inc"
+ENV{noiswmd}=="?*", GOTO="md_inc_end"
+ENV{ID_FS_TYPE}=="isw_raid_member", GOTO="md_inc"
+GOTO="md_inc_end"
+
+LABEL="md_inc"
+
+ENV{ID_FS_UUID}=="${uuid:0:8}-${uuid:8:4}-${uuid:12:4}-${uuid:16:4}-${uuid:20:12}", GOTO="md_uuid_ok"
+IMPORT{program}="/sbin/mdadm --examine --export \$devnode"
+ENV{MD_UUID}=="$MD_UUID", GOTO="md_uuid_ok"
+GOTO="md_inc_end"
+
+LABEL="md_uuid_ok"
+
+ACTION=="add|change", IMPORT{program}="/sbin/mdadm --incremental --export \$devnode --offroot \$env{DEVLINKS}"
+ACTION=="remove", ENV{ID_PATH}=="?*", RUN+="/sbin/mdadm -If \$name --path \$env{ID_PATH}"
+ACTION=="remove", ENV{ID_PATH}!="?*", RUN+="/sbin/mdadm -If \$name"
+
+LABEL="md_inc_end"
+EOF
+
+printf '%s\n' "$rules" "$WORKDIR/root/etc/initrd/md/$uuid"

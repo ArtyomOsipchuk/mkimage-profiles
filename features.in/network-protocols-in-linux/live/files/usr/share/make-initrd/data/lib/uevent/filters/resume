@@ -1,0 +1,12 @@
+#!/bin/bash -efu
+
+. /.initrd/initenv
+. uevent-sh-functions
+. initrd-sh-functions
+
+devresume=
+get_dev devresume "${RESUME-}" ||
+	exit 0
+event="$(make_event)"
+echo "INIT_RESUME='$devresume'" > "$event"
+release_event resume "$event"

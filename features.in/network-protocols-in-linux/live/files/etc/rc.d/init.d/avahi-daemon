@@ -1,0 +1,89 @@
+#!/bin/sh
+#
+# avahi:        Starts the Avahi Daemon
+#
+# chkconfig:    345 50 05
+# description:  This is a daemon which runs on client machines to perform \
+#               Zeroconf service discovery on a network. avahi-daemon must be \
+#               running on systems  that use Avahi for service discovery. \
+#               Avahi-daemon should not be running otherwise.
+# processname:  avahi-daemon
+# config:       /etc/avahi/avahi-daemon.conf
+
+WITHOUT_RC_COMPAT=1
+
+# Source function library.
+. /etc/init.d/functions
+
+RETVAL=0
+PIDFILE=/var/run/avahi-daemon/pid
+LOCKFILE=/var/lock/subsys/avahi
+
+start() {
+    msg_starting $"Avahi mDNS/DNS-SD"
+    start_daemon --lockfile "$LOCKFILE" --pidfile "$PIDFILE" --no-announce --expect-user _avahi -- avahi-daemon -D
+    RETVAL=$?
+    return $RETVAL
+}
+
+stop() {
+    msg_stopping $"Avahi mDNS/DNS-SD"
+    stop_daemon --lockfile "$LOCKFILE" --pidfile "$PIDFILE" --no-announce --expect-user _avahi -- avahi-daemon
+    RETVAL=$?
+    return $RETVAL
+}
+
+reload() {
+    action "Reloading Avahi mDNS/DNS-SD service:" avahi-daemon -r
+    RETVAL=$?
+    return $RETVAL
+}
+
+restart() {
+    stop
+    start
+}
+
+case "$1" in
+    start)
+    start
+    ;;
+    stop)
+    stop
+    ;;
+    restart)
+    restart
+    ;;
+    reload)
+    reload
+    ;;
+    status)
+    status --pidfile "$PIDFILE" --expect-user _avahi -- avahi-daemon
+    RETVAL=$?
+    ;;
+    condstart)
+    if ! [ -f "$LOCKFILE" ]; then
+	start
+    fi
+    ;;
+    condstop)
+    if [ -f "$LOCKFILE" ]; then
+	stop
+    fi
+    ;;
+    condrestart)
+    if [ -f "$LOCKFILE" ]; then
+	restart
+    fi
+    ;;
+    condreload)
+    if [ -f "$LOCKFILE" ]; then
+	reload
+    fi
+    ;;
+    *)
+    msg_usage "${0##*/} {start|stop|status|restart|reload|condstart|condstop|condrestart|condreload}"
+    RETVAL=1
+    ;;
+esac
+exit $RETVAL

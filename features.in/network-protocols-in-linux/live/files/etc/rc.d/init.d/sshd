@@ -1,0 +1,114 @@
+#!/bin/sh
+
+# Init file for OpenSSH server daemon
+#
+# chkconfig: 2345 54 26
+# description: OpenSSH server daemon
+#
+# processname: sshd
+# config: /etc/openssh/sshd_config
+# pidfile: /var/run/sshd.pid
+
+WITHOUT_RC_COMPAT=1
+
+# Source function library.
+. /etc/init.d/functions
+
+# Source networking configuration.
+SourceIfNotEmpty /etc/sysconfig/network
+
+EXTRAOPTIONS=
+PROCESSNAME=sshd
+PIDFILE=/var/run/$PROCESSNAME.pid
+LOCKFILE=/var/lock/subsys/$PROCESSNAME
+
+# Source config.
+SourceIfNotEmpty /etc/sysconfig/$PROCESSNAME
+
+RETVAL=0
+
+gen_host_keys()
+{
+	ssh-keygen -A || exit
+}
+
+start()
+{
+	is_yes "$NETWORKING" || return 0
+	gen_host_keys
+	start_daemon --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user root -- $PROCESSNAME $EXTRAOPTIONS
+	RETVAL=$?
+	return $RETVAL
+}
+
+stop()
+{
+	stop_daemon --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user root -- $PROCESSNAME
+	RETVAL=$?
+	return $RETVAL
+}
+
+do_config_sanity_check()
+{
+        action $"Checking sshd configuration:" $PROCESSNAME $EXTRAOPTIONS -t || exit
+}
+
+reload()
+{
+	do_config_sanity_check
+	gen_host_keys
+	msg_reloading $PROCESSNAME
+	stop_daemon --pidfile "$PIDFILE" --expect-user root -HUP -- $PROCESSNAME
+	RETVAL=$?
+	return $RETVAL
+}
+
+restart()
+{
+	do_config_sanity_check
+	stop
+	start
+}
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	reload)
+		reload
+		;;
+	restart)
+		restart
+		;;
+	condstop)
+		if [ -e "$LOCKFILE" ]; then
+			stop
+		fi
+		;;
+	condrestart)
+		if [ -e "$LOCKFILE" ]; then
+			restart
+		fi
+		;;
+	condreload)
+		if [ -e "$LOCKFILE" ]; then
+			reload
+		fi
+		;;
+	check)
+		do_config_sanity_check
+		;;
+	status)
+		status --pidfile "$PIDFILE" --expect-user root -- $PROCESSNAME
+		RETVAL=$?
+		;;
+	*)
+		msg_usage "${0##*/} {start|stop|reload|restart|condstop|condrestart|condreload|check|status}"
+		RETVAL=1
+esac
+
+exit $RETVAL

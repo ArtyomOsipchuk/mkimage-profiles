@@ -1,0 +1,31 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:            pipeline
+# Required-Start:      uevent udev
+# Should-Start:
+# Required-Stop:
+# Should-Stop:
+# Default-Start:       3 4 5
+# Default-Stop:
+# X-LFS-Provided-By:   LFS
+### END INIT INFO
+
+[ "$1" = start ] || exit 0
+
+. /.initrd/initenv
+
+[ "${ROOT-}" = pipeline ] ||
+	exit 0
+
+dir=/.initrd/pipeline/waitdev
+mkdir -p -- "$dir"
+
+i=0
+while [ "$i" -lt "${WAITDEV:-0}" ]; do
+	touch "$dir/$i"
+	i=$(($i + 1))
+done
+
+. pipeline-sh-functions
+
+pipe_init

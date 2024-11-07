@@ -1,0 +1,48 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:            network-up
+# Required-Start:      uevent udev
+# Default-Start:       3 4 5
+### END INIT INFO
+
+[ "$1" = start ] ||
+	exit 0
+
+. /.initrd/initenv
+. /etc/init.d/functions
+
+msg="Network up"
+
+. network-sh-functions
+
+# wait for network modules
+udevadm settle --timeout=3
+
+ifaces=' '
+while :; do
+	set -- /sys/class/net/*
+
+	up=0
+	for confdir; do
+		NET_IF="${confdir##*/}"
+
+		if [ ! -d "$confdir" ] || [ -z "${ifaces##* $NET_IF *}" ] || ! get_iface_confdir; then
+			up=$(($up + 1))
+			continue
+		fi
+
+		[ -e "/.initrd/online/$NET_IF" ] ||
+			continue
+
+		echo_msg "$msg ($NET_IF):"
+		success "$msg ($NET_IF):"
+
+		ifaces+="$NET_IF "
+		up=$(($up + 1))
+	done
+
+	[ "$#" != $up ] ||
+		break
+
+	sleep 0.1
+done

@@ -1,0 +1,4 @@
+#%PAM-1.0
+auth		required	pam_rootok.so
+account		include		common-login
+session		include		common-login

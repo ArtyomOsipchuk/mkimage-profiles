@@ -1,0 +1,5 @@
+LANG=de_DE@euro
+SYSFONTACM=trivial.trans
+SYSFONT=lat0-sun16
+DICTIONARY=deutsch
+export DICTIONARY

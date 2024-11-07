@@ -1,0 +1,100 @@
+#!/bin/sh -e
+#
+# Copyright (c) 2003,2004 ALT Linux Ltd.
+# Copyright (c) 2003,2004 Stanislav Ievlev <inger@altlinux.org>
+# decode function is written by  Fr. Br. George <george@altlinux.ru>
+#
+# This files defines functions used by alternatives scripts
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+# USA.
+#
+
+. shell-error
+. shell-args
+. shell-quote
+
+export LC_ALL=C
+
+#main work files and directories
+root_dir=/etc/alternatives
+
+auto_dir=$root_dir/auto
+package_dir=$root_dir/packages.d
+links_dir=$root_dir/links
+manual_file=$root_dir/manual
+
+: "${lib_dir:=/usr/share/alternatives}"
+
+awk_options="--traditional"
+sed_options= #"--posix" #WARNING: use this flag only for debugging
+
+print_version()
+{
+	cat <<EOF
+$PROG version 0.4
+
+Written by Stanislav Ievlev
+
+Copyright (C) 2003-2018 ALT Linux Team
+EOF
+	exit
+}
+
+#generate current state of alternatives
+# cat all data, skip non-existence files and
+# choose weights using awk script
+get_list()
+{
+    local args="$@"
+    set -- "$package_dir"/*
+    [ "$*" != "$package_dir/*" ] || return 0
+
+    [ -f "$manual_file" ] ||
+	touch -- "$manual_file"
+
+    local arg1 arg2 arg3
+    (for i in $args; do echo "$i $i ignore"; done; cat -- "$manual_file" "$@") |
+    while read -r arg1 arg2 arg3; do
+	[ -n "$arg1" ] && [ -n "$arg2" ] && [ -n "$arg3" ] || {
+		message "invalid config line: $line"
+		continue
+	}
+	[ -f "$arg2" -o -d "$arg2" ] ||
+		continue
+	printf '%s %s %s\n' "$arg1" "$arg2" "$arg3"
+    done | awk $awk_options -f "$lib_dir/list.awk"
+}
+
+
+#simple pathname encoding
+#/   ---> |
+#|   ---> %|
+#%   ---> %%
+alternatives_encode()
+{
+    sed $sed_options 's,%,%%,g
+	 s,|,%|,g
+	 s,/,|,g'
+}
+
+alternatives_decode()
+{
+    local separator=$(printf '\007')
+    sed  $sed_options "s,%\(.\),$separator\1,g
+	    s,\([^$separator]\|^\)|,\1/,g
+	    s,\([^$separator]\|^\)|,\1/,g
+	    s,$separator,,g"
+}

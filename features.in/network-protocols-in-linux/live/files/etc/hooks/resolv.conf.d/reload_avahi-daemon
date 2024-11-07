@@ -1,0 +1,3 @@
+#!/bin/sh
+
+service messagebus status >/dev/null 2>&1 && service avahi-daemon condreload >/dev/null 2>&1 ||:

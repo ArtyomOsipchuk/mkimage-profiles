@@ -1,0 +1,19 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+CONFIG=/etc/sudoers
+
+new_subst disabled \
+        '^\s*#[#[:space:]]*WHEEL_USERS[[:space:]]+ALL\s*=\s*\(\s*(ALL|ALL\s*:\s*ALL)\s*\)\s+ALL\s*$' \
+        's,^\s*\(WHEEL_USERS[[:space:]]\+ALL\s*=\s*(\s*\(ALL\|ALL\s*:\s*ALL\)\s*)\s\+ALL\)\s*$,#\1,'
+new_subst enabled \
+        '^\s*WHEEL_USERS[[:space:]]+ALL\s*=\s*\(\s*(ALL\s*|\s*ALL\s*:\s*ALL)\s*\)\s+ALL\s*$' \
+        's,^\s*#[#[:space:]]*\(WHEEL_USERS[[:space:]]\+ALL\s*=\s*(\s*\(ALL\|ALL\s*:\s*ALL\)\s*)\s\+ALL\)\s*$,\1,'
+
+new_help enabled 'Enable sudo for wheel users'
+new_help disabled 'Disable sudo for wheel users'
+
+new_summary 'sudo rule "ALL=(ALL:ALL) ALL" for wheel users'
+
+control_subst "$CONFIG" "$*"

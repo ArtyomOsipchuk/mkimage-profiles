@@ -1,0 +1,86 @@
+#! /bin/bash
+# chkconfig:   - 58 74
+# description: Chronyd is an implementation of NTP that supports disconnected
+### BEGIN INIT INFO
+# Provides:          chronyd
+# Required-Start:    $syslog $remote_fs $network $time
+# Should-Start:      $time
+# Required-Stop:     $syslog $remote_fs $network $time
+# Should-Stop:
+# Default-Start:     3 4 5
+# Default-Stop:      0 1 2 6
+# Short-Decription:  Chrony daemon providing system clock synchronization
+# Description:       Chronyd is an implementation of NTP that supports disconnected
+#		operation
+### END INIT INFO
+
+# Source function library.
+WITHOUT_RC_COMPAT=1
+. /etc/init.d/functions
+
+# Source networking configuration.
+SourceIfNotEmpty /etc/sysconfig/network
+
+SourceIfNotEmpty /etc/sysconfig/chronyd
+
+LOCKFILE=/var/lock/subsys/chronyd
+RETVAL=0
+
+start()
+{
+	is_yes "$NETWORKING" || return 0
+	start_daemon --lockfile "$LOCKFILE" -- chronyd $CHRONYD_ARGS
+	RETVAL=$?
+	return $RETVAL
+}
+
+stop()
+{
+	stop_daemon --lockfile "$LOCKFILE" -- chronyd
+	RETVAL=$?
+	return $RETVAL
+}
+
+chronyd_status()
+{
+	status --lockfile "$LOCKFILE" -- chronyd
+	RETVAL=$?
+	return $RETVAL
+}
+
+restart()
+{
+  	stop
+	start
+}
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	reload|restart)
+		restart
+		;;
+	status)
+		chronyd_status
+		;;
+	condstop)
+		if [ -e "$LOCKFILE" ]; then
+			stop
+		fi
+		;;
+	condreload|condrestart)
+		if [ -e "$LOCKFILE" ]; then
+			restart
+		fi
+		;;
+	*)
+		msg_usage "${0##*/} {start|stop|reload|restart|status|condstop|condreload|condrestart}"
+		RETVAL=1
+esac
+
+exit $RETVAL

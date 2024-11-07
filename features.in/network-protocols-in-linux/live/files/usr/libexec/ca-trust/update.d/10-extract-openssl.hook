@@ -1,0 +1,4 @@
+#!/bin/sh -efu
+
+trust extract --format=openssl-bundle --filter=certificates --overwrite \
+	--comment $EXTRACT_DIR/openssl/ca-bundle.trust.crt

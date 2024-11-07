@@ -1,0 +1,64 @@
+#!/bin/sh
+#
+# /etc/rc.d/scripts/cleanup - run once at boot time from rc.sysinit
+#
+
+WITHOUT_RC_COMPAT=1
+
+# Source function library.
+. /etc/init.d/functions
+
+SourceIfNotEmpty /etc/sysconfig/system
+
+# Clean up /
+rm -f /fastboot /fsckoptions /forcefsck /halt /poweroff
+
+# Clean up /var
+find /var/run/ /var/lock/ -type f -delete
+
+rm -rf /tmp/.X*-lock /tmp/.ICE-unix /tmp/.X11-unix /tmp/.esd /tmp/.font-unix
+rm -f /tmp/esrv*
+rm -f /tmp/k{fm,io}_*
+rm -f /tmp/.s.PGSQL.*
+rm -f /tmp/.MediaCon*
+rm -rf /tmp/kde-*
+rm -rf /tmp/ksocket-*
+rm -rf /tmp/mcop-*
+rm -rf /tmp/orbit-*
+rm -rf /tmp/ssh-*
+
+# Clean up /tmp.
+if [ -n "$CLEAN_TMP" ] && [ "$CLEAN_TMP" -ge 1 ]; then
+	(
+		cd /tmp &&
+		    find -mindepth 1 -xdev \
+		    ! -ctime -"$CLEAN_TMP" \
+		    ! \( -name lost+found -uid 0 \) \
+		    ! \( -name quota.user -uid 0 \) \
+		    ! \( -name quota.group -uid 0 \) \
+		    ! \( -name aquota.user -uid 0 \) \
+		    ! \( -name aquota.group -uid 0 \) \
+		    -delete 2>/dev/null
+	)
+fi
+
+/sbin/systemd-tmpfiles --clean
+/sbin/systemd-tmpfiles --remove --create --boot --exclude-prefix=/dev
+
+# Possibly create lastlog, faillog, utmp and wtmp, reset utmp and possibly utmpx.
+for f in /var/log/{lastlog,faillog}; do
+	if [ ! -e $f ]; then
+		touch $f
+		chown root:root $f && chmod 644 $f
+	fi
+done
+for f in /var/log/wtmp /var/run/utmp; do
+	[ -e $f ] && continue
+	touch $f
+	chown root:utmp $f && chmod 664 $f
+done
+> /var/run/utmp
+test -f /var/run/utmpx && > /var/run/utmpx
+
+
+exit 0

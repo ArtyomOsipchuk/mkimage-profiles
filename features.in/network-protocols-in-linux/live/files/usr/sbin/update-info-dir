@@ -1,0 +1,55 @@
+#!/bin/sh -efu
+# update-info-dir
+# create a dir file from all installed info files
+# Copyright 2009 Norbert Preining
+# GPLv2
+
+unset RPM_INSTALL_NAME
+errors=0
+
+if [ -n "${1-}" ]; then
+  INFODIR="$1"; shift
+else
+  INFODIR=/usr/share/info
+fi
+
+cd "$INFODIR"
+
+update_index()
+{
+  if dir="$(readlink -e dir)"; then
+    mv -f -- "$dir" "$dir.old" ||:
+  fi
+
+  find -maxdepth 1 -type f |while read file; do
+    t=${file##*/}
+    t=${t%.gz}
+    t=${t%.bz2}
+    t=${t%.lzma}
+    t=${t%.xz}
+    case "$t" in
+      dir|dir.old|*.png|*-[0-9]|*-[1-9][0-9]|*-[1-9][0-9][0-9])
+        # these files are ignored
+        continue
+        ;;
+      *)
+        install-info --dir-file=dir --info-file="$file" ||
+          errors=$(($errors+1))
+        ;;
+    esac
+  done
+}
+
+find -type d |while read d; do
+  pushd "$d" >/dev/null
+  update_index
+  popd >/dev/null
+done
+
+if [ $errors -gt 0 ]; then
+  echo >&2 "Updating the index of info documentation produced $errors errors."
+fi
+
+exit 0
+
+# vim:set expandtab tabstop=2: #

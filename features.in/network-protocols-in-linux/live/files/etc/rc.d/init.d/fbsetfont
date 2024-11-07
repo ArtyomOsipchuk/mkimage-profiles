@@ -1,0 +1,93 @@
+#!/bin/sh
+#
+# fbsetfont	Framebuffer post initialization
+#
+# chkconfig: 345 33 67
+# description:	Framebuffer post initialization.
+# config: /etc/sysconfig/framebuffer
+
+WITHOUT_RC_COMPAT=1
+
+# Source function library.
+. /etc/init.d/functions
+
+# Default log device.
+LOGDEVICE=/dev/tty12
+
+# Path to programs.
+FBSET=/usr/sbin/fbset
+SETSYSFONT=/sbin/setsysfont
+
+# Parse framebuffer config.
+SourceIfNotEmpty /etc/sysconfig/framebuffer && is_yes "$ENABLE" || exit 0
+
+LOCKFILE=/var/lock/subsys/fbsetfont
+RETVAL=0
+
+foreach_ttys()
+{
+	local i t
+	for i in $TTYS; do
+		t="/dev/tty$i"
+		[ ! -c "$t" ] || "$1" "$t"
+	done
+
+	[ -s /etc/inittab ] ||
+		return 0
+
+	sed -ne 's,^\([0-9]\+\):[0-9]\+:respawn:/s\?bin/\(a\|m\|min\)\?getty\([[:space:]].*\|$\),/dev/tty\1,pg' </etc/inittab |
+	while read t; do
+		[ ! -c "$t" ] || "$1" "$t"
+	done
+}
+
+check_tty()
+{
+	: >>"$1"
+}
+
+setsysfont()
+{
+	"$SETSYSFONT" <"$1" >>"$1" 2>&1
+}
+
+start()
+{
+	# Initializing ttys.
+	foreach_ttys check_tty
+
+	do_setsysfont=
+
+	# Setup videomode if requested.
+	if [ -n "$MODE" ] && [ -x "$FBSET" ]; then
+		: >>"$LOGDEVICE"
+		"$FBSET" -a "$MODE" >>"$LOGDEVICE" 2>&1
+		do_setsysfont=1
+	fi
+
+	[ -z "$MODULE" ] ||
+		do_setsysfont=1
+
+	# Update system font.
+	[ ! -x "$SETSYSFONT" ] || [ -z "$do_setsysfont" ] ||
+		foreach_ttys setsysfont
+
+	touch "$LOCKFILE"
+}
+
+# See how we were called.
+case "$1" in
+	start|reload|restart|condrestart|condreload)
+		start
+		;;
+	stop|condstop)
+		rm -f "$LOCKFILE"
+		;;
+	status)
+		;;
+	*)
+		msg_usage "${0##*/} {start|stop}"
+		RETVAL=1
+esac
+
+exit $RETVAL

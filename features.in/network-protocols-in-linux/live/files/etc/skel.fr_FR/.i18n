@@ -1,0 +1,5 @@
+LANG=fr_FR@euro
+SYSFONT=lat0-sun16
+SYSFONTACM=iso15
+DICTIONARY=french
+export DICTIONARY

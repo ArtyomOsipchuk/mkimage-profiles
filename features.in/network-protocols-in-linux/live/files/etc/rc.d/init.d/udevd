@@ -1,0 +1,332 @@
+#!/bin/sh
+#
+# udevd	init script to setup /dev
+#
+# chkconfig: 2345 02 95
+# description: Manage user-space device nodes in /dev
+# processname: udevd
+# config: /etc/udev/udev.conf
+### BEGIN INIT INFO
+# Provides:          udevd
+# Required-Start:
+# Should-Start:
+# Required-Stop:
+# Should-Stop:
+# Default-Start:  2 3 4 5
+# Default-Stop:   0 1 6
+# Short-Decription: Manage user-space device nodes in /dev
+### END INIT INFO
+
+WITHOUT_RC_COMPAT=1
+
+. /etc/init.d/functions
+
+SourceIfNotEmpty /etc/udev/udev.conf
+
+: ${udev_root:=/dev}
+: ${udev_tmpfs:=1}
+: ${tmpfs_options:=size=5M}
+
+udev_root=${udev_root%/}
+
+prog=udevd
+sysfs_dir=/sys
+udevd=/lib/systemd/systemd-udevd
+systemd_tmpfiles=/sbin/systemd-tmpfiles
+kmod=/bin/kmod
+
+LOCKFILE=/run/lock/subsys/udevd
+RETVAL=0
+
+SYSTEMD_LOG_TARGET=syslog
+export SYSTEMD_LOG_TARGET
+
+RESTORECON=/sbin/restorecon
+[ -x "$RESTORECON" ] && mountpoint -q /selinux ||
+	RESTORECON=
+
+restore_context()
+{
+	[ -n "$RESTORECON" ] || return 0
+	"$RESTORECON" -R "$@"
+}
+
+# If running from rc.sysinit, need to use mount -n (mtab is not yet writable)
+mount_n="${RUN_FROM_SYSINIT:+-n}"
+
+get_pts_attributes()
+{
+	# Warning: /dev/null is not present when this function is called.
+
+	local rc line opts
+	line=`grep -s "[[:space:]]$udev_root/pts[[:space:]]" /proc/mounts | head -1`
+	test -n "$line" || line=`grep -s "[[:space:]]$udev_root/pts[[:space:]]" /etc/fstab | head -1`
+	test -n "$line" || return 1
+	set -- $line ''
+	opts=$4
+	echo $opts
+	return 0
+}
+
+attach_pts_filesystem()
+{
+	# Warning: /dev/null is not present when this function is called.
+
+	test -f /proc/mounts || return 0
+	local RETVAL opts rc
+	opts="`get_pts_attributes`"
+	rc=$?
+	RETVAL=0
+	if test $rc = 0; then
+		mkdir -p "$udev_root"/pts || return $?
+		if grep -q "[[:space:]]$udev_root/pts[[:space:]]" /proc/mounts; then
+			mount -n --move pts "$udev_root"/pts
+		else
+			mount $mount_n -t devpts -o $opts \
+				devpts "$udev_root"/pts
+		fi
+		RETVAL=$?
+	fi
+	return $RETVAL
+}
+
+attach_shm_filesystem()
+{
+	# Warning: /dev/null is not present when this function is called.
+
+	test -f /proc/mounts || return 0
+	mkdir -p "$udev_root"/shm || return $?
+	if grep -q "[[:space:]]$udev_root/shm[[:space:]]" /proc/mounts; then
+		# Already mounted - move to overmounted /dev.
+		mount -n --move shm "$udev_root"/shm
+	elif grep -E -q "^[^#][^[:space:]]*[[:space:]]+$udev_root/shm[[:space:]]" /etc/fstab; then
+		# Listed in fstab - use options from there.
+		# If run from rc.sysinit, defer mount to the later step in
+		# rc.sysinit to get correct mtab entry.
+		if [ -z "$RUN_FROM_SYSINIT" ]; then
+			mount $mount_n "$udev_root"/shm
+		fi
+	else
+		# Not listed in fstab - mount with default options.
+		mount $mount_n -t tmpfs shmfs "$udev_root"/shm
+	fi
+	local RETVAL=$?
+	return $RETVAL
+}
+
+create_static_inodes()
+{
+	mkdir -p /run/tmpfiles.d
+	[ -x "$kmod" ] && $kmod static-nodes --format=tmpfiles --output=/run/tmpfiles.d/kmod.conf
+	[ -x "$systemd_tmpfiles" ] && $systemd_tmpfiles --prefix=/dev --create --boot
+}
+
+startup_failure()
+{
+	msg_starting "udevd"
+	printf "%s" "$1"
+	failure "udevd startup"
+	echo
+}
+
+prepare_filesystem()
+{
+	local RETVAL mounted
+
+	# Check system before trying to start udev
+	[ -d /sys/devices ] || {
+		startup_failure "/sys is not mounted"
+		return 1
+	}
+	[ -w /sys/class/mem/null/uevent ] || {
+		startup_failure "kernel too old - no /sys/class/mem/null/uevent"
+		return 1
+	}
+	[ -r /sys/kernel/uevent_seqnum ] || {
+		startup_failure "kernel too old - no /sys/kernel/uevent_seqnum"
+		return 1
+	}
+
+	if [ ! -d $udev_root ]; then
+		mkdir -p $udev_root || return 1
+	fi
+
+	# Check if udevd is already running
+	if start-stop-daemon --stop --exec $udevd \
+			--user root --test >/dev/null; then
+		[ -n "$RUN_FROM_SYSINIT" ] || touch "$LOCKFILE"
+		return 0
+	fi
+
+	# Check if we should mount a tmpfs to $udev_root
+	if [ "x$udev_tmpfs" != "x1" ]; then
+		/sbin/udevadm control --property="STARTUP=1"
+		/sbin/udevadm trigger
+		/sbin/udevadm settle
+		/sbin/udevadm control --property="STARTUP="
+		RETVAL=$?
+		return $RETVAL
+	fi
+
+	cd "$udev_root"
+	RETVAL=$[$RETVAL+$?]
+	[ $RETVAL -ne 0 ] && return $RETVAL
+	if test -d /run; then
+		if ! mountpoint -q /run; then
+			mount $mount_n -t tmpfs -o mode=755${runfs_options:+,$runfs_options} runfs /run
+			RETVAL=$[$RETVAL+$?]
+		fi
+		mkdir -p /run/udev 2>/dev/null
+	fi
+	if ! mountpoint -q $udev_root; then
+		mounted=0
+		devfs=tmpfs
+		! grep -q "^nodev[[:space:]]*devtmpfs" /proc/filesystems || devfs=devtmpfs
+		mount $mount_n -t $devfs -o mode=755,$tmpfs_options udevfs $udev_root
+		RETVAL=$[$RETVAL+$?]
+	else
+		mounted=1
+		RETVAL=0
+	fi
+
+	attach_pts_filesystem && attach_shm_filesystem
+
+	if [ $RETVAL = 0 ]; then
+		create_static_inodes
+		# $udev_root is partially populated already,
+		# so set SELinux context for it now.
+		restore_context "$udev_root"
+
+		# We want to start udevd ourselves if it isn't already running.
+		# This lets udevd run at a sane nice level...
+		if [ -z "$RUN_FROM_SYSINIT" ]; then
+			start_daemon --lockfile "$LOCKFILE" --expect-user root -- $udevd --daemon
+		else
+			start_daemon --expect-user root -- $udevd --daemon
+		fi
+		RETVAL=$[$RETVAL+$?]
+		/sbin/udevadm control --property="STARTUP=1"
+		/sbin/udevadm trigger --type=subsystems --action=add
+		/sbin/udevadm trigger --type=devices --action=add
+		action "Populating /dev:" /sbin/udevadm settle
+		/sbin/udevadm control --property="STARTUP="
+		RETVAL=$[$RETVAL+$?]
+
+		if [ -z "$RUN_FROM_SYSINIT" ]; then
+			mount -o remount,$tmpfs_options $udev_root
+			RETVAL=$[$RETVAL+$?]
+			if test -d /run; then
+				mount -o remount${runfs_options:+,$runfs_options} /run
+				RETVAL=$[$RETVAL+$?]
+			fi
+		fi
+	fi
+
+	[ $RETVAL != 0 -a $mounted = 0 ] && detach_filesystem
+	return $RETVAL
+}
+
+detach_pts_filesystem()
+{
+	local opts
+	opts="`get_pts_attributes`"
+	if test $? = 0; then
+		umount $udev_root/pts 2>/dev/null
+		umount -l $udev_root/pts 2>/dev/null
+	fi
+	return 0
+}
+
+detach_filesystem()
+{
+	# Check if we had to mount a tmpfs to $udev_root
+	[ "x$udev_tmpfs" = "x1" ] || return 0
+	umount $udev_root/shm
+	detach_pts_filesystem
+	umount -l $udev_root
+	attach_pts_filesystem
+}
+
+start()
+{
+	# don't use udev if sysfs is not mounted.
+	[ ! -d $sysfs_dir/block ] && exit 1
+
+	prepare_filesystem
+	RETVAL=$?
+	return $RETVAL
+}
+
+
+stop()
+{
+	stop_daemon --lockfile "$LOCKFILE" $udevd ||
+		RETVAL=$?
+	return $RETVAL
+}
+
+umount_dev()
+{
+	stop
+	echo -n $"Removing udev device nodes: "
+	detach_filesystem
+	echo_success
+	echo
+}
+
+start_udevd_only()
+{
+	start_daemon --lockfile "$LOCKFILE" \
+		--expect-user root -- $udevd --daemon ||
+		RETVAL=$?
+	return $RETVAL
+}
+
+restart()
+{
+	stop
+	start_udevd_only
+	return $RETVAL
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	start_udevd_only)
+		start_udevd_only
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status --expect-user root -- $prog
+		exit $?
+		;;
+	condrestart)
+		if [ -e "$LOCKFILE" ]; then
+			restart
+		fi
+		;;
+	condstop)
+		msg=`status --expect-user root -- $prog`
+		RETVAL=$?
+		if [ $RETVAL -eq 0 ]; then
+			stop
+		fi
+		;;
+	restart)
+		restart
+		;;
+	reload)
+		# nothing to do here
+		;;
+	umount)
+		umount_dev
+		;;
+	*)
+		echo "Usage: $0 {start|stop|status|restart|condrestart|condstop|umount}"
+		exit 1
+esac
+
+exit $RETVAL

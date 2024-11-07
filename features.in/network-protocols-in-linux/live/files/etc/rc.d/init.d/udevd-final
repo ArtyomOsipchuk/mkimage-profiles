@@ -1,0 +1,129 @@
+#!/bin/sh
+#
+# udevd-final	Perform final udevd startup steps.
+#
+# chkconfig: 2345 06 69
+# description:	Retries udev events which could not be processed earlier \
+#		during startup.
+### BEGIN INIT INFO
+# Provides:          udevd-final
+# Required-Start:    udevd $local_fs
+# Should-Start:      udevd $local_fs
+# Required-Stop:
+# Should-Stop:
+# Default-Start:  2 3 4 5
+# Default-Stop:   0 1 6
+# Short-Decription: Perform final udevd startup steps
+### END INIT INFO
+
+# Do not load RH compatibility interface.
+WITHOUT_RC_COMPAT=1
+
+# Source function library.
+. /etc/init.d/functions
+
+LOCKFILE=/run/lock/subsys/udevd-final
+RETVAL=0
+
+CHECK_TIME_LIMIT=300
+UPDATE_NET_RULES=no
+
+SourceIfNotEmpty /etc/sysconfig/udev-rule-generator
+
+start()
+{
+	local f t
+	[ -w /etc/udev/rules.d/ -a -d /run/udev ] &&
+		for f in /run/udev/tmp-rules--*; do
+			[ -s "$f" ] || continue
+			t="${f##*/}"
+			t="${t#tmp-rules--}"
+			[ -n "$t" ] || continue
+			cat "$f" >>/etc/udev/rules.d/"$t"
+		done
+	action "Handling remaining udev events:" udevadm trigger \
+		&& touch "$LOCKFILE"
+	RETVAL=$?
+
+	MODULES=`ls -dl /sys/class/net/*/device/driver | sed "s|.*/||" | sort | uniq`
+
+	is_yes "$UPDATE_NET_RULES" && \
+		{ # https://bugzilla.altlinux.org/29282#c34
+		  # modules reload is more quickly then udevadm trigger --action=add
+			for MODULE in $MODULES; do
+				rmmod $MODULE && action "reloading $MODULE module for triggering udev" modprobe $MODULE
+				RETVAL=$[RETVAL+$?]
+			done
+			sleep 2
+			udevadm control --reload-rules
+		}
+
+	[ -f /etc/udev/rules.d/70-persistent-net.rules ] && \
+		{ # reloading modules for renaming interfaces
+		  # if 70-persistent-net.rules recently changed
+			MODIFIED=`stat -c %Y /etc/udev/rules.d/70-persistent-net.rules`
+			CURRIENT=`date +%s`
+			if [ $[($CURRIENT-$MODIFIED)*($CURRIENT-$MODIFIED)] -lt $[$CHECK_TIME_LIMIT*$CHECK_TIME_LIMIT] ]; then
+				for MODULE in $MODULES; do
+					rmmod $MODULE && action "reloading $MODULE module for renaming interfaces" modprobe $MODULE
+					RETVAL=$[RETVAL+$?]
+				done
+				sleep 1
+			fi
+		}
+
+	return $RETVAL
+}
+
+stop()
+{
+	rm -f "$LOCKFILE"
+}
+
+restart()
+{
+	stop
+	start
+}
+
+status()
+{
+	if [ -f "$LOCKFILE" ]; then
+		echo "This service was last time (re-)started at $(LANG=C LANGUAGE=C /bin/ls -l --time-style='+%Y-%m-%d %H:%M:%S %z' "$LOCKFILE" |tr -s ' ' |cut --fields 6-8 -d' ')."
+		echo "No other status information available."
+	else
+		echo "This service hasn't been started since stopped last time."
+	fi
+}
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		restart
+		;;
+	reload)
+		;;
+	condstop)
+		if [ -e "$LOCKFILE" ]; then
+			stop
+		fi
+		;;
+	condrestart|condreload)
+		# "condrestart" is called during package upgrade.
+		# Nothing to do here - this is not a normal service.
+		;;
+	status)
+		status
+		;;
+	*)
+		msg_usage "${0##*/} {start|stop|restart|reload|status|condrestart|condreload|condstop}"
+		RETVAL=1
+esac
+
+exit $RETVAL

@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+[ -L /proc/1/root ] || exit 0
+
+LC_ALL=C grep -E -qs '^/(lib|etc)/sysctl.d/.+\.conf' && systemd-sysctl >/dev/null 2>&1 ||:

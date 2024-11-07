@@ -1,0 +1,4 @@
+proc		/proc			proc	nosuid,noexec,gid=proc		0 0
+devpts		/dev/pts		devpts	nosuid,noexec,gid=tty,mode=620	0 0
+tmpfs		/tmp			tmpfs	nosuid				0 0
+UUID=ac4e558a-616b-43cd-977a-d518225817ed	/	ext4	relatime	1	1

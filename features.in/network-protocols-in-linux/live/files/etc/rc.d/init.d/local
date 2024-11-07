@@ -1,0 +1,30 @@
+#!/bin/sh
+#
+# This script should be executed after all the other init scripts.
+
+WITHOUT_RC_COMPAT=1
+
+# Source function library.
+. /etc/init.d/functions
+
+if [ ! -f /etc/issue ]; then
+	W2L=/usr/bin/welcome2l
+	if [ -x "$W2L" ]; then
+		"$W2L" -gt '\R' >/etc/issue
+	else
+		echo 'Welcome to \R / \l' >/etc/issue
+	fi
+fi
+
+if [ ! -f /etc/issue.net ]; then
+	echo "Welcome to $HOSTNAME" >/etc/issue.net
+	cat /etc/altlinux-release >>/etc/issue.net 2>/dev/null
+fi
+
+/etc/rc.d/scripts/first_time
+
+# You can put your own initialization stuff in this script
+# if you don't want to do the full Sys V style init stuff.
+ExecIfExecutable /etc/rc.d/rc.local
+
+exit 0

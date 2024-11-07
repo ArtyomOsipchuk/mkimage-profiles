@@ -1,0 +1,20 @@
+#!/bin/bash -efu
+
+. guess-functions
+
+if [ -z "${LOCALES-}" ]; then
+	is_active_feature "plymouth" ||
+		exit 0
+
+	for f in /etc/sysconfig/i18n /etc/locale.conf; do
+		if [ -s "$f" ] && . "$f"; then
+			break
+		fi
+	done
+
+	LANG="${LANG:-C}"
+	LOCALES="${LANG%%.*}"
+fi
+
+guess_feature "locales"
+guess_variable "LOCALES" "${LOCALES}"

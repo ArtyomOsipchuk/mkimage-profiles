@@ -1,0 +1,38 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+BINARY_MOUNT=/bin/mount
+BINARY_UMOUNT=/bin/umount
+
+new_summary "mount and unmount file systems"
+
+new_fmode public 4711 root root
+new_fmode wheelonly 4710 root wheel
+new_fmode unprivileged 755 root root
+new_fmode restricted 700 root root
+
+new_help public "Any user can execute $BINARY_MOUNT and $BINARY_UMOUNT"
+new_help wheelonly "Only \"wheel\" group members can execute $BINARY_MOUNT and $BINARY_UMOUNT"
+new_help unprivileged "Any user can execute $BINARY_MOUNT and $BINARY_UMOUNT for unprivileged operations"
+new_help restricted "Only root can execute $BINARY_MOUNT and $BINARY_UMOUNT"
+
+if is_builtin_mode "$*"; then
+	case "$*" in
+	status|'')
+		STATUS_MOUNT="`control_fmode "$BINARY_MOUNT" status`" || exit 1
+		STATUS_UMOUNT="`control_fmode "$BINARY_UMOUNT" status`" || exit 1
+		if [ -n "$STATUS_MOUNT" -a "$STATUS_MOUNT" = "$STATUS_UMOUNT" ]; then
+			echo "$STATUS_MOUNT"
+		else
+			echo "unknown"
+		fi
+		;;
+	*)
+		control_fmode "$BINARY_MOUNT" "$*"
+		;;
+	esac
+else
+	control_fmode "$BINARY_MOUNT" "$*" || exit 1
+	control_fmode "$BINARY_UMOUNT" "$*" || exit 1
+fi

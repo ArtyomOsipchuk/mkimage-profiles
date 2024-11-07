@@ -1,0 +1,14 @@
+#!/bin/bash -efu
+
+for m in $MOUNTPOINTS; do
+	fstype="$(findmnt -n -o FSTYPE --target "$m")"
+	type -P "fsck.$fstype" ||:
+
+	case "$fstype" in
+		ext2|ext3|ext4*)
+			conf="$SYSCONFDIR/e2fsck.conf"
+			[ ! -f "$conf" ] || printf '%s\n' "$conf"
+			;;
+	esac
+done
+type -P fsck ||:

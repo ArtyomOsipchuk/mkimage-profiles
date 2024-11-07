@@ -1,0 +1,20 @@
+1. `login' doesn't have S bit by default since 0.59 release because it needs
+   the additional privileges very rarely.  However David Luyer
+   <luyer@ucs.uwa.edu.au> in security-audit mailing list describes a number of
+   cases where the privileges are required.  Anyone interested in the subject
+   may read the discussion in the list.  I still stay with my opinion.
+
+2. As <fredrik@krixor.xy.org> mentioned in security-audit mailing list that a
+   password mistakenly typed instead of username is visible by all users in
+   login command line.  People haven't agreed how to solve the problem.  I
+   need to think more.
+
+[ In this package, login has been patched to be able to obtain the username
+from LOGNAME (as well as from the command line) when started as root (not
+SUID).  This is to be used by getty's. ]
+
+3. Somebody (I don't remember who) stated that `su' had to provide a protection
+   against brute force attacks on user passwords.  The issue needs more
+   discussion.  Such a protection makes a sense only if all ways for brute
+   force attack have the protection.  And I doubt that the protection can be
+   clearly implemented.

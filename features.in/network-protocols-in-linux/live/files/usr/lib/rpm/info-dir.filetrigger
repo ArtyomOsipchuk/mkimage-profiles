@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+grep -qs '^/usr/share/info/' && /usr/sbin/update-info-dir ||:
