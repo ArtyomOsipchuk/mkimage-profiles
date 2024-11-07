@@ -1,0 +1,27 @@
+#!/bin/bash
+
+. /.initrd/initenv
+. uevent-sh-functions
+. initrd-sh-functions
+
+message_time=1
+
+handler()
+{
+	resume_checked ||
+		return 1
+	[ -d "$MOUNTPOINT" ] ||
+		return 1
+	! mountpoint -q "$MOUNTPOINT" ||
+		return 0
+	rc=0
+	msg="$(mount -v "$MOUNTPOINT" 2>&1)" ||
+		rc=1
+	message "$msg"
+	return $rc
+}
+
+for e in "$eventdir"/mountdev.*; do
+	[ -e "$e" ] || break
+	( . "$e"; handler; ) && done_event "$e" ||:
+done

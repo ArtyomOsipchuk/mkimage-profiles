@@ -1,0 +1,81 @@
+#! /bin/sh
+#
+# rpcbind	Start/Stop RPC portmapper
+#
+# chkconfig:	- 13 87
+# description:	The rpcbind manages RPC connections, which are used by \
+#		protocols such as NFS and NIS. The rpcbind server must be \
+#		running on machines which act as servers for protocols which \
+#		make use of the RPC mechanism.
+# processname:	rpcbind
+
+WITHOUT_RC_COMPAT=1
+# Source function library.
+. /etc/init.d/functions
+
+# Source networking configuration.
+SourceIfNotEmpty /etc/sysconfig/network
+
+LOCKFILE=/var/lock/subsys/rpcbind
+CONTROL_ARGS=
+RPCBIND_ARGS=
+WARMSTART=
+
+# Source config.
+SourceIfNotEmpty /etc/sysconfig/rpcbind
+
+RETVAL=0
+
+start()
+{
+	is_yes "$NETWORKING" || return 0
+	start_daemon --lockfile "$LOCKFILE" --expect-user rpc -- rpcbind $RPCBIND_ARGS $CONTROL_ARGS $WARMSTART
+	RETVAL=$?
+	return $RETVAL
+}
+
+stop()
+{
+	stop_daemon --lockfile "$LOCKFILE" --expect-user rpc -- rpcbind
+	RETVAL=$?
+	return $RETVAL
+}
+
+restart()
+{
+	stop
+	WARMSTART=-w \
+	start
+}
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart|reload)
+		restart
+		;;
+	condstop)
+		if [ -e "$LOCKFILE" ]; then
+			stop
+		fi
+		;;
+	condrestart|condreload)
+		if [ -e "$LOCKFILE" ]; then
+			restart
+		fi
+		;;
+	status)
+		status --expect-user rpc rpcbind
+		RETVAL=$?
+		;;
+	*)
+		msg_usage "${0##*/} {start|stop|reload|restart|condstop|condrestart|condreload|status}"
+		RETVAL=1
+esac
+
+exit $RETVAL

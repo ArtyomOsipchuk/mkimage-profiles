@@ -1,0 +1,326 @@
+#!/bin/bash -efu
+#
+# Install debuginfo RPMs for a kernel
+#
+# Copyright (C) 2023 Vitaly Chikunov <vt@altlinux.org>
+# SPDX-License-Identifier: GPL-2.0-only
+
+set +o posix
+shopt -s extglob
+export LC_ALL=C
+
+cr=$'\n'
+PROG=${0##*/}
+message() {
+	echo >&2 -e "$PROG: $*"
+}
+
+fatal() {
+	message "$@"
+	exit 1
+}
+
+log() {
+	[ "$verbose" -lt "$1" ] && return
+	shift
+	echo "$*"
+}
+
+show_help()
+{
+        cat <<EOF
+Usage: $PROG [OPTIONS...] [-f|-r] REFERENCE
+Find and install debuginfo package corresponding to already installed kernel from
+the ALT Packages Archive (requires Internet access for direct downloads)
+
+Options:
+	-F, --file              REFERENCE is a filename (such as /boot/vmlinuz)
+	-f, -y, --force         Force installation (assume 'yes' to all prompts)
+	--headers-only          Only install kernel headers
+	-H, --headers           Add kernel headers to install plan
+	-h, --help              This help
+	-d, --download-only     Tell apt to download packages but don't install them
+	-n, --dry-run           Tell apt to simulate action but not to change the system
+	                        Note that apt-get may still download the target packages
+	-q, --quiet             Do not show (experimental & Internet access) warning"
+	--reinstall             Try to reihnstall packages
+	-r, --release           REFERENCE is a kernel release (such as 6.6.1-alt1)
+	-v, --verbose           Increase verbosity
+
+Note: If there is a dependency between debuginfo packages, it won't be automatically resolved.
+
+EOF
+	exit "$@"
+}
+
+declare -i verbose=0
+dryrun=
+force=
+headers=
+headers_modules=y
+isfile=
+isrelease=
+kernel=y
+quiet=
+reinstall=
+
+TEMP=$(getopt -n "$PROG" -o f,d,y,F,r,v,n,H,q,h -l file,reinstall,release,verbose,dry-run,force,download-only,headers,headers-only,no-headers-modules,no-kernel,quiet,help -- "$@") || show_help 1
+eval set -- "$TEMP"
+
+while :; do
+	case "$1" in
+		-n | --dry-run) dryrun+=" --dry-run" ;;
+		-d | --download-only) dryrun+=" --download-only" ;;
+		-F | --file) isfile=y ;;
+		-f | --force) force=y ;;
+		--headers-only) headers=y; kernel= ;;
+		-H | --headers) headers=y ;;
+		-h | --help) show_help ;;
+		--no-headers-modules) headers_modules= ;;
+		--no-kernel) kernel= ;;
+		-q | --quiet) quiet=y ;;
+		--reinstall) reinstall=--reinstall ;;
+		-r | --release) isrelease=y ;;
+		--) shift; break ;;
+		-v | --verbose) verbose+=1 ;;
+	esac
+	shift
+done
+
+if [[ "$#" -lt 1 ]]; then
+	if [[ -n "$isfile" ]] || [[ -n "$isrelease" ]]; then
+		fatal "Argument is required"
+	fi
+elif [[ "$#" -gt 1 ]]; then
+	fatal "Too many arguments"
+fi
+ref=${1-}
+
+if [ -t 1 ] && [ ! -v NO_COLOR ]; then
+	# No need to determine FGBG colors if we don't use bright colors.
+	GREEN=$'\e[32m' YELLOW=$'\e[33m' MAGENTA=$'\e[35m' BRIGHT=$'\e[1m' NORM=$'\e[0m'
+else
+	GREEN='' YELLOW='' MAGENTA='' BRIGHT='' NORM=''
+fi
+
+if [ -n "$verbose" ]; then
+	V() { echo >&2 "+ $*"; "$@"; }
+else
+	V() { "$@"; }
+fi
+
+confirmator() {
+	if [ -n "$force" ]; then
+		echo "yes (forced)"
+		return
+	fi
+        while true; do
+                read -r || { echo "Aborting"; exit 1; }
+                shopt -s nocasematch
+                case "$REPLY" in
+                        n|no|0|q) exit 0 ;;
+                        y|ye|yes|'') break ;;
+                        *) ;;
+                esac
+                echo -n "[Y/n] "
+                shopt -u nocasematch
+        done
+}
+
+if [[ -z "$quiet" ]]; then
+	echo >&2 "***************************************************************************"
+	echo >&2 "*  This is an experimental, developers-only tool. There is no guarantees  *"
+	echo >&2 "*  that installing an old package from the Archive will work.             *"
+	echo >&2 "***************************************************************************"
+fi
+
+find_kernel_package() {
+	# shellcheck disable=SC2207
+	pkg=( $(rpmquery "$@") )
+	if [[ ! -v pkg ]]; then
+		fatal "Kernel with requested release ($release) not installed"
+	elif [[ "${#pkg[@]}" -gt 1 ]]; then
+		warning "$PROG: Too much packages found for requested release ($release):"
+		printf "%s\n" "${pkg[@]}" | cat -n >&2
+		exit 1
+	fi
+}
+
+file=
+release=
+if [[ -n "$isfile" ]]; then
+	file=$ref
+elif [[ -n "$isrelease" ]]; then
+	release=$ref
+elif [[ -e "$ref" ]]; then
+	file=$ref
+elif [[ "$ref" =~ / ]]; then
+	file=$ref
+else
+	release=$ref
+fi
+unset ref isfile isrelease
+
+if [[ -n "$file" ]]; then
+	if [[ ! -e "$file" ]]; then
+		fatal "Requested file ($file) not found"
+	elif [[ -L "$file" ]]; then
+		echo "Requested file ($file) is a symlink (following)"
+		file=$(realpath "$file")
+	fi
+	echo "User requested kernel file $file"
+elif [[ -z "$release" ]]; then
+	uname_r=$(uname -r)
+	echo "Booted kernel release: $uname_r"
+	if [[ -e "/boot/vmlinuz-$uname_r" ]]; then
+		file="/boot/vmlinuz-$uname_r"
+	else
+		fatal "'vmlinuz' for the booted kernel not found"
+	fi
+elif [[ "$release" =~ ^([0-9.]+)-([[:alnum:]-]+)-(alt.*)$ ]]; then
+	# 6.5.9-un-def-alt1
+	find_kernel_package -a \
+		V="${BASH_REMATCH[1]}" \
+		R="${BASH_REMATCH[3]}" \
+		N="kernel-image-${BASH_REMATCH[2]}"
+elif [[ "$release" =~ ^([0-9.]+)-(alt.*)$ ]]; then
+	# 6.5.9-alt1
+	find_kernel_package -a \
+		V="${BASH_REMATCH[1]}" \
+		R="${BASH_REMATCH[2]}" \
+		N="kernel-image-*"
+elif [[ "$release" =~ ^kernel-(image|modules)- ]] && rpmquery "$release" &>/dev/null; then
+	# kernel-image-un-def-1:6.5.9-alt1.x86_64
+	find_kernel_package -q "$release"
+elif [[ "$release" =~ ^(kernel-image-[[:alnum:]-]+)-([0-9]+:)?([0-9.]+)-(alt.*)$ ]]; then
+	# kernel-image-un-def-6.5.9-alt1
+	find_kernel_package -a \
+		N="${BASH_REMATCH[1]}" \
+		E="${BASH_REMATCH[2]}" \
+		V="${BASH_REMATCH[3]}" \
+		R="${BASH_REMATCH[4]}"
+else
+	fatal "Release '$release' in unknown format"
+fi
+unset release
+
+if [[ -n "$file" ]]; then
+	if ! pkg=$(rpmquery -f "$file" 2>/dev/null); then
+		fatal "Requested file ($file) is not form a package"
+	elif [[ ! "$pkg" =~ ^kernel-(image|modules)- ]]; then
+		fatal "Requested file ($file) is not from a kernel package (but from $pkg)"
+	fi
+fi
+unset file
+
+if [[ "$pkg" =~ ^kernel-([^-]*)- ]]; then
+	echo "Kernel ${BASH_REMATCH[1]} package: $BRIGHT$pkg$NORM"
+fi
+fquery='arch=%{ARCH:shescape}
+	disttag=%{DISTTAG:shescape}
+	name=%{N:shescape}
+	ver=%{V:shescape}
+	rel=%{R:shescape}'
+eval "$(rpmquery --qf "$fquery" -- "$pkg")"
+# (none) will become 1-element array.
+disttag=${disttag#none}
+[[ -n "$disttag" ]] || fatal "Package disttag not found"
+[[ "$disttag" =~ ^[[:alnum:]]+\+[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+$ ]] \
+	|| fatal "Package disttag in unknown format: $disttag"
+repo=${disttag%+*}
+taskit=${disttag#*+}
+task=${taskit%%.*}
+subtask=${taskit#"$task."}
+subtask=${subtask%%.*}
+# shellcheck disable=SC2015
+[[ -n "$repo" ]] && [[ -n "$task" ]] && [[ -n "$subtask" ]] || fatal "Package disttag parse error"
+# shellcheck disable=SC2154
+log 1 "Package build info: repo=$repo task=$task subtask=$subtask arch=$arch"
+# shellcheck disable=SC2154
+flavour=${name#kernel-image-}
+
+declare -a plan
+declare -i requested=0
+to_plan() {
+	local rpm=$1
+	requested+=1
+	if rpmquery -- "$rpm:$disttag" &>/dev/null; then
+		echo -n "- Package $rpm is already installed"
+		if [[ -z "$reinstall" ]]; then
+			echo
+			return
+		else
+			echo " (reinstall)"
+		fi
+	elif rpmquery -- "$rpm" &>/dev/null; then
+		echo "Package $rpm is installed but have different build (update)"
+	fi
+	plan+=( "$rpm" )
+}
+
+# Generate URLs.
+if rpm -q "apt-https" &>/dev/null; then
+	baseurl='https://'
+else
+	baseurl='http://'
+fi
+# APT does not follow http redirects so we need direct URL.
+baseurl+="git.altlinux.org/tasks/archive/done/_$((task/1024))/$task/build/$subtask/$arch/rpms"
+# shellcheck disable=SC2154
+[[ -n "$kernel" ]] && to_plan "$name-debuginfo-$ver-$rel"
+
+if [[ -n "$headers" ]]; then
+	to_plan "kernel-headers-$flavour-$ver-$rel"
+	[[ -n "$headers_modules" ]] && to_plan "kernel-headers-modules-$flavour-$ver-$rel"
+fi
+
+if [[ "$requested" -eq 0 ]]; then
+	echo "${MAGENTA}Nothing selected to install$NORM"
+	exit 0
+elif [[ ! -v plan ]]; then
+	echo "${GREEN}It seems that everything as already installed$NORM"
+	exit 0
+fi
+
+if [[ -z "$quiet" ]]; then
+	echo
+	echo "Direct Internet access is required to download from the ALT Packages Archive"
+	echo -n "Do you allow ${YELLOW}Internet access$NORM [Y/n]? "
+	confirmator
+	echo
+fi
+
+CURL=$(type -p curl ||:)
+declare -a urls
+declare -i sumsize=0
+[[ "${#plan[@]}" -gt 1 ]] && things='packages need' || things='package needs'
+echo "The following $things to be installed:"
+for url in "${plan[@]}"; do
+	url="$baseurl/$url.$arch.rpm"
+	urls+=( "$url" )
+	# Add space for curl errors.
+	printf "  %s " "$url"
+	if [[ "$quiet" ]] || [[ -z "$CURL" ]]; then
+		# Postpone Internet access until final confirmation.
+		echo
+		continue
+	fi
+	filesize=$($CURL -sSfL --head "$url" | grep -ioP '(?<=Content-Length:\s)[0-9]+')
+	[[ -n "$filesize" ]] || fatal "${cr}Unknown filesize (aboring)"
+	filesize=$((filesize/1000000))
+	printf " [%d MB]\n" "$filesize"
+	sumsize+=$filesize
+done
+echo
+
+[[ "$dryrun" =~ download-only ]] && action='download' || action='install'
+printf "Proceed to ${YELLOW}$action${NORM} %d package%s" "${#urls[@]}" "$([ ${#urls[@]} -gt 1 ] && echo s)"
+[[ "$sumsize" -gt 0 ]] && printf " taking $BRIGHT%d MB$NORM" "$sumsize"
+printf " [Y/n]? "
+confirmator
+echo
+
+[[ "$UID" = "0" ]] || message "This tool needs ${YELLOW}root privileges${NORM}."
+( set -x;
+  # shellcheck disable=SC2086
+  apt-get install $dryrun $reinstall "${urls[@]}") || fatal "failed to install the packages"

@@ -1,0 +1,82 @@
+#!/bin/sh
+# iperf3	iperf3 service
+#
+# chkconfig: - 90 10
+# description: iperf3 service for test bandwidth performance
+# processname: iperf3
+# pidfile: /var/run/iperf3.pid
+
+### BEGIN INIT INFO
+# Provides:          iperf3
+# Required-Start:    $network
+# Required-Stop:     $network
+# Default-Start:
+# Default-Stop:
+# Short-Description: Start iperf3 at boot time
+# Description:       Enable iperf3 test server.
+### END INIT INFO
+
+# Do not load RH compatibility interface.
+WITHOUT_RC_COMPAT=1
+
+# Source function library.
+. /etc/init.d/functions
+
+RUNAS=root
+PIDFILE=/var/run/iperf3.pid
+LOCKFILE=/var/lock/subsys/iperf3
+RETVAL=0
+
+SourceIfNotEmpty /etc/sysconfig/iperf3
+
+start()
+{
+	start_daemon --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --user $RUNAS -- iperf3 --pidfile "$PIDFILE" $ARGS
+	RETVAL=$?
+	return $RETVAL
+}
+
+stop()
+{
+	stop_daemon --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user $RUNAS -- iperf3
+	RETVAL=$?
+	return $RETVAL
+}
+
+restart()
+{
+	stop
+	start
+}
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		restart
+		;;
+	condstop)
+		if [ -e "$LOCKFILE" ]; then
+			stop
+		fi
+		;;
+	condrestart)
+		if [ -e "$LOCKFILE" ]; then
+			restart
+		fi
+		;;
+	status)
+		status --pidfile "$PIDFILE" --expect-user root --displayname iperf3-tcp -- iperf3
+		RETVAL=$?
+		;;
+	*)
+		msg_usage "${0##*/} {start|stop|restart|condstop|condrestart|status}"
+		RETVAL=1
+esac
+
+exit $RETVAL

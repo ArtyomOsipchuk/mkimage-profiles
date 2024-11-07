@@ -1,0 +1,49 @@
+#!/bin/bash -efu
+
+export PATH=/sbin:/usr/sbin:/usr/local/sbin:/bin:/usr/bin:/usr/local/bin
+
+[ -d /.initrd ] ||
+	mkdir -p /.initrd
+
+# Save kernel environment and init arguments
+[ -f /.initrd/kernenv ] ||
+	/bin/environ -q -u _,PWD,SHLVL > /.initrd/kernenv
+
+# Create storage for init environment
+:> /.initrd/initenv
+
+# Backward compatibility
+x=/sbin/init-bin
+[ ! -x "$x" ] || exec "$x"
+
+trap : INT TSTP QUIT HUP
+
+x=/etc/rc.d/rc.sysinit
+[ ! -x "$x" ] || setsid "$x" ||:
+
+level=3
+rc=
+
+while :; do
+	[ -z "$rc" ] || {
+		read -r level < /.initrd/telinit
+	} 2>/dev/null ||:
+
+	case "$level" in
+		[0-6])
+			[ "$rc" != "$level" ] ||
+				continue
+
+			rc="$level"
+
+			{
+				:> "/.initrd/killall/$BASHPID"
+				setsid /etc/rc.d/rc "$rc" ||:
+				rm -f -- "/.initrd/killall/$BASHPID"
+			} &
+			;;
+		9)
+			exec /etc/rc.d/rc.sysexec "$@"
+			;;
+	esac
+done

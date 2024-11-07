@@ -1,0 +1,14 @@
+#!/bin/bash -efu
+
+. sh-functions
+
+verbose "Copying files from libgcc_s.so* ..."
+
+case "${1-}" in
+	files)
+		list_libs |
+			grep -e '/libgcc_s\.so.*' ||:
+		;;
+	dirs)
+		;;
+esac

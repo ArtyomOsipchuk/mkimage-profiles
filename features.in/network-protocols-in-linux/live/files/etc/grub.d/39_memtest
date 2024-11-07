@@ -1,0 +1,96 @@
+#! /bin/sh -e
+
+# grub-mkconfig helper script.
+# Copyright (C) 2006,2007,2008,2009,2010  Free Software Foundation, Inc.
+#
+# GRUB is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GRUB is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GRUB.  If not, see <http://www.gnu.org/licenses/>.
+
+prefix=/
+exec_prefix=/usr
+bindir=/usr/bin
+datadir=/usr/share
+. ${datadir}/grub/grub-mkconfig_lib
+
+export TEXTDOMAIN=grub
+export TEXTDOMAINDIR=/usr/share/locale
+
+CLASS="--class gnu-linux --class gnu --class os"
+
+if [ -r /etc/altlinux-release ]; then
+ OS=`cat /etc/altlinux-release | sed 's/ (.*$//g'`
+else
+ OS=ALTLinux
+fi
+
+# loop-AES arranges things so that /dev/loop/X can be our root device, but
+# the initrds that Linux uses don't like that.
+case ${GRUB_DEVICE} in
+  /dev/loop/*|/dev/loop[0-9])
+    GRUB_DEVICE=`losetup ${GRUB_DEVICE} | sed -e "s/^[^(]*(\([^)]\+\)).*/\1/"`
+  ;;
+esac
+
+if [ "x${GRUB_DEVICE_UUID}" = "x" ] || [ "x${GRUB_DISABLE_LINUX_UUID}" = "xtrue" ] \
+    || ! test -e "/dev/disk/by-uuid/${GRUB_DEVICE_UUID}" ; then
+  LINUX_ROOT_DEVICE=${GRUB_DEVICE}
+else
+  LINUX_ROOT_DEVICE=UUID=${GRUB_DEVICE_UUID}
+fi
+
+# prepare to strip off /boot in case it's a separate filesystem
+grep -qF " /boot " /proc/mounts && FMT="%P" || FMT="%p"
+
+find /boot -name "memtest-*.bin" -printf "$FMT\\n" | while read memtest ; do
+  prepare_boot_cache=
+  echo "Found memtest image: $memtest" >&2
+
+  basename=`basename $memtest`
+  dirname=`dirname $memtest`
+  rel_dirname=`make_system_path_relative_to_its_root $dirname`
+
+  version=`echo $basename | sed -e "s,^[^0-9]*-,,g" | sed -e "s,\.bin$,,g"`
+
+  if [ -z "${prepare_boot_cache}" ]; then
+    prepare_boot_cache="$(prepare_grub_to_access_device ${GRUB_DEVICE_BOOT} | sed -e "s/^/\t\t/")"
+  fi
+
+  printf "if [ \"\$grub_platform\" = \"pc\" ]; then\n"
+  printf "\tmenuentry \"Memtest86+-$version\" {\n"
+  printf '%s\n' "${prepare_boot_cache}"
+  printf "\t\tlinux $rel_dirname/$basename\n"
+  printf "\t}\n"
+  printf "fi\n"
+done
+
+find /boot -name "memtest-*.efi" -printf "$FMT\\n" | while read memtest ; do
+  prepare_boot_cache=
+  echo "Found memtest image: $memtest" >&2
+
+  basename=`basename $memtest`
+  dirname=`dirname $memtest`
+  rel_dirname=`make_system_path_relative_to_its_root $dirname`
+
+  version=`echo $basename | sed -e "s,^[^0-9]*-,,g" | sed -e "s,\.efi$,,g"`
+
+  if [ -z "${prepare_boot_cache}" ]; then
+    prepare_boot_cache="$(prepare_grub_to_access_device ${GRUB_DEVICE_BOOT} | sed -e "s/^/\t\t/")"
+  fi
+
+  printf "if [ \"\$grub_platform\" = \"efi\" ]; then\n"
+  printf "\tmenuentry \"Memtest86+-$version (may not work with Secure Boot)\" {\n"
+  printf '%s\n' "${prepare_boot_cache}"
+  printf "\t\tlinux $rel_dirname/$basename\n"
+  printf "\t}\n"
+  printf "fi\n"
+done

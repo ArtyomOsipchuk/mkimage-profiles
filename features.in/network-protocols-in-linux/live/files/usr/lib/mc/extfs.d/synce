@@ -1,0 +1,88 @@
+#! /usr/bin/perl -w
+#
+# External filesystem for Windows CE, using SynCE, version 0.1.1,
+# by Michael Lashkevich <lashkevi@landau.ac.ru> on 10.06.2003
+#
+# Opens the "\My Documents" directory.
+# You have to establish SynCE connection before changin directory
+# to #synce
+# 
+
+# These mtools components must be in PATH for this to work
+$pls = "pls";
+$pcp = "pcp";
+$prm = "prm";
+$pmkdir = "pmkdir";
+$prmdir = "prmdir";
+
+SWITCH: for ( $ARGV[0] ) {
+  /list/ && do {
+    @dirs = get_dirs("");
+    while ($dir = shift(@dirs)) {
+      push @dirs, get_dirs("$dir");
+    } exit 0; };
+  /mkdir/ && do {
+    shift; shift;
+    exit 1 if scalar(@ARGV) != 1;
+    system("$pmkdir \"$ARGV[0]\" >/dev/null");
+    exit 0; };
+  /rmdir/ && do {
+    shift; shift;
+    exit 1 if scalar(@ARGV) != 1;
+    system("$prmdir \"$ARGV[0]\" >/dev/null");
+    exit 0; };
+  /rm/ && do {
+    shift; shift;
+    exit 1 if scalar(@ARGV) != 1;
+    system("$prm \"$ARGV[0]\" >/dev/null");
+    exit 0; };
+  /copyout/ && do {
+    shift; shift;
+    exit 1 if scalar(@ARGV) != 2;
+    ( $src, $dest ) = @ARGV;
+    system("$pcp \":My Documents/$src\" $dest >/dev/null");
+    exit 0; };
+  /copyin/ && do {
+    shift; shift;
+    exit 1 if scalar(@ARGV) != 2;
+    ( $dest, $src ) = @ARGV;
+    system("$pcp $src \":My Documents/$dest\" >/dev/null");
+    exit 0; };
+  /.*/ && do {                               # an unfamiliar command
+    exit 1; };
+}
+
+sub get_dirs {
+  my ($path, $name, $pathname, $type0, $type2, $size, $datetime, @lst, @rv);
+
+  $path = shift(@_);
+  @rv = ();
+
+  open(FILE,"$pls -a \"/My Documents/$path\" |");
+  while ( <FILE> ) {
+    chomp();
+    /^ / && next;                            # ignore `non-file' lines
+    /^$/ && next;                            # ignore empty lines
+    /^\.\.?/ && next;                        # ignore `.' and `..'
+
+    $name = substr($_,60);
+    $pathname = $path.$name;
+    $type0 = substr($_,0,1);
+    $type2 = substr($_,2,1);
+    $datetime = substr($_,28,6).substr($_,43,5).substr($_,34,9);
+    $size = substr($_,14,8);
+
+    if ($type0 =~ 'D' or $type2 =~ 'D') {
+      printf("drwxr-xr-x   1 %-8d %-8d %-8d %s %s\n",
+        0, 0, 0, $datetime, $pathname);
+      push @rv, $pathname;
+    } else {
+      printf("-rw-r--r--   1 %-8d %-8d %s %s %s\n",
+        0, 0, $size, $datetime, $pathname);
+    }
+  }
+  close(FILE);
+  return @rv;
+}
+
+1;

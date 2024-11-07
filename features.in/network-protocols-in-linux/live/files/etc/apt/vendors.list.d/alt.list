@@ -1,0 +1,60 @@
+simple-key "alt" {
+	Fingerprint "49B01E70C64124E6742EAE7195C584D5AE4AE412";
+	Name "ALT Linux incominger <incominger@altlinux.org>";
+}
+
+simple-key "sisyphus" {
+	Fingerprint "DF6C02E5F174D7CDF792A9CDFF979DEDDA2773BB";
+	Group "alt";
+	Name "ALT Sisyphus <alt-sisyphus@altlinux.org>";
+}
+
+simple-key "updates" {
+       Fingerprint "64032F109FD0C4331F572CC0DC9E95C2231114B3";
+       Name "ALT Linux 4.0 updates <updates@altlinux.org>";
+}
+
+simple-key "p8" {
+	Fingerprint "64032F109FD0C4331F572CC0DC9E95C2231114B3";
+	Name "ALT Linux 4.0 updates <updates@altlinux.org>";
+}
+
+simple-key "p9" {
+	Fingerprint "B285B93E53CCF43A860F45B22B6B82CB7AED4D09";
+	Name "ALT p9 <alt-p9@altlinux.org>";
+}
+
+simple-key "secondary" {
+	Fingerprint "DB7335A9CF93543BA3E5033ACEA7F56E5689C9F0";
+	Name "ALT Sisyphus (ports) <alt-sisyphus-ports@altlinux.org>";
+}
+
+simple-key "sisyphus-ports" {
+	Fingerprint "DB7335A9CF93543BA3E5033ACEA7F56E5689C9F0";
+	Name "ALT Sisyphus (ports) <alt-sisyphus-ports@altlinux.org>";
+}
+
+simple-key "sisyphus-mipsel" {
+	Fingerprint "DB7335A9CF93543BA3E5033ACEA7F56E5689C9F0";
+	Name "ALT Sisyphus (ports) <alt-sisyphus-ports@altlinux.org>";
+}
+
+simple-key "sisyphus-riscv64" {
+	Fingerprint "DB7335A9CF93543BA3E5033ACEA7F56E5689C9F0";
+	Name "ALT Sisyphus (ports) <alt-sisyphus-ports@altlinux.org>";
+}
+
+simple-key "p9-ports" {
+	Fingerprint "0B8F42E2A2EF6F9F1B5296787D6CD4E0A8F77FE6";
+	Name "ALT p9 (ports) <alt-p9-ports@altlinux.org>";
+}
+
+simple-key "p9-mipsel" {
+	Fingerprint "0B8F42E2A2EF6F9F1B5296787D6CD4E0A8F77FE6";
+	Name "ALT p9 (ports) <alt-p9-ports@altlinux.org>";
+}
+
+simple-key "p10" {
+	Fingerprint "357BE37422F73D9CB3A0C8D142F343A2C7EB80F9";
+	Name "ALT p10 <alt-p10@altlinux.org>";
+}

@@ -1,0 +1,592 @@
+<HTML>
+<HEAD>
+<TITLE>LESS</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Frequently Asked Questions about less</H1>
+
+<H2>Table of Contents</H2>
+
+<OL>
+<LI>Overview
+<OL>
+<LI><A HREF="#what">What is less?</A>
+<LI><A HREF="#why">Why would I want to use less?</A>
+<LI><A HREF="#history">Where did less come from?</A>
+</OL>
+
+<LI>Resources
+<OL>
+<LI><A HREF="#getit">How can I get a copy of less?</A>
+<LI><A HREF="#mail">How can I write to the author of less?</A>
+<LI><A HREF="#bugs">What if I find a bug in less?</A>
+</OL>
+
+<LI>Technical questions
+<OL>
+<LI><A HREF="#tricks">Cool less tricks</A>
+<LI><A HREF="#build">I can't get less to build!</A>
+<LI><A HREF="#unix">Do I need Unix to use less?</A>
+<LI><A HREF="#intl">Can less display non-English language characters?</A>
+<LI><A HREF="#wrap">Why does less scroll off the screen if there are long lines?</A>
+<LI><A HREF="#optfile">How can I view a file whose name looks like a command line option?</A>
+<LI><A HREF="#dashr">Why does -r cause display problems?</A>
+<LI><A HREF="#dashw">Why is the first line on the screen highlighted?</A>
+<LI><A HREF="#tite">Can less leave the screen alone when it quits?</A>
+<LI><A HREF="#dashe">Why doesn't less quit when it reaches the end of the file?</A>
+<LI><A HREF="#ctrlc">Why doesn't less quit when I type control-C?</A>
+<LI><A HREF="#csh">Why does it take so long to start the editor / start a shell?</A>
+<LI><A HREF="#csh2">Why does it say
+"<CODE>stty: TCGETS: Operation not supported on socket</CODE>"?</A>
+<LI><A HREF="#profileout">Why are there problems if my .cshrc, .profile or ENV
+files produce output?</A>
+<LI><A HREF="#filter">Can less view compressed files?</A>
+<LI><A HREF="#searchlt">Why do I get a segmentation fault if I search for a pattern containing "\&lt;"?</A>
+<LI><A HREF="#linux269">Why doesn't less work with Linux 2.6.9?</A>
+<LI><A HREF="#version">Why are there no dots in the version number?</A>
+</OL>
+</OL>
+
+This FAQ is Copyright &copy;2007 by Mark Nudelman.
+This document may be reproduced freely, provided it is kept
+in its entirety and in its original format.
+
+<HR>
+
+<H2>Questions and Answers</H2>
+
+<!-- ================================================================== -->
+<A NAME="what">
+<H3>What is less?</H3>
+<P>
+Less is a pager.
+A pager is a program that displays text files.
+Other pagers commonly in use are <CODE>more</CODE> and <CODE>pg</CODE>.
+Pagers are often used in command-line environments like
+the Unix shell and the MS-DOS command prompt to display files.
+Windowed environments like the Windows and Macintosh desktops don't need
+pagers as much, since they have other methods for viewing files.
+</P>
+<P>
+Less is not an editor.  
+You can't change the contents of the file you're viewing.
+Less is not a windowing system.
+It doesn't have fancy scroll bars or other 
+GUI (graphical user interface) elements.
+It was designed to work on simple text-only terminals.
+</P>
+<P>
+Less has been used by thousands of people around the world since its
+release in 1985.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="why">
+<H3>Why would I want to use less?</H3></A>
+<P>
+If you're not using a pager now, then you probably don't need less.
+But if you're using another pager, you should take a look at less.
+Less has some very nice features:
+</P>
+
+<DL>
+<DT>Backwards movement
+<DD>It's hard to believe some people are still using pagers
+that don't let you move backwards in the file.
+Even pagers that do let you move backwards often don't work
+when viewing "standard input"; that is, data that is being 
+piped into the pager from another program.
+
+<DT>Searching and highlighting
+<DD>Less lets you search for text in the file you're viewing.
+You can search forwards and backwards.
+Furthermore, less highlights the text that matches your search,
+to make it easy to see where the match is.
+
+<DT>Multiple files
+<DD>Less allows you to switch between any number of different
+files, remembering your position in each file.
+You can also do a single search which spans all the files you are working with.
+
+<DT>Bold and underline
+<DD>Some text files, notably Unix-style "man pages", 
+use overstriking (backspaces) to simulate underlined and bold text.
+Less interprets this overstriking and displays the text in real
+underlined or bold mode.
+
+<DT>Advanced features
+<DD>Less has a large number of fancy features for advanced users.
+Once you learn the basics, you'll find you can customize less to
+do almost anything you want it to do.
+You can change key bindings, set different tab stops,
+set up filters to view compressed data or other file types,
+customize the prompt, display line numbers, use "tag" files, and more.
+
+<DT>Portability
+<DD>Less is available on many different machines, different 
+system architectures, and different terminals.
+Pretty much wherever you go, you'll find less.
+You won't have to learn how to use a different pager on every system you use.
+</DL>
+
+<!-- ================================================================== -->
+<A NAME="history">
+<H3>Where did less come from?</H3>
+<P>
+Back in 1983, I was working for a now-defunct company
+called Integrated Office Systems.
+Some of our software ran on a Unix system and produced enormous log files
+of its transactions.
+We wanted to be able to search these log files for error messages.
+But the version of "vi" we were using couldn't handle files larger than
+a certain size, and our log files often exceeded that size. 
+So we were forced to use "more" to view the files.
+The problem was, once we found an error message, what we really wanted
+to see was the transactions leading up to the error; that is,
+the lines in the log file immediately before the error message.
+But more didn't allow backward movement in the file.
+</P>
+<P>
+We often complained about this problem.
+We said we needed a "backwards more"; someone (it wasn't me,
+but unfortunately I don't remember who it was) coined the name "less"
+as a joke on the concept of a "backwards more".
+It didn't seem to me that
+it would be too difficult to write a simple pager that would allow
+forward and backward movement.
+I wrote the first version in late 1983 and we began using it internally.
+I continued to enhance it and finally decided it was a useful enough
+tool that I should make it available to the world.
+I posted the first version to the newsgroup called (at that time)
+<CODE>net.sources</CODE> in May, 1985.
+</P>
+<P>
+Making the program publicly available allowed an enormous number 
+of people to use it.
+Many people have made their own modifications and donated them
+to me for incorporation into the official version, and
+many more have reported bugs they've found or
+made suggestions about features they'd like to see added.
+This was my first experience with the concept of what is now
+called "open source" or "free software",
+and it has, I believe, produced a very high quality product.
+I'd like to thank all the users of less for their invaluable comments
+and suggestions over the years.
+Less wouldn't be what it is today without you.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="getit">
+<H3>How can I get a copy of less?</H3>
+<P>
+You can <A HREF="download.html">download</A> a copy of less from here.
+</P>
+<P>
+Less is also distributed as a part of the standard software available
+with many varieties of Unix and similar systems.
+Less is also available from many ftp sites, including the GNU archives
+on <A HREF="ftp://ftp.gnu.org/gnu/less">ftp.gnu.org/gnu/less</A>.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="mail">
+<H3>How can I write to the author of less?</H3>
+<P>
+Less was written by Mark Nudelman 
+and is currently being maintained by him.
+You can write to him at 
+<A HREF="mailto:markn@greenwoodsoftware.com">markn@greenwoodsoftware.com</A>.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="bugs">
+<H3>What if I find a bug in less?</H3>
+<P>
+There is a list of known bugs <A HREF="bugs.html">here</A>.
+If you find a bug that is not in the list,
+please send <A HREF="#mail">email to the author</A>.
+Describe the bug in as much detail as possible,
+and I'll do what I can to help resolve the problem.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="tricks">
+<H3>Cool less tricks</H3>
+<P>
+New users of less sometimes find that less doesn't behave exactly the
+way they expect.
+If this is the case, don't despair.
+Less has an enormous number of options (perhaps too many)
+which let you change the way it behaves.
+Chances are, there is a way to make less do what you want.
+A complete description of all these features is in the less man page,
+but here's a summary of some of the more popular ones.
+</P>
+<DL>
+<DT>Quit at end-of-file
+<DD>To make less automatically quit as soon as it reaches the end of the file
+(so you don't have to hit "q"), set the -E option.
+<DT>Verbose prompt
+<DD>To see a more verbose prompt, set the -m or -M option.
+You can also design your own prompt; see the man page for details.
+<DT>Clear the whole screen
+<DD>To make less clear and repaint the screen rather than scrolling
+when you move to a new page of text, set the -C option.
+<DT>Case-less searches
+<DD>To treat upper-case and lower-case letters the same in searches,
+set the -I option.
+<DT>Start at a specific place in the file
+<DD>To start at a specific line number, say line 150, 
+use "<CODE>less +150 filename</CODE>".
+To start where a specific pattern first appears,
+use "<CODE>less +/pattern filename</CODE>".
+To start at the end of the file, use "<CODE>less +G filename</CODE>".
+<DT>Scan all instances of a pattern in a set of files
+<DD>To search multiple files, use "<CODE>/*pattern</CODE>"
+instead of just "<CODE>/pattern</CODE>".
+To do this from the command line, use "<CODE>less '+/*pattern' ...</CODE>".
+Note that you may need to quote the "<CODE>+/*pattern</CODE>" argument 
+to prevent your shell from interpreting the "<CODE>*</CODE>".
+<DT>Watch a growing file
+<DD>Use the F command to go to the end of the file and keep
+displaying more text as the file grows.
+You can do this from the command line by using "<CODE>less +F ...</CODE>".
+<DT>Change keys
+<DD>The <CODE>lesskey</CODE> program lets you change the meaning
+of any key or sequence of keys.  See the lesskey man page for details.
+<DT>Save your favorite options
+<DD>If you want certain options to be in effect whenever you run less, 
+without needing to type them in every time,
+just set your "<CODE>LESS</CODE>" environment variable to the options you want.
+(If you don't know how to set an environment variable,
+consult the documentation for your system or your shell.)
+For example, if your <CODE>LESS</CODE> environment variable 
+is set to "<CODE>-IE</CODE>", every time you run less 
+it will do case-less searches and quit at end-of-file.
+</DL>
+
+<!-- ================================================================== -->
+<A NAME="build">
+<H3>I can't get less to build!</H3>
+<P>
+There are a number of possible reasons why less 
+may not be building on your system.
+If you're building on a Unix system, and you ran "sh configure" once,
+you might try removing the "config.log" and "config.cache" files and
+trying it all from scratch again; that is, run "sh configure" again.
+</P>
+<P>
+If that doesn't help and you're still stumped, send 
+<A HREF="#mail">email to the author</A> describing your problem.
+If possible, include the messages produced by the configure 
+and/or make procedures.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="unix">
+<H3>Do I need Unix to use less?</H3>
+<P>
+Less was originally developed for Unix, but has been ported
+to a variety of other systems, including MS-DOS, Windows, OS/2, and OS-9,
+as well as Unix variants like Linux, FreeBSD and Solaris.
+See the <A HREF="download.html">download</A> page for a
+list of supported systems.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="intl">
+<H3>Can less display non-English language characters?</H3>
+<P>
+Less has two ways to display non-English characters.
+If your system uses a non-ASCII single-byte character set,
+you should set up your system with the correct "locale" settings.
+If your system does not support setlocale, you can set the
+<CODE>LESSCHARSET</CODE> or <CODE>LESSCHARDEF</CODE>
+environment variable to tell less what language you are using.
+See the section "NATIONAL CHARACTER SETS" in the man page for details.
+</P>
+<P>
+If your system supports the UTF-8 encoding of Unicode for
+non-ASCII text, as many modern systems do,
+you should either set your locale to something that includes 
+the string "UTF-8" or "UTF8" (either uppercase or lowercase is ok),
+or set <CODE>LESSCHARSET</CODE> to "utf-8".
+</P>
+
+<!-- ================================================================== -->
+<A NAME="wrap">
+<H3>Why does less scroll off the screen if there are long lines?</H3>
+<P>
+If you see data scroll off the screen when you view lines longer
+than the screen width, something is wrong.
+There are two likely possibilities.
+First, you may be using the -r option (either explicitly or in
+your LESS environment variable).
+The man page states that the -r option may cause display problems
+(see <A HREF="#dashr">Why does -r cause display problems?</A> for more details).
+The other possibility is more difficult to diagnose: you may have
+a mismatch between your termcap or terminfo setup and the type of your terminal.
+On most systems, you should check that:
+<UL>
+<LI>your TERM environment variable matches the type of terminal you are using.
+<LI>the environment variables LINES and COLUMNS are correct
+for your terminal (if they are set).
+<LI>"stty rows" and "stty columns" are correct for your terminal
+(if they are non-zero).
+</UL>
+</P>
+
+<A NAME="optfile">
+<H3>How can I view a file whose name looks like a command line option?</H3>
+<P>
+If a filename begins with a dash or a plus sign, you can't just say
+<BR>
+<CODE> less -funnyfile </CODE>
+<BR>
+because less will think the name is a command line option.
+The best way to view such a file is to use "--" to mark the end of the
+real options (if any):
+<BR>
+<CODE> less -- -funnyfile </CODE>
+<BR>
+</P>
+
+
+<!-- ================================================================== -->
+<A NAME="dashr">
+<H3>Why does -r cause display problems?</H3>
+<P>
+Less needs to keep track of where the cursor is
+on the screen as it displays text, so that it knows when it reaches the
+end of the line.  
+If the screen is 24 lines high, less wants to display
+enough text to exactly fill those 24 lines.  
+To do this, it needs to know
+when it reaches the end of a line on the screen.  
+But if it just starts outputting raw control characters (like ESC), 
+it won't be able to keep track of this.  
+For example, if less outputs four ordinary characters, it
+moves the cursor four spaces to the right.
+But on a vt220 terminal, if less outputs
+the four characters "ESC [ 1 m", it merely switches the terminal to
+"bold", but doesn't move the cursor.  
+On the other hand, if it outputs "ESC [ 1 H", 
+it moves the cursor to the top left corner of the screen!
+Obviously less would need to know what every escape sequence does
+to the particular terminal being used, which is not practical. 
+So by default less does not output ESC or other control characters,
+to avoid this problem.
+When -r is set, it does output control characters, but then
+it is no longer possible to determine when the text wraps to
+a new line on the display,
+so the display may not be accurate in all cases.
+</P>
+<P>
+One reason you might be using -r is to "pass through" the escape
+sequences that change the color of text.
+You can use -R instead of -r to pass through these color escape sequences,
+and less will understand that such sequences don't move the cursor.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="dashw">
+<H3>Why is the first line on the screen highlighted?</H3>
+You probably have the -w flag set in your LESS environment variable
+or in your lesskey file.
+The meaning of the -w flag changed in version 346.
+Previously it turned off the tildes displayed after end-of-file,
+now it highlights the first unread line on each new screen.
+Use the -~ flag to turn off tildes.
+
+<!-- ================================================================== -->
+<A NAME="tite">
+<H3>Can less leave the screen alone when it quits?</H3>
+<P>
+When less starts, it sends the "ti" termcap string to the terminal,
+and when it quits, it sends the "te" string.
+Exactly what the "te" string does depends on the system you are using, 
+the type of terminal, and your version of termcap.
+On some systems, it does nothing; on others it restores the screen
+to the state it was in when less started, thus erasing from the screen
+the last page of the file which less was viewing.
+<P>
+If you don't like the behavior of "te" on your system,
+you can disable the sending of the "ti" and "te" strings by 
+invoking less with the -X option.
+Unfortunately, this sometimes has other side effects, because the
+"ti"/"te" strings might do other things that are required.
+For example, on some terminals, disabling "ti" and "te" causes arrow
+keys to cease to function.
+<P>
+If you want "te" to do something different (for example, restore
+the screen if it's not doing that already), you'll have to figure
+out how to change the termcap or terminfo for your terminal on your system.
+Unfortunately, this is done differently on different systems,
+so you'll have to check the documentation for your system.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="dashe">
+<H3>Why doesn't less quit when it reaches the end of the file?</H3>
+<P>
+Normally, less doesn't quit until you type "q".
+You can make it quit as soon as it reaches the end of the file
+by using the -E option.
+However, many (but not all) people prefer to have less remain active until
+they explicitly quit, because they might wish to back up and look
+at earlier parts of the file again.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="ctrlc">
+<H3>Why doesn't less quit when I type control-C?</H3>
+<P>
+Control-C on Unix systems is an "interrupt" character; it is supposed
+to stop whatever the current program is doing.
+Many programs react to control-C by just quitting.
+But in many interactive programs, such as less and vi,
+control-C stops whatever the program was doing and returns the program
+to an "idle" state, where it's just waiting for a command.
+For example, in less you can use control-C to stop a long search,
+or to stop the F command, without quitting the program.
+If you really want to quit, just type "q".
+If you really really want control-C to cause less to quit,
+you can use the -K option.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="csh">
+<H3>Why does it take so long to start the editor / start a shell?</H3>
+<P>
+If you use csh, you may find it takes a long time to start a shell
+(using the "!" command) or to start an editor (using the "v" command).
+This is usually because your .cshrc file contains many commands.
+Csh executes the commands in .cshrc each time less starts a subshell.
+If you only need these commands executed once at login, and not
+in every subshell, you can move them to .login instead of .cshrc.
+Changing your SHELL environment variable to "sh" can also avoid
+this problem, although you will then be using sh rather than csh
+in programs that use the SHELL variable.
+You can also try setting SHELL to "csh -f", which tells
+csh not to execute the .cshrc or .login files.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="csh2">
+<H3>Why does it say
+"<CODE>stty: TCGETS: Operation not supported on socket</CODE>"?</H3>
+<P>
+If you see this message and you're using csh, you probably have
+a "<CODE>stty</CODE>" command in your .cshrc file.
+You should either move this to your .login file so it only gets
+executed once, when you login;
+or set your SHELL variable to "csh -f", which tells
+csh not to execute the .cshrc or .login files.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="profileout">
+<H3>Why are there problems if my .cshrc, .profile or ENV files produce output?</H3>
+<P>
+Like some other programs, less invokes the shell to perform certain
+operations, such as expanding special characters in filenames.
+It does this by invoking a shell program and reading the program's output.
+If the shell itself produces output, this interferes with the
+output coming from the program that less is trying to read from.
+This problem is not unique to less; for example, if you have your
+shell set up to produce output from a .cshrc or ENV file and 
+then you try the command "<CODE>:n *.c</CODE>" from within vi,
+you'll see a similar problem.
+</P>
+<P>
+If you use the LESSOPEN feature, having your shell produce output
+can cause other problems.
+Since less uses the shell to invoke the LESSOPEN filter, the
+output from the shell will appear at the beginning of the output
+from the filter program, causing it to appear to be part of the file.
+</P>
+<P>
+In general, it's not a good idea for a .cshrc or ENV file 
+to produce output.
+If you use csh, tcsh or a variant, you can move the output commands
+to your .login file so they only get
+executed once, when you login;
+or set your SHELL variable to "csh -f", which tells
+csh not to execute the .cshrc or .login files.
+If you use sh, ksh, bash or a variant, you can move the output commands
+from your ENV file to your .profile file so they only get executed once
+when you login.
+Unfortunately, some older versions of these shells execute the .profile
+every time a shell is invoked rather than only at login.
+For such shells, it is best to avoid output in the .profile,
+or arrange for the output to appear only at login time in some other way.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="filter">
+<H3>Can less view compressed files?</H3>
+<P>
+Less provides a mechanism to <I>preprocess</I> the file being viewed.
+The preprocessing can decompress a compressed file, or do other
+arbitrary processing on the file contents.
+However, each user must specify their own preprocessor.
+See the INPUT PREPROCESSOR section of the man page for more details.
+Less does not provide any default preprocessing, because the types
+of compressed files likely to be viewed depends on the 
+work habits of the particular user.
+In a future release of less, some automatic preprocessing may be provided.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="searchlt">
+<H3>Why do I get a segmentation fault if I search for a pattern containing "\&lt;"?</H3>
+<P>
+Less usually uses the pattern matching library supplied by 
+the operating system on which it runs.
+This pattern matching library is sometimes called the "regular expresson library".
+There is a bug in some regular expression libraries which sometimes causes
+the program to crash if you search for a pattern that includes a
+backslash followed by a less-than sign.
+This bug seems to be in glibc 2.2.2, and possibly other versions.
+It is known to exist in several versions of Linux.
+Less has a built-in regular expression library which does not have
+this bug; if you wish to use it, compile with
+<BR>
+<CODE>
+	configure --with-regex=regcomp-local
+</CODE>
+</P>
+
+<!-- ================================================================== -->
+<A NAME="linux269">
+<H3>Why doesn't less work with Linux 2.6.9?</H3>
+<P>
+There appears to be a bug in the Linux 2.6.9 release 
+which causes <CODE>/dev/tty</CODE> to be created as a directory
+instead of a character file as it should be
+(it appears that <CODE>/dev/pty</CODE> was inadvertently renamed 
+to <CODE>/dev/tty</CODE>).
+This causes less to exit immediately after displaying
+the first page of the output.
+Reportedly, upgrading to the latest <CODE>udev</CODE> package
+will fix this.
+</P>
+
+<!-- ================================================================== -->
+<A NAME="version">
+<H3>Why are there no dots in the version number?</H3>
+<P>
+I use a very simple version numbering scheme.
+The first version of less was version 1.
+The next was version 2.  And so on.
+There are no "major" and "minor" releases, so there
+are no dots in the version number.
+So version 381 is the three hundred and eighty-first version of less.
+It's just 381, not 3.81 or 3.8.1.
+</P>
+
+</BODY>
+</HTML>
+

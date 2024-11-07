@@ -1,0 +1,15 @@
+# ftp.altlinux.org (ALT Linux, Moscow)
+
+# ALT Platform 10
+#rpm [p10] ftp://ftp.altlinux.org/pub/distributions/ALTLinux p10/branch/x86_64 classic
+#rpm [p10] ftp://ftp.altlinux.org/pub/distributions/ALTLinux p10/branch/x86_64-i586 classic
+#rpm [p10] ftp://ftp.altlinux.org/pub/distributions/ALTLinux p10/branch/noarch classic
+
+#rpm [p10] http://ftp.altlinux.org/pub/distributions/ALTLinux p10/branch/x86_64 classic
+#rpm [p10] http://ftp.altlinux.org/pub/distributions/ALTLinux p10/branch/x86_64-i586 classic
+#rpm [p10] http://ftp.altlinux.org/pub/distributions/ALTLinux p10/branch/noarch classic
+
+#rpm [p10] rsync://ftp.altlinux.org/ALTLinux p10/branch/x86_64 classic
+#rpm [p10] rsync://ftp.altlinux.org/ALTLinux p10/branch/x86_64-i586 classic
+#rpm [p10] rsync://ftp.altlinux.org/ALTLinux p10/branch/noarch classic
+

@@ -1,0 +1,3 @@
+#%PAM-1.0
+auth		required	pam_tcb.so shadow fork nullok use_first_pass
+password	required	pam_tcb.so use_authtok shadow fork nullok write_to=tcb

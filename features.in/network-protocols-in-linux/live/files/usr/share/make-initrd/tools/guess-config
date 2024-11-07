@@ -1,0 +1,98 @@
+#!/bin/bash -eu
+
+. guess-functions
+
+modules_fmt() {
+	while read -r m; do
+		m="${m##*/}"
+		m="${m%.ko*}"
+		printf '%s ' "$m"
+	done |
+		fmt -u -w60
+}
+
+print_vars() {
+	f="$guessdir/guess:variables"
+
+	[ "$(cat "$f":* 2>/dev/null |wc -l)" != "0" ] ||
+		return 0
+
+	for m in "$f":*; do
+		[ -s "$m" ] ||
+			continue
+		n="${m##*:}"
+		printf '%s = \\\n' "$n"
+		sort -u "$m" |
+			tr '\n' ' ' |
+			fmt |
+			sed -e 's/^/\t/; $ ! s/$/ \\/'
+	done
+
+	printf '\n'
+}
+
+print_list() {
+	f="$guessdir/guess:$2"
+
+	[ "$(cat "$f"* |wc -l)" != "0" ] ||
+		return 0
+
+	printf '%s += \\\n' "$1"
+
+	for m in "$f:"* "$f"; do
+		[ -s "$m" ] ||
+			continue
+
+		fn="${m##*/guess:}"
+		name="${fn##*:}"
+		type="${fn%%:*}"
+
+		[ "$type" = 'features' ] ||
+			guess_feature add-modules
+
+		if [ -n "${verbose-}" ]; then
+			{
+				printf 'Module "%s" propose %s:\n' "$name" "$type"
+				sort -u "$m" | modules_fmt
+				printf '\n'
+			} >&2
+		fi
+
+		cat "$m"
+	done |
+		sort -u |
+		modules_fmt |
+		sed -e 's/^/\t/; $ ! s/$/ \\/'
+	printf '\n'
+}
+
+if [ -n "${RESOLVE_MODALIAS-}" ]; then
+	for m in "$guessdir"/guess:modalias*; do
+		[ -s "$m" ] ||
+			continue
+
+		suffix=
+		[ -z "${m##*/guess:modalias}" ] ||
+			suffix=":${m##*/guess:modalias:}"
+
+		depinfo \
+				--input="$m" \
+				${USE_MODPROBE_BLACKLIST:+--use-blacklist} \
+				--set-version="$kernel" \
+				--no-deps \
+				--no-prefix \
+				--no-firmware \
+				--no-builtin \
+			2>/dev/null |
+			sort -u >> "$guessdir/guess:modules$suffix"
+
+		rm -f "$m"
+	done
+fi
+
+print_vars
+print_list RESCUE_MODULES modules:rescue
+print_list RESCUE_MODULES modalias:rescue
+print_list MODULES_ADD    modules:add
+print_list MODULES_ADD    modalias:add
+print_list FEATURES       features

@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+echo 'LESSOPEN="|/usr/share/less/lesspipe.sh %s"; export LESSOPEN'

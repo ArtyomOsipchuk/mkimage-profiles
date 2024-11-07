@@ -1,0 +1,2 @@
+# iptables firewall config file in iptables-save format.
+# DO NOT USE THE -t (table) OPTION IN THIS FILE!

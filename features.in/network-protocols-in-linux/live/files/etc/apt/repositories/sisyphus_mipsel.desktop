@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Icon=sisyphus
+Terminal=false
+Name=ALT Linux Sisyphus (mipsel)
+X-Sign=sisyphus-mipsel
+X-Path=/ports/mipsel/Sisyphus
+X-Has-Noarch=yes
+X-Has-Arepo=no
+X-Components=classic
+X-Has-Arches=mipsel

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+LC_ALL=C grep -Eqs '^/etc/alternatives/packages[.]d(/|$)' || exit 0
+
+alternatives-validate
+alternatives-update

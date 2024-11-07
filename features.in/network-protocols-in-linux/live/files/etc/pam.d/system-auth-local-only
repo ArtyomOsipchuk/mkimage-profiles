@@ -1,0 +1,6 @@
+#%PAM-1.0
+auth		required	pam_tcb.so shadow fork nullok
+account		required	pam_tcb.so shadow fork
+password	required	pam_passwdqc.so config=/etc/passwdqc.conf
+password	required	pam_tcb.so use_authtok shadow fork nullok write_to=tcb
+session		required	pam_tcb.so

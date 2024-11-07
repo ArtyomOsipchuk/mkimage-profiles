@@ -1,0 +1,311 @@
+ Особенности сборки Vim в дистрибутивах ALT Linux.
+
+1. Разбивка на подпакеты.                                                 {{{1
+
+  + vim-minimal: options=TINY, GUI=none
+  + vim-common: общие файлы для всех вариантов сборки
+   + vim-console: options=HUGE, -perl/python/ruby/tcl/mzscheme, GUI=none
+   + vim-enhanced: options=HUGE, +perl/python/ruby/tcl, GUI=none
+   + vim-X11: общие файлы для всех GUI вариантов сборки
+    + vim-X11-gnome2: options=HUGE, +perl/python/ruby/tcl, GUI=GNOME2
+    + vim-X11-gtk: options=HUGE, +perl/python/ruby/tcl, GUI=Gtk+
+    + vim-X11-gtk2: options=HUGE, +perl/python/ruby/tcl, GUI=Gtk+2
+    + vim-X11-gtk3: options=HUGE, +perl/python/ruby/tcl, GUI=Gtk+3
+    + vim-X11-motif: options=HUGE, +perl/python/ruby/tcl, GUI=Motif (OpenMotif)
+   + vimtutor: VIM tutor
+   + vim-doc-LL: переводы официальной документации
+   + vim-spell-LL: словари проверки орфографии для языка LL
+   + vim-plugin-*: сторонние плагины
+  + rpm-build-vim: rpm макросы, необходимые для сборки дополнительных плагинов
+
+ Переключение между различными вариантами сборки производится при помощи
+пакета alternatives.
+
+                                                                          1}}}
+2. Инициализация.                                                         {{{1
+
+ Процесс инициализации Vim описан в ":help initialization", отличия в сборках
+ALT Linux:
+
+  Чтение файлов конфигурации происходит в следующем порядке (* помечены файлы,
+ обрабатываемые только GUI версией Vim):
+
+  + /etc/vim/vimrc
+  + ~/.vimrc
+  + /etc/vim/gvimrc (*)
+  + ~/.gvimrc (*)
+
+  По умолчанию опция 'runtimepath' выглядит следующим образом:
+
+  + ~/.vim
+  + /usr/share/vim/vimfiles
+  + $VIMRUNTIME (/usr/share/vim)
+  + /usr/share/vim/vimfiles/after
+  + ~/.vim/after
+
+                                                                          1}}}
+3. RPM макросы.                                                           {{{1
+
+  В пакете rpm-build-vim находятся RPM макросы, облегчающие сборку
+ дополнительных плагинов:
+
+3.1 Глобальные каталоги, используемые Vim:                                {{{2
+
+  + %vim_dir         - $VIMRUNTIME (/usr/share/vim)
+  + %vim_runtime_dir - global runtime (/usr/share/vim/vimfiles)
+  + %vim_after_dir   - global runtime "after" (/usr/share/vim/vimfiles/after)
+                                                                          2}}}
+3.2 Дополнительные подкаталоги в %vim_runtime_dir:                        {{{2
+
+  + %vim_autoload_dir - .../autoload
+  + %vim_colors_dir   - .../colors
+  + %vim_compiler_dir - .../compiler
+  + %vim_doc_dir      - .../doc
+  + %vim_ftdetect_dir - .../ftdetect
+  + %vim_ftplugin_dir - .../ftplugin
+  + %vim_indent_dir   - .../indent
+  + %vim_keymap_dir   - .../keymap
+  + %vim_lang_dir     - .../lang
+  + %vim_plugin_dir   - .../plugin
+  + %vim_print_dir    - .../print
+  + %vim_syntax_dir   - .../syntax
+                                                                          2}}}
+3.3 Дополнительные подкаталоги в %vim_after_dir:                          {{{2
+
+  + %vim_after_compiler_dir - .../compiler
+  + %vim_after_ftplugin_dir - .../ftplugin
+  + %vim_after_indent_dir   - .../indent
+  + %vim_after_plugin_dir   - .../plugin
+  + %vim_after_syntax_dir   - .../syntax
+                                                                          2}}}
+3.4 Макрос, определяющий URL по номеру скрипта:                           {{{2
+
+  + %vim_script_url()
+
+  Пример использования:
+
+Url: %vim_script_url 39
+
+  Этот макрос будет раскрыт в:
+
+Url: http://www.vim.org/scripts/script.php?script_id=39
+                                                                          2}}}
+3.5 Макросы для создания пакетов со словарями проверки орфографии:        {{{2
+
+  + %vim_spell_dir    - $VIMRUNTIME/spell
+  + %vimspell_version - внутренняя версия интерфейса проверки орфографии
+  + %mkvimspell       - макрос для компиляции словарей MySpell в формат Vim
+
+  Примеры использования:
+
+Conflicts: vimspell-interface < %vimspell_version
+Conflicts: vimspell-interface > %vimspell_version
+
+...
+
+%build
+...
+for enc in KOI8-R CP1251 UTF-8; do
+  %mkvimspell -L ru_RU.$enc ru ru/ru_IE ru/ru_YO
+done
+                                                                          2}}}
+                                                                          1}}}
+4. Рекомендации по сборке дополнительных плагинов.                        {{{1
+
+  Все пакеты с дополнительными плагинами (кроме переводов официальной
+ документации и словарей проверки орфографии) должны придерживаться следующих
+ правил:
+
+4.1 Общие рекомендации.                                                   {{{2
+
+  Имена пакетов должны иметь вид
+
+  vim-plugin-NAME[-TYPE], где
+
+  NAME - название пакета
+  TYPE - тип пакета (опционально)
+
+  Как правило, тип пакета зависит от его местонахождения. Рекомендуемые типы
+ пакетов:
+
+  .../colors   - colorscheme
+  .../compiler - compiler
+  .../ftplugin - filetype
+  .../indent   - indent
+  .../plugin   - не используется
+  .../print    - print
+  .../syntax   - syntax
+
+  Все пакеты должны иметь сборочную зависимость на rpm-build-vim:
+
+BuildRequires(pre): rpm-build-vim
+
+  !!!ВНИМАНИЕ!!! Эта зависимость не определяется автоматически при помощи
+ buildreq из пакета rpm-utils.
+
+  Все пакеты, использующие Vim в процессе сборки пакета, должны иметь
+ сборочную зависимость на vim-console при условии, что не требуется
+ дополнительной функциональности, в противном случае пакет должен иметь
+ сборочную зависимость на vim-enhanced *И* проверять наличие необходимого
+ функционала в run time, не создавая сообщений от ошибках:
+
+if &cp || !has("python")
+  if !&cp && &verbose
+    echo "KABOOM!  I need Python support..."
+  endif
+  finish
+endif
+
+...
+                                                                          2}}}
+4.2 Расположение файлов.                                                  {{{2
+
+  Все скрипты и документация должны находиться внутри %vim_runtime_dir.
+ Поскольку скрипты в %vim_runtime_dir обрабатываются раньше скриптов
+ в $VIMRUNTIME, это позволяет переопределить стандартные цветовые схемы,
+ компиляторы, и т.д.
+                                                                          2}}}
+4.3 Конфигурация по умолчанию.                                            {{{2
+
+  Все плагины, переопределяющие стандартные скрипты из vim-common (для типов
+ compiler, indent, print, syntax), и все плагины с типами filetype и plugin
+ должны быть по умолчанию выключены.
+
+  Механизм включения должен быть одинаковым для всех плагинов. Это достигается
+ добавлением следующего кода в начало скрипта:
+
+if !exists("use_name_type")
+ finish
+endif
+
+ где "use_name_type" - уникальная переменная, состоящая из имени плагина (не
+ обязательно совпадающего с именем скрипта, например плагин vimruby, скрипт
+ ruby.vim) и опционально типа скрипта.
+
+  Для использования плагина пользователю достаточно в .vimrc добавить строку:
+
+let use_name_type = 1
+
+ о чём должно быть упоминание в %description пакета:
+
+...
+To enable this plugin define "use_some_filetype" variable somewhere
+in your .vimrc file.
+
+  Если какие либо из плагинов попадают в основной дистрибутив Vim, в пакет
+ vim-common прописывается соответствующий Obsoletes:
+
+Provides: vim-plugin-NAME-TYPE = VERSION.vim
+Obsoletes: vim-plugin-NAME-TYPE <= VERSION
+
+  При этом к версии плагина, указанной в Provides пакета vim-common,
+ добавляется суффикс ".vim".
+                                                                          2}}}
+4.4 Переводы официальной документации.                                    {{{2
+
+  Структура переводов официальной документации описана в
+ ":help help-translated". Пакет с документацией имеет следующие отличия:
+
+  1. Имя пакета vim-doc-LL, где LL - двухсимвольный код языка
+  2. Пакет содержит только файлы %vim_dir/doc/*.LLx и %vim_dir/doc/tags-LL
+  3. BuildArch необходимо установить в noarch.
+                                                                          2}}}
+4.5 Словари проверки орфографии.                                          {{{2
+
+  Дополнительные словари проверки орфографии должны придерживаться следующих
+ правил:
+
+  1. Имя пакета vim-spell-LL, где LL - двухсимвольный код языка
+  2. Пакет содержит только файлы %vim_spell_dir/LL.*.spl, LL.*.sug,
+     (опционально LL.vim) и README_LL.txt в качестве документации.
+  3. Версия пакета должна выглядеть как %vimspell_version.ДАТА, где ДАТА
+     - дата последней модификации самого нового патча к словарям этого языка
+     из %vim_spell_source_dir/LL/
+  4. BuldArch необходимо установить в noarch.
+
+  Для компиляции словарей необходимо использовать макрос %mkvimspell,
+ принимающий одну обязательную опцию, -L ЛОКАЛЬ для указания кодировки словаря
+ или -a для генерации ASCII версии.  Примерный spec-файл выглядит следующим
+ образом:
+
+=== vim-spell-en.spec ===                                                 {{{3
+%define spelllang en
+%define fulllang English
+
+Name: vim-spell-%spelllang
+Version: %vimspell_version.20060311
+Release: alt1
+
+Summary: VIM spelling dictionaries (%fulllang)
+Group: Text tools
+License: distributable
+Url: http://ftp.services.openoffice.org/pub/OpenOffice.org/contrib/dictionaries
+
+BuildArch: noarch
+
+Source1: %url/en_US.zip
+Source2: %url/en_AU.zip
+Source3: %url/en_CA.zip
+Source4: %url/en_GB.zip
+Source5: %url/en_NZ.zip
+
+BuildPreReq: vim-devel >= 4:7.0 vim-spell-source vim-console
+BuildRequires: unzip patch
+
+%description
+VIM (VIsual editor iMproved) is an updated and improved version of the vi
+editor.  Vi was the first real screen-based editor for UNIX, and is still
+very popular.  VIM improves on vi by adding new features: multiple windows,
+multi-level undo, block highlighting and more.  The vim-common package
+contains files which every VIM binary will need in order to run.
+
+This package contains dictionaries for VIM's spellchecking feature (%fulllang).
+
+%prep
+%setup -T -c
+%__cp -a %vim_spell_source_dir/%{spelllang}* .
+pushd %spelllang
+for dict in en_US en_AU en_CA en_GB en_NZ; do
+  %__unzip -qa "%_sourcedir/$dict.zip"
+  patch <"$dict.diff"
+done
+popd
+
+%build
+pushd %spelllang
+  echo "en_US:" >../README_%spelllang.txt
+  %__cat README_en_US.txt >>../README_%spelllang.txt
+  echo "===================================================" >>../README_%spelllang.txt
+  echo "en_AU:" >>../README_%spelllang.txt
+  %__cat README_en_AU.txt >>../README_%spelllang.txt
+  echo "===================================================" >>../README_%spelllang.txt
+  echo "en_CA:" >>../README_%spelllang.txt
+  %__cat README_en_CA.txt >>../README_%spelllang.txt
+  echo "===================================================" >>../README_%spelllang.txt
+  echo "en_GB:" >>../README_%spelllang.txt
+  %__cat README_en_GB.txt >>../README_%spelllang.txt
+  echo "===================================================" >>../README_%spelllang.txt
+  echo "en_NZ:" >>../README_%spelllang.txt
+  %__cat README_en_NZ.txt >>../README_%spelllang.txt
+popd
+
+%mkvimspell -a                 %spelllang %spelllang/en_US %spelllang/en_AU %spelllang/en_CA %spelllang/en_GB %spelllang/en_NZ
+%mkvimspell -L en_US.ISO8859-1 %spelllang %spelllang/en_US %spelllang/en_AU %spelllang/en_CA %spelllang/en_GB %spelllang/en_NZ
+%mkvimspell -L en_US.UTF-8     %spelllang %spelllang/en_US %spelllang/en_AU %spelllang/en_CA %spelllang/en_GB %spelllang/en_NZ
+
+%install
+%__mkdir_p %buildroot%vim_spell_dir
+
+%__install -p -m644 %spelllang.* %buildroot%vim_spell_dir/
+
+%files
+%doc README_%spelllang.txt
+%vim_spell_dir/%spelllang.*
+
+%changelog
+* Wed Mar 29 2006 Sir Raorn <raorn@altlinux.ru> 50.1.20060311-alt1
+- Built for vim7
+=== vim-spell-en.spec ===                                                 3}}}
+                                                                          2}}}
+                                                                          1}}}
+ vim:tw=78:fdm=marker:fo=tcqn21:noet:norl:

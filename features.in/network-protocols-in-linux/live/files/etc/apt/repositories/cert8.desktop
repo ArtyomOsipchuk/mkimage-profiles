@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Icon=sisyphus
+Terminal=false
+Name=ALT Certified 8
+Name[ru]=Репозиторий обновлений для Альт 8 СП
+X-Sign=cert8
+X-Path=/c8/branch
+X-Has-Noarch=yes
+X-Has-Arepo=yes
+X-Components=classic
+X-Has-Arches=armh aarch64 ppc64le i586 x86_64

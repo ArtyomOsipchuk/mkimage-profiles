@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Icon=sisyphus
+Terminal=false
+Name=ALT Linux Platform 9 (mipsel)
+Name[ru]=Девятая платформа (mipsel)
+X-Sign=p9-mipsel
+X-Path=/ports/mipsel/p9
+X-Has-Noarch=yes
+X-Components=classic
+X-Has-Arepo=yes
+X-Has-Arches=mipsel

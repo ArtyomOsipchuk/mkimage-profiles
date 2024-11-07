@@ -1,0 +1,6 @@
+#!/bin/sh -e
+
+LC_ALL=C grep -E -qs '^/(usr/lib|etc)/systemd/user/' || exit 0
+if sd_booted; then
+  /lib/systemd/systemd-update-helper user-reload-restart || :
+fi

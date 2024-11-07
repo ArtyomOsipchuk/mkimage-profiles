@@ -1,0 +1,106 @@
+#!/bin/bash -efu
+
+. sh-functions
+
+SYSFS_PATH="${SYSFS_PATH:-/sys}"
+reportdir="$workdir/report"
+
+c=/
+progress()
+{
+	case "$1" in
+		'/') c='-' ;;
+		'-') c='\' ;;
+		'\') c='|' ;;
+		'|') c='/' ;;
+	esac
+	# shellcheck disable=SC2169
+	echo -en "\rPlease wait ... $1 "
+}
+
+copy()
+{
+	find -P "$@" -regextype egrep \! -type d |
+	while read -r filename; do
+		progress "$c"
+		mkdir -p -- "$reportdir/${filename%/*}"
+		cp -d --preserve=all -- \
+			"$filename" "$reportdir/${filename%/*}"/ 2>/dev/null ||:
+	done
+}
+
+progress "$c"
+mkdir -p -- \
+	"$reportdir"/boot \
+	"$reportdir"/etc \
+	"$reportdir"/sys \
+	"$reportdir"/proc/self \
+#
+
+if [ -f "${KERNEL_CONFIG-}" ]; then
+	cp -a \
+		"$KERNEL_CONFIG" \
+		"$reportdir"/boot/
+	progress "$c"
+fi
+
+kver="$(uname -r)" ||:
+if [ -n "$kver" ]; then
+	find "/lib/modules/$kver" -mindepth 1 -maxdepth 1 -type f -name 'modules.*' |
+	while read -r filename; do
+		copy "$filename"
+	done
+fi
+
+mkdir -p -- "$reportdir"/dev
+LANG=C find /dev \! -type d -exec ls -lad '{}' '+' >"$reportdir"/dev/list
+progress "$c"
+
+(
+	export LANG=C;
+	find /dev \( -type b -o -type c \) -exec stat -L -c '%A %t %T %n' '{}' '+' 2>/dev/null |
+		sort >"$reportdir"/dev/devlist
+) ||
+	rm -f -- "$reportdir"/dev/devlist
+progress "$c"
+
+blkid -c /dev/null >"$reportdir"/etc/blkid.out
+progress "$c"
+
+copy \
+	/etc/blkid.tab \
+	/etc/fstab \
+	/proc/cmdline \
+	/proc/config.gz \
+	/proc/cpuinfo \
+	/proc/crypto \
+	/proc/devices \
+	/proc/filesystems \
+	/proc/mdstat \
+	/proc/modules \
+	/proc/mounts \
+	/proc/partitions \
+	/proc/self/mountinfo \
+	/proc/self/mounts \
+	/proc/sys \
+	/proc/version \
+	"$SYSFS_PATH/block" \
+	"$SYSFS_PATH/bus" \
+	"$SYSFS_PATH/class" \
+	"$SYSFS_PATH/dev" \
+	"$SYSFS_PATH/devices" \
+	"$SYSFS_PATH/firmware" \
+	"$SYSFS_PATH/module" \
+#
+
+[ -z "${VERSION-}" ] ||
+	printf '%s\n' "$VERSION" > "$reportdir"/.version
+progress "done"
+echo
+
+outfile="$PWD/make-initrd-bugreport-$(date +"%Y%m%d").tar.bz2"
+
+cd "$workdir"
+tar -cjf "$outfile" report
+
+printf '\nPlease submit %s to authors\n\n' "$outfile"

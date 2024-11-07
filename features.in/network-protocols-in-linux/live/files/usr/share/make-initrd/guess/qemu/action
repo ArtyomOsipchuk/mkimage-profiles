@@ -1,0 +1,41 @@
+#!/bin/bash -eu
+
+. guess-functions
+
+found() {
+	guess_feature qemu
+	exit
+}
+
+find_qemu() {
+	local basedir path syspath n
+
+	basedir="$SYSFS_PATH$1"
+	shift
+
+	for path in "$basedir"/*; do
+		syspath=$(readlink -ev "$path" 2>/dev/null) ||
+			continue
+
+		while [ "$syspath" != "$SYSFS_PATH" ]; do
+			for n in "$@"; do
+				[ ! -f "$syspath/$n" ] ||
+				! grep -qsi 'QEMU' "$syspath/$n" ||
+					found
+			done
+			syspath="${syspath%/*}"
+		done
+	done
+}
+
+! grep -qs 'linux,dummy-virt' "$SYSFS_PATH"/firmware/devicetree/base/compatible ||
+	found
+
+! grep -qsi 'QEMU' "$PROCFS_PATH"/cpuinfo ||
+	found
+
+! (lspci -vv |grep -qsi 'QEMU') 2>/dev/null ||
+	found
+
+find_qemu '/class/block' vendor model name product manufacturer
+find_qemu '/class/input' vendor model name product manufacturer

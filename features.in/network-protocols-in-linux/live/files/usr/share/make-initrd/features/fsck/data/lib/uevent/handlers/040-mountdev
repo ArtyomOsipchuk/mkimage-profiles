@@ -1,0 +1,64 @@
+#!/bin/bash
+
+. /.initrd/initenv
+. /etc/init.d/functions
+. uevent-sh-functions
+. rdshell-sh-functions
+. initrd-sh-functions
+. state-sh-functions
+
+message_time=1
+
+handler()
+{
+	resume_checked ||
+		return 1
+
+	[ -z "${NO_FSCK-}" ] &&
+		[ -z "${FASTBOOT-}" ] &&
+		[ -d "$MOUNTPOINT" ] &&
+		! mountpoint -q "$MOUNTPOINT" ||
+		return 0
+
+	local rc=0
+
+	rootdelay_pause
+
+	action "Checking filesystem [$MOUNTDEV]:" fsck -t noloop,noswap -Tay "$MOUNTDEV" ||
+		rc=$?
+
+	if [ "$rc" = 0 ] || [ "$rc" = 1 ]; then
+		rootdelay_unpause
+
+		majmin="$(get_majmin "$MOUNTDEV")" &&
+			echo 'done' | statefs_write "/devices/block/$majmin/fsck" ||:
+
+		return 0
+	fi
+
+	if [ "$rc" -gt 3 ]; then
+		echo
+		echo "*** An error occurred during the file system check"
+		echo "*** Dropping you to a shell; the system will reboot"
+		echo "*** when you leave the shell."
+		echo "*** Mountpoint: $MOUNTPOINT"
+		echo "***     Device: $MOUNTDEV"
+		echo
+		rdshell
+	fi
+
+	reboot
+}
+
+while ! console_lock; do
+	sleep 0.5
+done
+
+exec 0</dev/console >/dev/console 2>&1
+
+for e in "$eventdir"/mountdev.*; do
+	[ -e "$e" ] || break
+	( . "$e"; handler; ) ||:
+done
+
+console_unlock

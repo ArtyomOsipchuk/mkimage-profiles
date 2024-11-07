@@ -1,0 +1,13 @@
+#!/bin/sh
+
+STATUS_DIR=/var/run/control
+umask 077
+mkdir -p "$STATUS_DIR"
+
+for FACILITY in "$@"; do
+	FACILITY="${FACILITY//\//_}"
+
+	FILE="$STATUS_DIR/$FACILITY"
+	rm -f "$FILE"
+	/usr/sbin/control "$FACILITY" status > "$FILE" || rm -f "$FILE"
+done

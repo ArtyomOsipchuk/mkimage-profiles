@@ -1,0 +1,108 @@
+#!/bin/sh
+#
+# chkconfig: 2345 37 63
+# description: \
+#	gpm provides mouse support to text-based Linux applications as \
+#	well as console cut-and-paste operations using the mouse.
+#
+# processname: gpm
+# config: /etc/sysconfig/mouse
+# pidfile: /var/run/gpm.pid
+### BEGIN INIT INFO
+# Provides:       gpm
+# Required-Start: $syslog
+# Should-Start:
+# Required-Stop:  $syslog
+# Should-Stop:
+# Default-Start:  2 3 4 5
+# Default-Stop:   0 1 6
+# Description:    Start gpm to allow mouse on console
+# Short-Description: Console mouse support
+### END INIT INFO
+
+WITHOUT_RC_COMPAT=1
+
+# Source function library.
+. /etc/init.d/functions
+
+GPM_OPTIONS=
+MOUSECFG=/etc/sysconfig/mouse
+PIDFILE=/var/run/gpm.pid
+LOCKFILE=/var/lock/subsys/gpm
+RETVAL=0
+
+unconfigured()
+{
+	echo -n $"no mouse is configured."
+	failure 'gpm startup'
+	echo
+	exit 1
+}
+
+start()
+{
+	msg_starting $"console mouse"
+
+	[ -s "$MOUSECFG" ] && . "$MOUSECFG" || unconfigured
+	[ "$MOUSETYPE" != none ] || unconfigured
+	[ -n "$device" ] || unconfigured
+
+	if [ "$MOUSETYPE" = Microsoft ]; then
+		MOUSETYPE=ms
+	fi
+
+	local args
+	args="-m /dev/$device"
+	if [ -n "$MOUSETYPE" ]; then
+		args="$args -t $MOUSETYPE"
+	fi
+
+	start_daemon --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user root --no-announce -- gpm $GPM_OPTIONS $args
+	RETVAL=$?
+	return $RETVAL
+}
+
+stop()
+{
+	msg_stopping $"console mouse"
+	stop_daemon --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user root --no-announce -- gpm
+	RETVAL=$?
+	return $RETVAL
+}
+
+restart()
+{
+	stop
+	start
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart|reload)
+		restart
+		;;
+	condstop)
+		if [ -f "$LOCKFILE" ]; then
+			stop
+		fi
+		;;
+	condrestart)
+		if [ -f "$LOCKFILE" ]; then
+			restart
+		fi
+		;;
+	status)
+		status --pidfile "$PIDFILE" --expect-user root -- gpm
+		RETVAL=$?
+		;;
+	*)
+		msg_usage "${0##*/} {start|stop|restart|condstop|condrestart|status}"
+		RETVAL=1
+esac
+
+exit $RETVAL

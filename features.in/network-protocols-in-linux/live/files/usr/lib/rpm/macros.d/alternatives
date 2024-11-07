@@ -1,0 +1,2 @@
+%_altdir %([ ! -f /usr/share/alternatives/functions ])/etc/alternatives/packages.d
+%force_update_alternatives [ -x /usr/bin/alternatives-update ] && /usr/bin/alternatives-update ||:

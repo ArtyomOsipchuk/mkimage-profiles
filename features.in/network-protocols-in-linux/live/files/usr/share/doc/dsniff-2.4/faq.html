@@ -1,0 +1,199 @@
+<!doctype html public "-//W30//DTD W3 HTML 2.0//EN">
+
+<HTML>
+
+<!-- This file was generated using SDF 2.001 by
+     Ian Clatworthy (ianc@mincom.com). SDF is freely
+     available from http://www.mincom.com/mtr/sdf. -->
+
+<HEAD>
+<TITLE>dsniff Frequently Asked Questions</TITLE>
+</HEAD>
+<BODY BGCOLOR="ffffff" TEXT="000000">
+
+<blockquote><img src="../img/monkey6.gif">
+<DIV CLASS="header">
+<DIV CLASS="navigate">
+</DIV>
+</DIV>
+<DIV CLASS="title">
+<H1 CLASS="doc-title">dsniff Frequently Asked Questions</H1>
+<ADDRESS CLASS="doc-author">Dug Song &lt;<A HREF="mailto:dugsong@monkey.org">dugsong@monkey.org</A>&gt;</ADDRESS>
+<ADDRESS CLASS="doc-modified">18 December 2000</ADDRESS>
+<BR CLEAR="All">
+</DIV>
+<DIV CLASS="contents">
+<HR>
+<H2>Table of Contents</H2>
+<UL>
+<A HREF="#General">1. General</A><UL>
+<A HREF="#What is dsniff">1.1. What is dsniff?</A>
+<BR>
+<A HREF="#Why are you releasing it">1.2. Why are you releasing it?</A>
+<BR>
+<A HREF="#What platforms are supported">1.3. What platforms are supported?</A>
+<BR>
+<A HREF="#What else is required">1.4. What else is required?</A>
+<BR>
+<A HREF="#Is there a mailing list">1.5. Is there a mailing list?</A></UL>
+<BR>
+<A HREF="#Installation">2. Installation</A><UL>
+<A HREF="#Do I really have to install all those third-party packages">2.1. Do I really have to install all those third-party packages?</A>
+<BR>
+<A HREF="#Make dies with &quot;undefined symbol __db185_open&quot;">2.2. Make dies with &quot;undefined symbol __db185_open&quot;?</A>
+<BR>
+<A HREF="#Make dies with missing {{EX:R_NOOVERWRITE}} and {{EX:R_NEXT}} declarations">2.3. Make dies with missing <TT>R_NOOVERWRITE</TT> and <TT>R_NEXT</TT> declarations?</A>
+<BR>
+<A HREF="#Configure can\'t find Berkeley DB, even though it\'s installed!">2.4. Configure can't find Berkeley DB, even though it's installed!</A>
+<BR>
+<A HREF="#Make dies with &quot;undefined reference to pcap_open_live_new&quot;">2.5. Make dies with &quot;undefined reference to pcap_open_live_new&quot;?</A></UL>
+<BR>
+<A HREF="#Operation">3. Operation</A><UL>
+<A HREF="#How do I sniff in a switched environment">3.1. How do I sniff in a switched environment?</A>
+<BR>
+<A HREF="#arpspoof always fails with &quot;couldn\'t arp for host&quot;">3.2. arpspoof always fails with &quot;couldn't arp for host&quot;?</A>
+<BR>
+<A HREF="#Why isn\'t dsniff / *snarf seeing anything">3.3. Why isn't dsniff / *snarf seeing anything?</A>
+<BR>
+<A HREF="#How do I sniff / hijack HTTPS / SSH connections">3.4. How do I sniff / hijack HTTPS / SSH connections?</A>
+<BR>
+<A HREF="#Why isn\'t dsniff capturing Oracle logins">3.5. Why isn't dsniff capturing Oracle logins?</A>
+<BR>
+<A HREF="#Why does webmitm report &quot;openssl: not found&quot;">3.6. Why does webmitm report &quot;openssl: not found&quot;?</A>
+<BR>
+<A HREF="#Why is dsniff crashing with &quot;Bus Error (core dumped)&quot;">3.7. Why is dsniff crashing with &quot;Bus Error (core dumped)&quot;?</A></UL>
+<BR>
+<A HREF="#Countermeasures">4. Countermeasures</A><UL>
+<A HREF="#How do I detect dsniff on my network">4.1. How do I detect dsniff on my network?</A>
+<BR>
+<A HREF="#How do I protect my network against dsniff">4.2. How do I protect my network against dsniff?</A></UL>
+<BR>
+<A HREF="#References">5. References</A><UL>
+<A HREF="#Where can I learn more about these attacks">5.1. Where can I learn more about these attacks?</A></UL></UL>
+</DIV>
+<DIV CLASS="main">
+<HR>
+<H1><A NAME="General">1. General</A></H1>
+<H2><A NAME="What is dsniff">1.1. What is dsniff?</A></H2>
+<P>dsniff is a collection of tools for network auditing and penetration testing. dsniff, filesnarf, mailsnarf, msgsnarf, urlsnarf, and webspy passively monitor a network for interesting data (passwords, e-mail, files, etc.). arpspoof, dnsspoof, and macof facilitate the interception of network traffic normally unavailable to an attacker (e.g, due to layer-2 switching). sshmitm and webmitm implement active monkey-in-the-middle attacks against redirected SSH and HTTPS sessions by exploiting weak bindings in ad-hoc PKI.</P>
+<H2><A NAME="Why are you releasing it">1.2. Why are you releasing it?</A></H2>
+<P>Without strong motivation to change, insecure network protocols and their implementations often go uncorrected, leaving much of the Internet vulnerable to attacks the research community has warned about for years (e.g. intercepting SSH / PGP private keys and .Xauthority files via NFS, sniffing in a switched environment, exploiting trust relationships based on DNS, monkey-in-the-middle attacks against SSH and HTTPS, etc.). However, proposed and pending legislation such as UCITA, the European Draft Cybercrime Treaty, and the DMCA threatens to criminalize security research that exposes flaws in the design and implementation of distributed systems. By publishing dsniff while it is still legal to do so, sysadmins, network engineers, and computer security practitioners will be better equipped with the tools to audit their own networks before such knowledge goes underground.</P>
+<H2><A NAME="What platforms are supported">1.3. What platforms are supported?</A></H2>
+<P>Only three platforms are available to me for testing: OpenBSD (i386), Redhat Linux (i386), and Solaris (sparc). Others have reported success on FreeBSD, Debian Linux, Slackware Linux, AIX, and HP-UX.</P>
+<P>A Windows port of an older version of dsniff is available from <A HREF="http://www.datanerds.net/~mike/dsniff.html">http://www.datanerds.net/~mike/dsniff.html</A>, and a MacOS X port is reportedly in the works.</P>
+<H2><A NAME="What else is required">1.4. What else is required?</A></H2>
+<P>The dsniff package relies on several additional third-party packages:</P>
+<UL>
+<LI><A HREF="http://www.sleepycat.com/">Berkeley DB</A>
+<LI><A HREF="http://www.openssl.org/">OpenSSL</A>
+<LI><A HREF="http://www.tcpdump.org/">libpcap</A>
+<LI><A HREF="http://www.packetfactory.net/Projects/Libnet">libnet</A>
+<LI><A HREF="http://www.packetfactory.net/Projects/Libnids">libnids</A></UL>
+<P>OpenBSD has already integrated the first three packages into the base system, leaving only libnet and libnids as additional dependencies (see <TT>/usr/ports/net/{libnet,libnids</TT>} or the OpenBSD FTP site for binary packages).</P>
+<P>Linux, Solaris, and most other OSs require building all third-party packages first (including Redhat, which ships with a non-standard libpcap) (see <A HREF="http://www.rpmfind.net/">rpmfind.net</A> for untrusted, potentially-trojaned binary RPMs).</P>
+<P>This software also requires a basic understanding of network security for its proper use. I will not entertain such inane questions as &quot;Can I use this to spy on my wife's chat sessions?&quot;, nor will I bother explaining the mechanism behind each exploit. RTFM, and RTFS.</P>
+<H2><A NAME="Is there a mailing list">1.5. Is there a mailing list?</A></H2>
+<P>A mailing list for dsniff announcements and moderated discussion is available.  Send e-mail with the word &quot;subscribe&quot; in the body of the message to <A HREF="mailto:dsniff-request@monkey.org">dsniff-request@monkey.org</A>. No archive of this list is available yet.</P>
+<HR>
+<H1><A NAME="Installation">2. Installation</A></H1>
+<H2><A NAME="Do I really have to install all those third-party packages">2.1. Do I really have to install all those third-party packages?</A></H2>
+<P>No. dsniff's <TT>configure</TT> script will accept a package's build directory as an argument to its various <TT>--with-libxxx</TT> flags. Build all third-party packages first, before running dsniff's <TT>configure</TT> script.</P>
+<H2><A NAME="Make dies with &quot;undefined symbol __db185_open&quot;">2.2. Make dies with &quot;undefined symbol __db185_open&quot;?</A></H2>
+<P>Be sure to build Berkeley DB with <TT>./configure --enable-compat185</TT>.</P>
+<H2><A NAME="Make dies with missing {{EX:R_NOOVERWRITE}} and {{EX:R_NEXT}} declarations">2.3. Make dies with missing <TT>R_NOOVERWRITE</TT> and <TT>R_NEXT</TT> declarations?</A></H2>
+<P>See the next question...</P>
+<H2><A NAME="Configure can\'t find Berkeley DB, even though it\'s installed!">2.4. Configure can't find Berkeley DB, even though it's installed!</A></H2>
+<P>dsniff-2.2 had a broken configure script that refused to find any installed Berkeley DB. Point <TT>./configure --with-db</TT> at your Berkeley DB build directory instead, or upgrade to dsniff-2.3.</P>
+<H2><A NAME="Make dies with &quot;undefined reference to pcap_open_live_new&quot;">2.5. Make dies with &quot;undefined reference to pcap_open_live_new&quot;?</A></H2>
+<P>You're probably linking against a different version of libpcap than the one used to build libnids (this is often reported by Linux users who've installed libnids from an RPM). Be sure to build libnids and dsniff against the same libpcap distribution.</P>
+<HR>
+<H1><A NAME="Operation">3. Operation</A></H1>
+<H2><A NAME="How do I sniff in a switched environment">3.1. How do I sniff in a switched environment?</A></H2>
+<P>The easiest route is simply to impersonate the local gateway, stealing client traffic en route to some remote destination. Of course, the traffic must be forwarded by your attacking machine, either by enabling kernel IP forwarding (<TT>sysctl -w net.inet.ip.forwarding=1</TT> on BSD) or with a userland program that acccomplishes the same (<TT>fragrouter -B1</TT>).</P>
+<P>Several people have reportedly destroyed connectivity on their LAN to the outside world by arpspoof'ing the gateway, and forgetting to enable IP forwarding on the attacking machine. Don't do this. You have been warned.</P>
+<H2><A NAME="arpspoof always fails with &quot;couldn\'t arp for host&quot;">3.2. arpspoof always fails with &quot;couldn't arp for host&quot;?</A></H2>
+<P>You can only arpspoof hosts on the same subnet as your attacking machine.</P>
+<H2><A NAME="Why isn\'t dsniff / *snarf seeing anything">3.3. Why isn't dsniff / *snarf seeing anything?</A></H2>
+<H3><A NAME="...when using arpspoof to intercept client traffic">3.3.1. ...when using arpspoof to intercept client traffic?</A></H3>
+<P>Make sure you are actually forwarding the intercepted packets, either via kernel IP forwarding or with fragrouter.</P>
+<P>If you are indeed seeing the client's half of the TCP connection (e.g. as verified using tcpdump), make sure you've enable dsniff's half-duplex TCP stream reassembly (<TT>dsniff -c</TT>). The *snarf tools do not yet support this mode of operation.</P>
+<H3><A NAME="...when I can see ongoing connections with tcpdump">3.3.2. ...when I can see ongoing connections with tcpdump?</A></H3>
+<P>libnids, dsniff's underlying TCP/IP reassembling library, needs to see the start of a connection in order to follow it. There are several good reasons for this, as outlined in Ptacek and Newsham's seminal paper on network IDS evasion.</P>
+<P>The best you can do, in a live penetration testing scenario, is to</P>
+<OL>
+<LI>start sniffing
+<LI>selectively reset existing connections with tcpkill, and then
+<LI>wait for the users to reconnect</OL>
+<P>This is horribly intrusive and evil, but then again, so are pen tests. :-)</P>
+<H3><A NAME="...when sniffing a busy network, or a switch\'s monitor port">3.3.3. ...when sniffing a busy network, or a switch's monitor port?</A></H3>
+<P>You may be losing some packets, either at the switch's monitor port (mirroring ten 100 Mbit Ethernet ports to a single port is never a good idea) or within libpcap - anathema to libnids, which needs to see all packets in a connection for strict reassembly. Try enabling dsniff's best-effort half-duplex TCP stream reassembly (<TT>dsniff -c</TT>) instead.</P>
+<P>Other general performance enhancements for sniffing include:</P>
+<OL>
+<LI>SMP, which on most OSs results in only one processor handling the high interrupt load, leaving the other to do real work
+<LI>good NICs and drivers with working DMA
+<LI>large kernel buffers for efficient packet capture (OpenBSD's BPF already does this)
+<LI>custom kernel support for single-copy packet capture (e.g. direct access to such buffers in kmem from userland)</OL>
+<H3><A NAME="...when sniffing traffic on an unusual port">3.3.4. ...when sniffing traffic on an unusual port?</A></H3>
+<P>Try enabling dsniff's magic (<TT>dsniff -m</TT>) automatic protocol detection, which should detect the appropriate protocol (if dsniff knows about it) running on any arbitrary port. If dsniff still fails to pick up the traffic, it may be an unusual protocol dsniff doesn't yet support. Create a dsniff services file like</P>
+<PRE>
+hex             12345/tcp
+</PRE>
+<P>where 12345 is the TCP port of the unknown service, run dsniff with <TT>-f services</TT> and send the resulting hexdump of the connection trace to me. Some proprietary protocols transmogrify almost daily, it's not easy keeping up!</P>
+<H3><A NAME="...when sniffing unknown traffic, or a new version of some protocol">3.3.5. ...when sniffing unknown traffic, or a new version of some protocol?</A></H3>
+<P>dsniff's decode routines are admittedly pretty sleazy, and cut many corners for the sake of performance (and simplicity - you try fully decomposing all 30+ open / proprietary protocols that dsniff handles!). Additionally, many of the protocols dsniff handles are completely proprietary, and required a bit of reverse engineering which may not have been all that complete, accurate, or forgiving in the face of new protocol versions or extensions.</P>
+<P>The best way to get new protocols handled by dsniff is to send me traffic traces of a few complete connections / sessions, from start to finish (making sure to capture the packets in their entirety with <TT>tcpdump -s 4096</TT>, or with <A HREF="http://ethereal.zing.org/">Ethereal</A>), along with any pointers to relevant documentation (or client/server implementations).</P>
+<P>If you'd like to give it a try yourself, add an entry to dsniff's <TT>dsniff.services</TT> file to map the traffic you wish to analyze to the &quot;hex&quot; decode routine, and dissect the hexdumps manually.</P>
+<H2><A NAME="How do I sniff / hijack HTTPS / SSH connections">3.4. How do I sniff / hijack HTTPS / SSH connections?</A></H2>
+<P>Although HTTPS and SSH are encrypted, they both rely on weakly bound public key certificates to identify servers and to establish security contexts for symmetric encryption. As the vast majority of users fail to comprehend the obtuse digital trust management PKI presents (e.g. is an X.509v3 DN really meaningful to you?), a simple monkey-in-the-middle attack works quite well in practice.</P>
+<P>Client traffic to a target server may be intercepted using dnsspoof and relayed to its intended destination using the sshmitm and webmitm proxies (which also happen to grep passwords in transit). For example, to sniff Hotmail webmail passwords, create a dnsspoof hosts file such as:</P>
+<PRE>
+1.2.3.4         *.passport.com
+1.2.3.4         *.hotmail.com
+</PRE>
+<P>where 1.2.3.4 is the IP address of your attacking machine. Local clients attempting to connect to Hotmail will be sent to your machine instead, where webmitm will present them with a self-signed certificate (with the appropriate X.509v3 distinguished name), and relay their sniffed traffic to the real Hotmail site.</P>
+<P>sshmitm is perhaps most effective at conference terminal rooms or webcafes as most travelling SSH users don't carry their server's key fingerprint around with them (only presented by the OpenSSH client, anyhow). Even sophisticated SSH users who insist on one-time passwords (e.g. S/Key), RSA authentication, etc. are still at risk, as sshmitm supports monitoring and hijacking of interactive sessions with its <TT>-I</TT> flag.</P>
+<H2><A NAME="Why isn\'t dsniff capturing Oracle logins">3.5. Why isn't dsniff capturing Oracle logins?</A></H2>
+<P>Increase the default snaplen with <TT>dsniff -s 4096</TT>. Oracle logins can be quite chatty...</P>
+<H2><A NAME="Why does webmitm report &quot;openssl: not found&quot;">3.6. Why does webmitm report &quot;openssl: not found&quot;?</A></H2>
+<P>webmitm uses the openssl binary to generate certificates. Make sure the <TT>openssl</TT> binary (usually in <TT>/usr/local/ssl/bin/</TT> on most systems) is in your <TT>PATH</TT>.</P>
+<H2><A NAME="Why is dsniff crashing with &quot;Bus Error (core dumped)&quot;">3.7. Why is dsniff crashing with &quot;Bus Error (core dumped)&quot;?</A></H2>
+<P>Chances are, you've built against an unstable version of libnids (libnids-1.14 on Solaris in particular). Upgrade to the latest version at <A HREF="http//www.packetfactory.net/Projects/Libnids/">http//www.packetfactory.net/Projects/Libnids/</A>, and if you still have problems, rebuild everything with <TT>-g</TT> and send me a <TT>gdb</TT> stack backtrace.</P>
+<HR>
+<H1><A NAME="Countermeasures">4. Countermeasures</A></H1>
+<H2><A NAME="How do I detect dsniff on my network">4.1. How do I detect dsniff on my network?</A></H2>
+<P>At layer-2: LBL's arpwatch can detect changes in ARP mappings on the local network, such as those caused by arpspoof or macof.</P>
+<P>At layer-3: A programmable sniffer such as NFR can look for either the obvious network anomalies or second-order effects of some of dsniff's active attacks, such as:</P>
+<UL>
+<LI>ICMP port unreachables to the local DNS server, a result of dnsspoof winning the race in responding to a client's DNS query with forged data
+<LI>excessive, or out-of-window TCP RSTs or ACK floods caused by tcpkill and tcpnice</UL>
+<P>dsniff's passive monitoring tools may be detected with the l0pht's antisniff, if used regularly to baseline network latency (and if you can handle the egregious load it generates). Honeynet techniques for sniffer detection (such as the sniffer detector at IBM Zurich GSAL) also present an interesting countermeasure of last resort...</P>
+<H2><A NAME="How do I protect my network against dsniff">4.2. How do I protect my network against dsniff?</A></H2>
+<P>At layer-2: Enabling port security on a switch or enforcing static arp entries for certain hosts helps protect against arpspoof redirection, although both countermeasures can be extremely inconvenient.</P>
+<P>At layer-3: IPSEC paired with secure, authenticated naming services (DNSSEC) can prevent dnsspoof redirection and trivial passive sniffing. Unfortunately, IPSEC's IKE is an overblown key exchange protocol designed by committee, so unwieldy and perverse that widespread deployment across the Internet is almost unthinkable in the immediate future.</P>
+<P>At layer-4: Don't allow proprietary, insecure application protocols or legacy cleartext protocols on your network. dsniff is useful in helping to detect such policy violations, especially when used in magic (<TT>dsniff -m</TT>) automatic protocol detection mode. This is largely a matter of remedial user education perhaps best left to the experienced BOFH. :-)</P>
+<P>Strong, trusted third-party network authentication (such as Kerberos) isn't generally subject to the kind of trivial monkey-in-the-middle attacks that plague PKI in such ad-hoc deployments as SSH and HTTPS. Leveraging an authenticated naming service like DNSSEC for secure key distribution is one solution, although realistically several years off from widespread deployment. A reasonable interim measure is to have users enable SSH's <TT>StrictHostKeyChecking</TT> option, and to distribute server key signatures to mobile clients.</P>
+<P><HR WIDTH="80%" ALIGN="Left">
+<STRONG>Note: </STRONG>Kerberos has its own problems, though - see <A HREF="http://www.monkey.org/~dugsong/kdcspoof.tar.gz">kdcspoof</A>, and my <A HREF="http://www.monkey.org/~dugsong/john-1.6.krb4.patch-3">AFS/Kerberos patch</A> for <A HREF="http://www.openwall.com/john/">John the Ripper</A>.
+<HR WIDTH="80%" ALIGN="Left"></P>
+<P>Firewalls can be a mixed blessing - while they protect sensitive private networks from the untrusted public Internet, they also tend to encourage a &quot;hard on the outside, soft on the inside&quot; perimeter model of network security. dsniff has perhaps been most effective behind the firewall, where Telnet, FTP, POP, and other legacy cleartext protocols run freely, unfettered by corporate security policy.</P>
+<HR>
+<H1><A NAME="References">5. References</A></H1>
+<H2><A NAME="Where can I learn more about these attacks">5.1. Where can I learn more about these attacks?</A></H2>
+<P>Many of the attacks dsniff implements are quite old, although still effective in most environments. Clearly, we still have a long way to go in securing our networks...</P>
+<OL>
+<LI>S. Bellovin. &quot;<A HREF="http://www.research.att.com/~smb/papers/dnshack.ps">Using the Domain Name System for System Break-Ins</A>&quot;. Proceedings of the 5th Usenix UNIX Security Symposium, June 1995.
+<LI>M. Blaze. &quot;<A HREF="http://citeseer.nj.nec.com/pdf/339550">NFS Tracing by Passive Monitoring</A>&quot;. Proceedings of the Winter USENIX Conference, January 1992.
+<LI>C. Ellison. &quot;<A HREF="http://world.std.com/~cme/usenix.ps">Establishing Identity Without Certification Authorities</A>&quot;. Proceedings of the 6th USENIX Security Symposium, July 1996.
+<LI>E. Felten, D. Balfanz, D. Dean, D. Wallach. &quot;<A HREF="http://www.cs.princeton.edu/sip/pub/spoofing.ps">Web Spoofing: An Internet Con Game</A>&quot;. 20th National Information Systems Security Conference, October 1997.
+<LI>D. Farmer, W. Venema. &quot;<A HREF="http://www.porcupine.org/satan/admin-guide-to-cracking.html">Improving the Security of Your Site by Breaking Into it</A>&quot;. December 1993.
+<LI>U. Flegel. &quot;<A HREF="http://rootshell.connectnet.com/docs/ssh-x11.ps.gz">The Interaction Between SSH and X11</A>&quot;. September 1997.
+<LI>T. Ptacek, T. Newsham. &quot;<A HREF="http://www.securityfocus.com/data/library/ids.ps">Insertion, Evasion, and Denial of Service: Eluding Network Intrusion Detection</A>&quot;. Secure Networks, Inc., January 1998.</OL>
+</DIV>
+<DIV CLASS="footer">
+<DIV CLASS="navigate">
+</DIV>
+</DIV>
+<hr><address><a href="/~dugsong/">Dug Song</a> &lt<a href="mailto:dugsong@monkey.org">dugsong@monkey.org</a>&gt</blockquote>
+
+</BODY>
+</HTML>

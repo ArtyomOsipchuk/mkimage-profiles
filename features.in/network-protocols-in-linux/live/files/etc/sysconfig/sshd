@@ -1,0 +1,5 @@
+# Parameters for OpenSSH server daemon.
+# See sshd(8) for more details.
+
+# Specifies additional parameters for sshd.
+EXTRAOPTIONS=

@@ -1,0 +1,87 @@
+/var/log/syslog/* {
+	rotate 5
+	weekly
+	postrotate
+		/sbin/reload-syslog >/dev/null
+	endscript
+}
+
+/var/log/kernel/* {
+	rotate 5
+	weekly
+	postrotate
+		/sbin/reload-syslog >/dev/null
+	endscript
+}
+
+/var/log/user/* {
+	rotate 5
+	weekly
+	postrotate
+		/sbin/reload-syslog >/dev/null
+	endscript
+}
+
+/var/log/mail/* {
+	rotate 5
+	weekly
+	postrotate
+		/sbin/reload-syslog >/dev/null
+	endscript
+}
+
+/var/log/daemons/* {
+	rotate 5
+	weekly
+	postrotate
+		/sbin/reload-syslog >/dev/null
+	endscript
+}
+
+/var/log/auth/* {
+	rotate 5
+	weekly
+	postrotate
+		/sbin/reload-syslog >/dev/null
+	endscript
+}
+
+/var/log/lpr/* {
+	rotate 5
+	weekly
+	postrotate
+		/sbin/reload-syslog >/dev/null
+	endscript
+}
+
+/var/log/news/* {
+	rotate 5
+	weekly
+	postrotate
+		/sbin/reload-syslog >/dev/null
+	endscript
+}
+
+/var/log/uucp/* {
+	rotate 5
+	weekly
+	postrotate
+		/sbin/reload-syslog >/dev/null
+	endscript
+}
+
+/var/log/cron/* {
+	rotate 5
+	weekly
+	postrotate
+		/sbin/reload-syslog >/dev/null
+	endscript
+}
+
+/var/log/ftp/* {
+	rotate 5
+	weekly
+	postrotate
+		/sbin/reload-syslog >/dev/null
+	endscript
+}

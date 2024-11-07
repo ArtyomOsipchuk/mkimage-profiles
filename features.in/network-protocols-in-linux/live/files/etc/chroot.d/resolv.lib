@@ -1,0 +1,15 @@
+#!/bin/sh -e
+
+chrooted_slib=lib
+
+# Source functions library
+. /etc/chroot.d/functions
+
+cd /var/resolv
+
+if [ -n "$force" ]; then
+	# Purge all libs from chroot
+	rm -f ${chrooted_slib}/*
+fi
+
+copy_resolv_lib

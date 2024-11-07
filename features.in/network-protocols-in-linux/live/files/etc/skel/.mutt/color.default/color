@@ -1,0 +1,6 @@
+# colorize the message body:
+source	~/.mutt/color.`~/.mutt/color-select`/body
+# colorize the message header:
+source	~/.mutt/color.`~/.mutt/color-select`/header
+# colorize the folder index:
+source	~/.mutt/color.`~/.mutt/color-select`/index

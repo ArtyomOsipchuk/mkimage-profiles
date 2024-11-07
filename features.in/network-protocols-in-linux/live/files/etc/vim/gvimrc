@@ -1,0 +1,37 @@
+" System-wide gvimrc file for ALTLinux distribution
+" The commands in this are executed when the GUI is started.
+"
+" Maintainer:	vim development team <vim@packages.altlinux.ru>
+" Last change:	2005 Mar 20 by Sir Raorn <raorn@altlinux.ru>
+"
+
+" GTK2/GNOME/KDE uses unicode fonts
+if has("gui_gtk2")
+	set guifont=Fixed\ 10
+elseif has("gui_gtk3")
+	set guifont=Fixed\ 10
+elseif has("gui_kde")
+	set guifont=Fixed\ [Misc]/10/-1/5/50/0/0/0/0/0
+else
+	" set (language-dependant) X11 font to use
+	if filereadable( $VIMRUNTIME . "/langrc/" . $LANG . ".vim" )
+		exe "so " . $VIMRUNTIME . "/langrc/" . $LANG . ".vim"
+	else
+		set guifont=-*-fixed-medium-r-normal-*-*-130-*-*-*-*-*-*
+	endif
+endif
+
+set ch=2			" Make command line two lines high
+set mousehide		" Hide the mouse when typing text
+
+" Make shift-insert work like in Xterm
+map <S-Insert> <MiddleMouse>
+map! <S-Insert> <MiddleMouse>
+
+" Enable "title" and "icon" features disabled in vimrc
+if has("title")
+	set title
+	set icon
+endif
+
+" vim:ft=vim:ts=4:sw=4:

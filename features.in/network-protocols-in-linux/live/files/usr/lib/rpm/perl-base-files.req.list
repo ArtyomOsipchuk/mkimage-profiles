@@ -1,0 +1,6 @@
+# perl-base dirlist for /usr/lib/rpm/files.req
+/usr/lib/perl5	perl-base
+/usr/lib64/perl5	perl-base
+/usr/share/perl5	perl-base
+/etc/perl5	perl-base
+/usr/lib/perl5/vendor_perl	perl-base

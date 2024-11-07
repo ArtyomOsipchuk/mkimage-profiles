@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+grep -qs '^/usr/share/vim/vimfiles/doc/' && update-vimhelp ||:

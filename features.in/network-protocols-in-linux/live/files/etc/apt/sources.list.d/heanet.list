@@ -1,0 +1,15 @@
+# ftp.heanet.ie (HEAnet, Ireland)
+
+# ALT Platform 10
+#rpm [p10] ftp://ftp.heanet.ie/mirrors/ftp.altlinux.org p10/branch/x86_64 classic
+#rpm [p10] ftp://ftp.heanet.ie/mirrors/ftp.altlinux.org p10/branch/x86_64-i586 classic
+#rpm [p10] ftp://ftp.heanet.ie/mirrors/ftp.altlinux.org p10/branch/noarch classic
+
+#rpm [p10] http://ftp.heanet.ie/mirrors/ftp.altlinux.org p10/branch/x86_64 classic
+#rpm [p10] http://ftp.heanet.ie/mirrors/ftp.altlinux.org p10/branch/x86_64-i586 classic
+#rpm [p10] http://ftp.heanet.ie/mirrors/ftp.altlinux.org p10/branch/noarch classic
+
+#rpm [p10] rsync://ftp.heanet.ie/mirrors/ftp.altlinux.org p10/branch/x86_64 classic
+#rpm [p10] rsync://ftp.heanet.ie/mirrors/ftp.altlinux.org p10/branch/x86_64-i586 classic
+#rpm [p10] rsync://ftp.heanet.ie/mirrors/ftp.altlinux.org p10/branch/noarch classic
+

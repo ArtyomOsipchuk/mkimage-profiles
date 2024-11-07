@@ -1,0 +1,49 @@
+#!/bin/bash -eu
+
+. shell-error
+. shell-source
+. rdshell-sh-functions
+
+source_if_exists /.initrd/initenv
+
+RDSHELL_MODE="${RDSHELL_MODE:-shell}"
+source_if_exists /etc/sysconfig/rdshell
+
+# Disallow console access
+[ "${PANIC-}" != 0 ] || [ "$RDSHELL_MODE" != shell ] || RDSHELL_MODE=disable
+
+shcmd='/bin/sh -l'
+case "$RDSHELL_MODE" in
+	shell)
+		;;
+	login)
+		shcmd='sulogin'
+		;;
+	disable)
+		printf 'Shell access is not allowed.\n'
+		exit 0
+		;;
+esac
+
+exec </dev/console >/dev/console 2>&1
+
+console_locked=
+if [ -n "$0" ] && [ -z "${0##*-locked}" ]; then
+	while ! console_lock; do
+		sleep 0.1
+	done
+	console_locked=1
+fi
+
+for f in /lib/shell/*; do
+	[ -x "$f" ] || break
+	"$f" ||:
+done
+
+[ "$#" -eq 0 ] ||
+	printf '%s: %s\n' "${0##*/}" "$1"
+
+setsid -c $shcmd
+
+[ -z "$console_locked" ] ||
+	console_unlock

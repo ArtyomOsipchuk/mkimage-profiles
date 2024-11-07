@@ -1,0 +1,27 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+CONFIG=/etc/sudoers.d/99-sudopw
+
+new_subst default \
+	'^\s*#[#[:space:]]*Defaults[[:space:]]+[[:alpha:]]+pw(\s*|\s+#.*)$' \
+	's,^[#[:space:]]*\(Defaults[[:space:]]\+[[:alpha:]]\+pw\)\(\s*\|\s\+#.*\)$,# \1\2,'
+new_subst root \
+	'^\s*Defaults[[:space:]]+rootpw(\s*|\s+#.*)$' \
+	's,^[#[:space:]]*\(Defaults[[:space:]]\+[[:alpha:]]\+pw\)\(\s*\|\s\+#.*\)$,Defaults rootpw\2,'
+new_subst target \
+	'^\s*Defaults[[:space:]]+targetpw(\s*|\s+#.*)$' \
+	's,^[#[:space:]]*\(Defaults[[:space:]]\+[[:alpha:]]\+pw\)\(\s*\|\s\+#.*\)$,Defaults targetpw\2,'
+new_subst runas \
+	'^\s*Defaults[[:space:]]+runaspw(\s*|\s+#.*)$' \
+	's,^[#[:space:]]*\(Defaults[[:space:]]\+[[:alpha:]]\+pw\)\(\s*\|\s\+#.*\)$,Defaults runaspw\2,'
+
+new_help default 'Sudo ask for the password of the invoking user as default'
+new_help root 'Sudo ask for the password of the root'
+new_help target 'Sudo ask for the password of the target user'
+new_help runas 'Sudo ask for the password of the user defined by the runas_default'
+
+new_summary "User account type of credentials that are verified during sudo authentication"
+
+control_subst "$CONFIG" "$*"

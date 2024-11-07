@@ -1,0 +1,14 @@
+#%PAM-1.0
+auth		[success=4 default=ignore]	pam_tcb.so shadow fork nullok use_first_pass
+auth		requisite	pam_succeed_if.so uid >= 500 quiet
+-auth		[success=2 default=ignore]	pam_krb5.so use_first_pass
+-auth		[success=1 default=ignore]	pam_ldap.so use_first_pass
+auth		required	pam_deny.so
+auth		required	pam_permit.so
+
+password	[success=4 default=ignore]	pam_tcb.so use_authtok shadow fork nullok write_to=tcb
+password	requisite	pam_succeed_if.so uid >= 500 quiet
+-password	[success=2 default=ignore]	pam_krb5.so use_authtok
+-password	[success=1 default=ignore]	pam_ldap.so use_authtok
+password	required	pam_deny.so
+password	required	pam_permit.so

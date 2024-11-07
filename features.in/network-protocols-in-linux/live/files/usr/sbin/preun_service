@@ -1,0 +1,32 @@
+#!/bin/sh
+
+fatal()
+{
+	printf '%s\n' "${0##*/}: $*" >&2
+	exit 1
+}
+
+[ $# -eq 1 ] ||
+	fatal 'usage: preun_service <service>'
+
+[ -n "${1##*/*}" ] ||
+	fatal "$1: invalid service name"
+
+[ "$RPM_INSTALL_ARG1" -ge 0 ] 2>/dev/null ||
+	fatal 'RPM_INSTALL_ARG1: invalid or undefined variable'
+
+[ "$RPM_INSTALL_ARG1" -eq 0 ] || exit 0
+
+SYSTEMCTL=systemctl
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+if sd_booted && "$SYSTEMCTL" --version >/dev/null 2>&1; then
+	"$SYSTEMCTL" --no-reload -q disable "$1"
+	chkconfig --del "$1"
+	"$SYSTEMCTL" stop "$1"
+else
+	chkconfig --del "$1"
+	service "$1" condstop
+fi
+
+exit 0

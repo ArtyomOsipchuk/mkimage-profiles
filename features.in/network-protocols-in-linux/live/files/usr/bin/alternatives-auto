@@ -1,0 +1,72 @@
+#!/bin/sh -e
+#
+# Copyright (c) 2003,2004 ALT Linux Ltd.
+# Copyright (c) 2003,2004 Stanislav Ievlev <inger@altlinux.org>
+#
+# alternatives-update - utility from alternatives subsystem
+# removes alternative from the hold list
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+# USA.
+#
+
+case "$0" in
+	/*) lib_dir= ;;
+	*/*) lib_dir="${0%/*}" ;;
+	*) lib_dir= ;;
+esac
+
+. "${lib_dir:-/usr/share/alternatives}/functions"
+
+show_help()
+{
+	cat <<EOF
+Usage: $PROG [options] [alternatives...]
+
+The alternatives-auto utility turns alternative(s) into automatic
+(default) mode.
+
+All changes will be made only in alternatives database.
+The alternatives-update program should be run for changes to take effect.
+
+Valid options are:
+  -h, --help	display help screen
+  -v, --version	display version information
+				     
+Report bugs to <inger@altlinux.org>
+EOF
+	exit
+}
+
+TEMP=`getopt -n $PROG -o $getopt_common_opts -l $getopt_common_longopts -- "$@"` ||
+	show_usage
+eval set -- "$TEMP"
+
+while :; do
+	case "$1" in
+		--) shift; break ;;
+		*) parse_common_option "$1" ;;
+	esac
+	shift
+done
+
+for name; do
+	quote_sed_regexp_variable qname "$name"
+	grep -qs "^$qname[[:space:]]" "$manual_file" ||
+		fatal "$name is not an alternative in manual mode"
+	sed -i "/^$qname"'[[:space:]].*[[:space:]]manual$/d' "$manual_file"
+done
+
+message 'Do not forget to run alternatives-update to apply changes.'

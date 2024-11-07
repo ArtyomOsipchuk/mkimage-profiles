@@ -1,0 +1,461 @@
+#!/bin/sh
+#
+# /etc/rc.d/rc.sysinit - run once at boot time
+#
+# Taken in part from Miquel van Smoorenburg's bcheckrc.
+#
+
+# Use a safe umask
+#umask 077
+
+# Don't do coredumps
+ulimit -Sc 0 >/dev/null 2>&1
+
+trap '' SIGPIPE
+
+# Rerun ourselves through initlog
+[ -n "$IN_INITLOG" ] || [ ! -x /sbin/initlog ] ||
+	exec /sbin/initlog $INITLOG_ARGS -r /etc/rc.d/rc.sysinit
+
+WITHOUT_RC_COMPAT=1
+
+# Source function library
+. /etc/init.d/functions
+
+# Read in config data
+SourceIfNotEmpty /etc/sysconfig/network
+
+PrintMargin()
+{
+	local n
+	[ "$BOOTUP" = serial ] ||
+		! n=`echo -n "$*" |wc -c` 2>/dev/null ||
+		tput hpa $(( ($COLUMNS - $n) / 2 ))
+}
+
+ActionIfExecutable()
+{
+	[ ! -x "$2" ] || action "$@"
+}
+
+rootfs_mounted=
+localfs_mounted=
+automatic_reboot()
+{
+	if [ -n "$localfs_mounted" ]; then
+		echo 'Unmounting file systems.'
+		umount -arnf
+	fi
+	if [ -n "$rootfs_mounted" ]; then
+		echo 'Remounting root filesystem readonly.'
+		mount -n -o remount,ro /
+	fi
+	echo 'Automatic reboot in progress.'
+	reboot -f
+}
+
+in_cmdline()
+{
+	[ -e /proc/cmdline ] &&
+		grep -iwqs "$1" /proc/cmdline
+}
+
+hide_plymouth()
+{
+	local plymouth=plymouth
+	! $plymouth --ping >/dev/null 2>&1 ||
+		$plymouth --hide-splash
+}
+
+fastboot=
+_RUN_QUOTACHECK=0
+check_filesystem()
+{
+	[ -z "$fastboot" ] ||
+		return 0
+
+	local MSG="$1" rc
+	shift
+
+	echo -n "$MSG "
+	initlog -c "fsck $*"
+	rc=$?
+
+	# The exit code returned by fsck is the sum of the following conditions:
+	#     0    - No errors
+	#     1    - File system errors corrected
+	#     2    - System should be rebooted
+	#     4    - File system errors left uncorrected
+	#     8    - Operational error
+	#     16   - Usage or syntax error
+	#     32   - Fsck canceled by user request
+	#     128  - Shared library error
+
+	case "$rc" in
+		0)
+			success "$MSG"
+			echo
+			;;
+		1)
+			passed "$MSG"
+			echo
+			_RUN_QUOTACHECK=1
+			;;
+		*)
+			failure "$MSG"
+			echo
+
+			# A return of 3 or higher means there were serious problems.
+			if [ "$rc" -gt 3 ]; then
+				hide_plymouth
+				echo
+				echo "*** An error occurred during the file system check."
+				echo "*** Dropping you to a shell; the system will reboot"
+				echo "*** when you leave the shell."
+
+				export PS1="(FS Repair) \# # "
+				sulogin
+			fi
+
+			automatic_reboot
+			;;
+	esac
+}
+
+check_quota()
+{
+	local MSG="$1"
+	shift
+	[ "$_RUN_QUOTACHECK" = 0 ] ||
+		ActionIfExecutable "$MSG" /sbin/quotacheck "$@"
+}
+
+mount_early()
+{
+	mountpoint -q "$1" ||
+		action "Mounting $1:" mount -n -t "$2" "$3" "$1"
+	action "Remounting $1:" mount -n "$1" -o remount
+}
+
+# Fix console loglevel
+dmesg -n "$LOGLEVEL"
+
+HOSTNAME=${HOSTNAME:-`hostname`}
+
+[ ! -x "$RESOLVE_HOSTNAME_COMMAND" ] ||
+	HOSTNAME="$("$RESOLVE_HOSTNAME_COMMAND")"
+
+[ -z "$HOSTNAME" ] || [ "$HOSTNAME" = "(none)" ] &&
+	HOSTNAME=localhost ||:
+
+# Print a banner. ;)
+WELCOME="Welcome to "
+BANNER="ALT Linux"
+PrintMargin "$WELCOME$BANNER"
+echo -n "$WELCOME"
+SETCOLOR_INFO
+echo -n "$BANNER"
+SETCOLOR_NORMAL
+echo
+
+if is_yes "$PROMPT"; then
+	PROMPT=1
+	MESSAGE="Press 'I' to enter interactive startup"
+	PrintMargin "$MESSAGE"
+	echo "$MESSAGE"
+else
+	PROMPT=
+fi
+
+# Mount /proc (done here so volume labels can work with fsck)
+mount_early /proc proc proc
+
+# Check and create symlinks if needed
+ln_if_needed()
+{
+	[ ! -e "$1" ] || [ -L "$2" ] || ln -s -- "$1" "$2"
+}
+
+ln_if_needed /proc/self/fd/2 /dev/stderr
+ln_if_needed /proc/self/fd/1 /dev/stdout
+ln_if_needed /proc/self/fd/0 /dev/stdin
+ln_if_needed /proc/self/fd /dev/fd
+ln_if_needed /proc/kcore /dev/core
+
+# Mount /sys where appropriate
+! grep -wqs sysfs /proc/filesystems || mount_early /sys sysfs sysfs
+
+if [ -z "$USEMODULES" ]; then
+	[ -f /proc/modules ] && [ -x /sbin/modprobe ] && ! in_cmdline nomodules &&
+		USEMODULES=y ||
+		USEMODULES=n
+fi
+
+MODPROBE=/bin/true
+
+if is_yes "$USEMODULES"; then
+	MODPROBE=/sbin/modprobe
+	action "Loading module:" /sbin/systemd-modules-load
+fi
+
+UDEV_SERVICE="${UDEV_SERVICE:-/etc/init.d/udevd}"
+[ -x "$UDEV_SERVICE" ] && ! in_cmdline noudev ||
+	UDEV_SERVICE=
+
+# Start udev
+[ -z "$UDEV_SERVICE" ] ||
+	RUN_FROM_SYSINIT=1 "$UDEV_SERVICE" start
+
+[ -c /dev/rtc ] ||
+	$MODPROBE rtc >/dev/null 2>&1
+
+# Initialize bootsplash subsystem.
+splash_init 5
+
+splash_update start 1
+
+# Set the system clock (when /etc/adjtime is missing)
+[ -s /etc/adjtime ] || /etc/init.d/clock start
+
+# Activate swap
+action "Activating swap partitions:" swapon -a -e
+
+# Set the hostname
+action "Setting hostname $HOSTNAME:" hostname "$HOSTNAME"
+
+# Set the NIS domain name
+[ -z "$NISDOMAIN" ] || is_no "$NISDOMAIN" ||
+	action "Setting NIS domain name $NISDOMAIN:" domainname "$NISDOMAIN"
+
+[ ! -f /fastboot ] && ! in_cmdline fastboot ||
+	fastboot=yes
+
+fsckoptions=
+[ -z "$FSCKOPTIONS" ] || fsckoptions="$FSCKOPTIONS"
+[ ! -f /forcefsck   ] || fsckoptions="-f $fsckoptions"
+
+[ "$BOOTUP" != "serial" ] &&
+	fsckoptions="-C $fsckoptions" ||
+	fsckoptions="-V $fsckoptions"
+
+
+_RUN_QUOTACHECK=0
+if [ -z "$fastboot" ] &&
+	! grep -F ' / ' /proc/mounts | tail -1 | cut -d' ' -f4 | grep -qsw 'rw' &&
+	! grep -F ' / ' /proc/mounts | tail -1 | cut -d' ' -f3 | grep -qs '^nfs'
+then
+	check_filesystem "Checking root filesystem:" -Tay $fsckoptions /
+fi
+
+# Remount the root filesystem read-write
+splash_update remount 2
+action "Remounting root filesystem in read/write mode:" ${REMOUNT_ROOTFS_RW_COMMAND:-mount -n -o remount,rw /}
+rootfs_mounted=1
+
+# The root filesystem is now read-write, so we can now log via syslog() directly
+[ -z "$IN_INITLOG" ] || IN_INITLOG=
+
+# Set the system clock (when /etc/adjtime is present)
+[ ! -s /etc/adjtime ] || /etc/init.d/clock start
+
+# Update quotas if fsck was run on /
+check_quota "Checking root filesystem quotas:" -v /
+
+# Setup /etc/HOSTNAME
+[ -f /proc/sys/kernel/hostname ] && [ "$(readlink /etc/HOSTNAME)" = /proc/sys/kernel/hostname ] ||
+	ln -snf /proc/sys/kernel/hostname /etc/HOSTNAME
+
+# Load modules where appropriate
+splash_update depmod 3
+
+[ -n "$fastboot" ] || [ ! -x /sbin/depmod ] || ! is_yes "$USEMODULES" ||
+	INITLOG_ARGS= action "Finding module dependencies:" depmod -A
+
+# Configure kernel parameters
+splash_update kernel 4
+action 'Configuring kernel parameters:' /sbin/systemd-sysctl
+
+if [ -f /proc/sys/kernel/modprobe ]; then
+	if is_yes "$USEMODULES"; then
+		if [ -z "$UDEV_SERVICE" ]; then
+			sysctl -w kernel.modprobe="$MODPROBE" >/dev/null 2>&1
+			sysctl -w kernel.hotplug="/sbin/hotplug" >/dev/null 2>&1
+		fi
+	else
+		# We used to set this to NULL, but that causes 'failed to exec' messages"
+		sysctl -w kernel.modprobe="/bin/true" >/dev/null 2>&1
+		sysctl -w kernel.hotplug="/bin/true" >/dev/null 2>&1
+	fi
+fi
+
+# Load framebuffer device settings
+/etc/rc.d/scripts/framebuffer_init
+
+# Load device-mapper, create its device file
+if [ -e /proc/devices ] && [ -e /proc/misc ]; then
+	$MODPROBE dm-mod >/dev/null 2>&1
+	if [ -z "$UDEV_SERVICE" ]; then
+		MAJOR="$(sed -ne 's/^ *\([0-9]\+\) \+misc$/\1/p' /proc/devices)"
+		MINOR="$(sed -ne 's/^ *\([0-9]\+\) \+device-mapper$/\1/p' /proc/misc)"
+		if [ -n "$MAJOR" ] && [ -n "$MINOR" ]; then
+	                rm -f /dev/mapper/control
+			mkdir -p -m755 /dev/mapper
+			action "Creating device-mapper character device ($MAJOR, $MINOR):" \
+				mknod --mode=600 /dev/mapper/control c "$MAJOR" "$MINOR"
+		fi
+		unset MAJOR MINOR
+	fi
+fi
+
+# Setup early encrypted block devices
+ExecIfExecutable /etc/rc.d/scripts/cryptdisks-early start
+
+# Activate multipath devices
+/etc/rc.d/scripts/multipath_start
+
+# Activate EVMS
+if [ ! -x /sbin/startevms ] || in_cmdline noevms ||
+	! action "Starting up EVMS:" /sbin/startevms init
+then
+	# Add raid devices
+	if ! /etc/rc.d/scripts/raidstart; then
+		hide_plymouth
+		echo
+		echo
+		echo "*** An error occurred during the RAID startup."
+		stop=
+		if in_cmdline onraiderror=stop; then
+			stop=1
+		elif ! in_cmdline onraiderror=ignore; then
+			echo "*** - Press ENTER for dropping you to a shell;"
+			echo "***   the system will reboot when you leave the shell."
+			echo "*** - Or wait 1 minute to continue normal startup."
+			read -t 60 && stop=1
+		fi
+
+		if [ -n "$stop" ]; then
+			PS1="(RAID Repair) \# # "; export PS1
+			sulogin
+
+			automatic_reboot
+		else
+			echo "*** Trying to continue normal startup."
+		fi
+		unset stop
+	fi
+
+	# Activate LVM
+	/etc/rc.d/scripts/lvm_start
+fi
+
+# Setup remaining encrypted block devices
+ExecIfExecutable /etc/rc.d/scripts/cryptdisks start
+
+# Check filesystems
+splash_update localfs 5
+
+# Reset quota check
+_RUN_QUOTACHECK=0
+
+# (pixel) do not check loopback files, will be done later (aren't available yet)
+check_filesystem "Checking filesystems:" -MTRAay -t noloop $fsckoptions
+
+# Mount all other filesystems (except for NFS and /proc, which is already
+# mounted). Contrary to standard usage,
+# filesystems are NOT unmounted in single user mode
+# (pixel) also do not mount loopback, will be done later
+splash_update mount 6
+action 'Mounting local filesystems:' mount -a -t nocifs,davfs,ftpfs,loop,ncp,ncpfs,nfs,panfs,proc,smbfs,sshfs -O no_netdev
+localfs_mounted=1
+
+# (pixel) Check loopback filesystems
+check_filesystem "Checking loopback filesystems" -MTRAay -t loop,ext2 $fsckoptions
+
+# Mount loopback
+action "Mounting loopback filesystems:" mount -a -t loop,ext2,vfat -O no_netdev
+
+# At this point everything should be mounted
+
+# Set system font
+ExecIfExecutable /sbin/setsysfont >/dev/null 2>&1
+
+check_quota "Checking filesystem quotas:" -v -R -a
+
+ActionIfExecutable "Turning on user and group quotas for local filesystems:" /sbin/quotaon -a
+
+# Check SELinux status
+SELINUX_STATE=
+SELINUX_MP=
+RESTORECON=/sbin/restorecon
+
+if [ -x "$RESTORECON" ] &&
+		SELINUX_MP="$(findmnt -n -m --output=target -S selinuxfs)" &&
+		[ -d "$SELINUX_MP" ]
+then
+	# assume enforcing mode by default
+	SELINUX_STATE=1
+	[ ! -r "$SELINUX_MP"/enforce ] ||
+		SELINUX_STATE="$(head -1 "$SELINUX_MP"/enforce)"
+fi
+
+# Check whether a full relabel is needed
+if [ -n "$SELINUX_STATE" ]; then
+	if [ -f /etc/selinux/.autorelabel ] || [ -f /.autorelabel ] || in_cmdline autorelabel; then
+		/etc/rc.d/scripts/selinux_relabel "$SELINUX_STATE" "$SELINUX_MP"
+		[ "$?" != 3 ] ||
+			automatic_reboot
+	fi
+elif [ -d /etc/selinux ]; then
+	[ -f /etc/selinux/.autorelabel ] || [ -f /.autorelabel ] ||
+		touch /etc/selinux/.autorelabel
+fi
+
+# Do the following while waiting for an 'I' from the user...
+{
+
+# Cleanup everything :)
+action "Cleaning up temporary files from previous boot:" /etc/rc.d/scripts/cleanup
+
+# Set SELinux context
+[ -z "$SELINUX_STATE" ] ||
+	action 'Setting SELinux context:' $RESTORECON -R /tmp /var/run/utmp* /var/log/wtmp*
+
+# Language fixes
+/etc/rc.d/scripts/lang
+
+# Now turn on swap again (in case we swap to files)
+splash_update swap 7
+action "Activating swap space:" swapon -a
+
+# Initialize the serial ports
+ExecIfExecutable /etc/rc.d/rc.serial
+
+# Initialize firewall
+for f in /etc/rc.d/scripts/firewall /etc/rc.d/rc.firewall /etc/rc.firewall; do
+	! ExecIfExecutable "$f" || break
+done
+
+# If they asked for ide-scsi, load it
+if in_cmdline ide-scsi; then
+	$MODPROBE ide-cd >/dev/null 2>&1
+	$MODPROBE ide-scsi >/dev/null 2>&1
+fi
+
+splash_update chrooted 8
+ActionIfExecutable "Updating chrooted environments:" /usr/sbin/update_chrooted conf lib
+
+# Now that we have all of our basic modules loaded and the kernel going,
+# let's dump the syslog ring somewhere so we can find it later
+dmesg >/var/log/dmesg
+kill -TERM `pidof getkey` >/dev/null 2>&1
+
+} &
+
+if [ -n "$PROMPT" ]; then
+	getkey i || PROMPT=
+fi
+wait
+
+if [ -n "$PROMPT" ]; then
+	touch /var/run/confirm
+fi

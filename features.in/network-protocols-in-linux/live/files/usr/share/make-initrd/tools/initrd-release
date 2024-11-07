@@ -1,0 +1,34 @@
+#!/bin/bash -efu
+#
+# See http://www.freedesktop.org/software/systemd/man/os-release.html
+#
+
+. sh-functions
+
+cd "$rootdir"
+
+readonly version="${VERSION:-0}"
+VERSION=
+
+if [ -s /etc/os-release ]; then
+	( . /etc/os-release ) >/dev/null 2>&1 &&
+		. /etc/os-release ||
+		message 'Error: /etc/os-release is completely broken.'
+fi
+
+if [ -z "${PRETTY_NAME-}" ]; then
+	[ ! -s /etc/system-release ] ||
+		read -r PRETTY_NAME < /etc/system-release
+fi
+
+mkdir -p -- ./etc
+cat > ./etc/initrd-release <<EOF
+ID=make-initrd
+VERSION_ID=$version
+NAME="make-initrd"
+VERSION="${VERSION:+$VERSION }make-initrd-$version"
+PRETTY_NAME="${PRETTY_NAME:+$PRETTY_NAME }make-initrd-$version (Initramfs)"
+ANSI_COLOR="0;34"
+EOF
+
+ln -sf initrd-release ./etc/os-release

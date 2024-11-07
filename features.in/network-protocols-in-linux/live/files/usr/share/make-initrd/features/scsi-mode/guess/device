@@ -1,0 +1,11 @@
+#!/bin/bash -efu
+
+. guess-functions
+
+if [ -f "$SYSFS_PATH$1"/modalias ]; then
+	modalias=
+	readline modalias "$SYSFS_PATH$1"/modalias
+
+	[ -n "${modalias##scsi:*}" ] ||
+		guess_module sd_mod
+fi

@@ -1,0 +1,8 @@
+#!/bin/bash -efu
+
+cd /lib/initrd/boot/scripts
+./live-mode
+./resume
+./console-inactive
+./mountpoints
+./sysinit

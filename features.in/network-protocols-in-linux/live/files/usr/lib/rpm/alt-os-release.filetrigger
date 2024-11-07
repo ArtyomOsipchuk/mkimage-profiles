@@ -1,0 +1,42 @@
+#!/bin/sh -euf
+#
+# RPM filetrigger to generate /etc/os-release file.
+#
+
+dst_file=/etc/os-release
+src_file=/usr/lib/os-release
+BUILD_ID=
+
+_cleanup_handler()
+{
+    local rc=$?
+    trap - EXIT
+    [ -z "$tmp_file" ] || rm -rf -- "$tmp_file"
+    exit $rc
+}
+
+grep -Fqsxe "$src_file" || exit 0
+[ -r "$src_file" ] || exit 0
+
+. shell-config
+
+tmp_file="$(mktemp -t os-release.XXXXXXXX)"
+
+trap _cleanup_handler EXIT HUP PIPE INT QUIT TERM
+
+if [ -e "$dst_file" ]; then
+	BUILD_ID="$(shell_config_get "$dst_file" BUILD_ID)"
+	if [ -z "$BUILD_ID" ]; then
+		NAME="$(shell_config_get "$dst_file" NAME)"
+		VERSION="$(shell_config_get "$dst_file" VERSION)"
+		if [ -n "$NAME" ] && [ -n "$VERSION" ]; then
+			BUILD_ID="\"$(echo "$NAME $VERSION" | tr -d "\"'")\""
+		fi
+	fi
+fi
+cp -af "$src_file" "$tmp_file"
+if [ -n "$BUILD_ID" ]; then
+	shell_config_set "$tmp_file" BUILD_ID "$BUILD_ID"
+fi
+
+cp -af "$tmp_file" "$dst_file"

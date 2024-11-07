@@ -1,0 +1,70 @@
+# Systemwide config file for limited(8).
+#
+# NOTE: In PAM-aware applications /etc/security/limits.conf may override
+# most of these settings.
+
+# scheduling priority, see nice(1)
+NICE_PRIORITY=
+
+# IO scheduling priority, see ionice(1)
+IONICE_PRIORITY=
+
+# (-c) maximum size of core files created, in kilobytes
+RLIMIT_SOFT_CORE=0
+RLIMIT_HARD_CORE=
+
+# (-d) maximum size of a process's data segment, in kilobytes
+RLIMIT_SOFT_DATA=
+RLIMIT_HARD_DATA=
+
+# (-e) maximum scheduling priority, see nice(1)
+RLIMIT_SOFT_NICE=
+RLIMIT_HARD_NICE=
+
+# (-f) maximum size of files written, in kilobytes
+RLIMIT_SOFT_FSIZE=
+RLIMIT_HARD_FSIZE=
+
+# (-i) maximum number of pending signals
+RLIMIT_SOFT_SIGPENDING=
+RLIMIT_HARD_SIGPENDING=
+
+# (-l) maximum size a process may lock into memory, in kilobytes
+RLIMIT_SOFT_MEMLOCK=
+RLIMIT_HARD_MEMLOCK=
+
+# (-m) maximum resident set size, in kilobytes
+RLIMIT_SOFT_RSS=
+RLIMIT_HARD_RSS=
+
+# (-n) maximum number of open file descriptors
+RLIMIT_SOFT_NOFILE=
+RLIMIT_HARD_NOFILE=
+
+# (-q) maximum number of bytes in POSIX message queues
+RLIMIT_SOFT_MSGQUEUE=
+RLIMIT_HARD_MSGQUEUE=
+
+# (-r) maximum real-time scheduling priority, see nice(1)
+RLIMIT_SOFT_RTPRIO=
+RLIMIT_HARD_RTPRIO=
+
+# (-s) maximum stack size, in kilobytes
+RLIMIT_SOFT_STACK=
+RLIMIT_HARD_STACK=
+
+# (-t) maximum amount of CPU time, in seconds
+RLIMIT_SOFT_CPU=
+RLIMIT_HARD_CPU=
+
+# (-u) maximum number of user processes
+RLIMIT_SOFT_NPROC=
+RLIMIT_HARD_NPROC=
+
+# (-v) size of virtual memory, in kilobytes
+RLIMIT_SOFT_AS=
+RLIMIT_HARD_AS=
+
+# (-x) maximum number of file locks
+RLIMIT_SOFT_LOCKS=
+RLIMIT_HARD_LOCKS=

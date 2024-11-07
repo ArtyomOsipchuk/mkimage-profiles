@@ -1,0 +1,657 @@
+#!/bin/bash
+#
+# Update kernel with modules
+#
+# Copyright (C) 2004, 2013, 2015 Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2005-2008 Anatoly Kitaykin <cetus@newmail.ru>
+# Copyright (C) 2008-2009 Vladimir V. Kamarzin <vvk@altlinux.org>
+# Copyright (C) 2008-2009 Michael Shigorin <mike@altlinux.org>
+# Copyright (C) 2008 Konstantin Baev <kipruss@altlinux.org>
+# Copyright (C) 2010 Dmitry Kulik <lnkvisitor@altlinux.org>
+# Copyright (C) 2020-2023 Vitaly Chikunov <vt@altlinux.org>
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+
+set +o posix
+shopt -s extglob
+export LC_ALL=C
+
+cr=$'\n'
+PROG=${0##*/}
+message() {
+	echo >&2 "$PROG: $*"
+}
+
+fatal() {
+	message "$@"
+	exit 1
+}
+
+show_usage()
+{
+	[ -z "$*" ] || message "$*"
+	echo >&2 "Try \`$PROG --help' for more information."
+	exit 1
+}
+
+show_help()
+{
+        cat <<EOF
+Usage: $PROG [options]
+Valid options are:
+        -l, --list           list available kernels
+        -a, --all            select all available kernel modules to install
+        -i, --interactive    interactive modules selection
+        -H, --headers        add kernel headers to install
+        --debuginfo          add debuginfo package to install
+        -A modulename        include (add) external module (by a short name)
+        -D modulename        exclude (del) external module from install
+        -f, -y, --force      force kernel upgrade
+        -t, --type           select desired kernel flavour (un-def, std-def, etc)
+                             by default it's same as of booted kernel
+        -r, --release        desired kernel release (allowed formats by example:
+                                 old format: alt1, 5.7.19-alt1
+                                 classic kernel release: 5.7.19-std-def-alt1
+                                 package name: [kernel-image-]std-def-5.7.19-alt1)
+        -u, --update         run 'apt-get update' automatically
+        -n, --dry-run        perform a simulation of events that would occur but
+                             do not actually change the system
+        -d, --download-only  download packages, but don't install
+        -h, --help           show this text and exit
+Run remove-old-kernels to uninstall unused kernels.
+EOF
+exit "$@"
+}
+
+# compensate for absent rpmevrdtcmp tool
+rpmevrdtcmp() {
+	local v
+
+	v=$(rpmevrcmp "$1" "$2")
+	if [ "$v" != 0 ]; then
+		echo "$v"
+		return
+	elif [[ "$1" =~ @ ]] && [[ "$2" =~ @ ]]; then
+		# Have buildtimes
+		# Hack: We will break and simplify EVRDT here, because user wants not the kernel 
+		# from branch with a higher letter, but newer kernel, so compare only buildtimes.
+		rpmvercmp "${1#*@}" "${2#*@}"
+	fi
+}
+
+# produce user-friendly version from EVRDT
+ufver() {
+	local v
+	v=${1#+([0-9]):} # epoch
+	v=${v%@*}	 # buildtime
+	v=${v%%:*}	 # disttag
+	echo "$v"
+}
+
+all=
+dryrun=
+download_only=
+force=
+headers=
+modules=
+xmodules=
+interactive=
+kernel_flavour=
+list=
+reinstall=
+release=
+verbose=
+apt_get_update=
+debuginfo=
+
+#parse command line options
+TEMP=$(getopt -n "$PROG" -o A:,D:,a,d,i,l,f,y,t:,r:,v,n,H,u,h -l interactive,list,all,add:,force,type:,release:,verbose,reinstall,dry-run,download-only,headers,update,debuginfo,help -- "$@") || show_help 1
+eval set -- "$TEMP"
+
+while :; do
+        case "$1" in
+                --) shift; break
+                        ;;
+                -l|--list) list=1
+                        ;;
+                -a|--all) all=1
+                        ;;
+                -i|--interactive) interactive=1
+                        ;;
+                -f|-y|--force) force=1
+                        ;;
+		-t|--type) shift ; kernel_flavour="$1"
+			;;
+		-r|--release) shift ; release="$1"
+			;;
+		-v|--verbose) verbose=1
+			;;
+		-H|--headers) headers=1
+			;;
+		--debuginfo) debuginfo=1
+			;;
+		-A|--add) shift; modules="$modules $1"
+			;;
+		-D|--del) shift; xmodules="$xmodules $1"
+			;;
+		--reinstall) reinstall=$1
+			;;
+		-n|--dry-run) dryrun="--dry-run"
+			;;
+		-d|--download-only) download_only="--download-only"
+			;;
+		-u|--update) apt_get_update=y
+			;;
+                -h|--help) show_help
+        esac
+	shift
+done
+
+if [ -n "$verbose" ]; then
+       V() { echo >&2 "+ $*"; "$@"; }
+else
+       V() { "$@"; }
+fi
+
+# set colors on tty
+if [ -t 1 ]; then
+	YELLOW=$'\e[1;33m'
+	MAGENTA=$'\e[1;35m'
+	BRIGHT=$'\e[1m'
+	NORM=$'\e[0m'
+else
+	YELLOW=
+	MAGENTA=
+	BRIGHT=
+	NORM=
+fi
+
+if [ -n "$interactive" ] && [ -n "$force" ]; then
+	show_usage '--force and --interactive are mutually exclusive options.'
+fi
+
+if [ -n "$interactive" ] && [ -n "$all" ]; then
+	message "Disabling --all because of --interactive. You will always select from all available modules."
+	all=
+fi
+
+LISTS='/var/lib/apt/lists/'
+eval "$(apt-config shell LISTS Dir::State::lists/f)"
+
+# check if apt db is stalled (older than a day)
+now=$(date +%s)
+if [ -n "$apt_get_update" ]; then
+	V apt-get update
+elif [ -z "$(find "$LISTS" -name '*_pkglist.*' -ctime -1 2>/dev/null)" ]; then
+	declare -i ts=0 t
+	# shellcheck disable=SC2044
+	for i in $(find "$LISTS" -name '*_pkglist.*'); do
+		t=$(stat -c%Z "$i")
+		[ "$t" -gt "$ts" ] && ts=$t
+	done
+	if [ "$ts" -gt 0 ]; then
+		# shellcheck disable=SC2017
+		days="$(( (now - ts) / (60 * 60 * 24) )) days old"
+	else
+		days="stalled"
+	fi
+	echo >&2 "${YELLOW}ATTENTION: Your APT database is $days, please run 'apt-get update'!${NORM}"
+	unset ts t days
+fi
+
+uname_r=$(uname -r)
+
+###################################################################
+# list available and installed kernels
+
+if [ -n "$list" ]; then
+	declare -i count=0 bt
+	rrel=$uname_r
+	if [ -n "$kernel_flavour" ]; then
+		rflv=$kernel_flavour
+	else
+		rflv=${rrel#*-}
+		rflv=${rflv%-*}
+	fi
+	def=$(readlink /boot/vmlinuz)
+	def=${def#vmlinuz-}
+	echo "List of available kernels${kernel_flavour:+ for $kernel_flavour flavour}:"
+	list_files=$(mktemp)
+	rpm -qa --queryformat '[%{=NAME}\t%{FILENAMES}\n]' 'kernel-*' > "$list_files"
+	set -o pipefail
+	apt-cache pkgnames "kernel-image-${kernel_flavour}" | sort \
+	| sort -V \
+	| grep '#' \
+	| grep -v -e '-debuginfo#' -e '^kernel-image-domU-' \
+	| (
+	  while read -r k; do
+		pkg=${k%#*}
+		flv=${pkg#kernel-image-}
+		ev=${k#*#}
+		ver=${ev#+([0-9]):}
+		epo=${ev%"$ver"}
+		ver=${ver%%[:@]*}
+		rel=${ver#*-}
+		ver=${ver%-*}
+		ev=$epo$ver
+
+		pkglist=$(apt-cache policy "$k" | grep -w 'pkglist$')
+		[ -z "$pkglist" ] && echo -n "   " || echo -n "  *"
+		bt=${k##*@}
+		[ "$bt" -gt 0 ] && printf " %7s" "($(( (now - bt) / 86400 )) d)" || printf " %7s" '?'
+		echo -n " $pkg-$ver-$rel"
+		if rpm -q "$pkg-$ver-$rel" >/dev/null 2>&1; then
+			if [ "$def" = "$ver-$flv-$rel" ]; then
+				echo -n ' [default]'
+			else
+				echo -n ' [installed]'
+			fi
+		elif [ -n "$pkglist" ] && [ "$rflv" = "$flv" ]; then
+			echo -n " <--- upgrade"
+		fi
+		[ "$rrel" = "$ver-$flv-$rel" ] && echo -n ' RUNNING'
+
+		# shellcheck disable=SC2002
+		addons=$(cat "$list_files" \
+			| grep	-e "/lib/modules/$ver-$flv-$rel/" \
+				-e "[[:space:]]/usr/include/linux-$ver-$flv\$" \
+				-e "[[:space:]]/boot/vmlinux-$ver-$flv-$rel\$" \
+			| cut -f1 \
+			| sort -u \
+			| while read -r m; do
+				# Skip kernel-image which is reported above.
+				[ -n "${m#kernel-image-"$flv"}" ] || continue
+				m=${m#kernel-image-}
+				m=${m#"$flv"-}
+				m=${m#kernel-modules-}
+				m=${m%-"$flv"}
+				m=${m#kernel-}
+				echo -n " $m"
+			done
+		)
+		[ -n "$addons" ] && echo -n " |$addons"
+		echo
+		count+=1
+	done
+	if [ $count -eq 0 ]; then
+		echo "Nothing found."
+	else
+		echo "[*] Latest available in repo. (d) Package age in days."
+	fi
+	)
+	exit 0
+fi
+
+if [ "$UID" != "0" ]; then
+	message "This program requires root privileges."
+fi
+
+# get running kernel package name
+current_kernel_package=$(rpmquery -qf "/boot/vmlinuz-$uname_r" 2>/dev/null)
+if [ -n "$current_kernel_package" ] ; then
+	current_kernel_pkgname=$(rpmquery --queryformat "%{NAME}-%{VERSION}-%{RELEASE}\n" -q "$current_kernel_package")
+	echo "Running kernel: $current_kernel_pkgname"
+else
+	echo "Running kernel: $uname_r is not from package"
+fi
+
+# Release desired by user.
+if [[ "$release" =~ ^[0-9]+\.[0-9.]+-.*-[^-]+$ ]]; then
+	# Rewrite release in `uname -r` compatible 'kernelrelease' format
+	ver="${release%-*}"
+	flv="${ver#*-}"
+	ver="${ver%%-*}"
+	rel="${release##*-}"
+	if [ -n "$kernel_flavour" ] && [ "$kernel_flavour" != "$flv" ]; then
+		fatal "Kernel flavour from '-t $kernel_flavour' does not match flavour from '-r' ($flv)."
+	fi
+	kernel_flavour="$flv"
+	release="$ver-$rel"
+	unset ver flv rel
+elif [[ "$release" =~ ^(kernel-image-)?.*[-=#][0-9:]+\.[0-9.]+-[^-]+$ ]]; then
+	# Rewrite release in RPM, APT package format
+	ver="${release#kernel-image-}"
+	flv="${ver%[-=#]*-*}"
+	rel="${ver#"$flv"[-=#]}"
+	if [ -n "$kernel_flavour" ] && [ "$kernel_flavour" != "$flv" ]; then
+		fatal "Kernel flavour from '-t $kernel_flavour' does not match flavour from '-r' ($flv)."
+	fi
+	kernel_flavour="$flv"
+	release="$rel"
+	unset ver flv rel
+fi
+
+# set kernel flavour. if not defined with -t option, use current
+if [ -n "$UPDATE_KERNEL_SYS_FLAVOUR" ]; then
+	current_kernel_flavour=$UPDATE_KERNEL_SYS_FLAVOUR
+else
+	current_kernel_flavour=$uname_r
+	current_kernel_flavour="${current_kernel_flavour#*-}"
+	current_kernel_flavour="${current_kernel_flavour%-*}"
+fi
+kernel_flavour="${kernel_flavour:-$current_kernel_flavour}"
+
+###################################################################
+# update kernel and modules
+
+echo "Checking for available $kernel_flavour kernel packages..."
+# get list of all available kernel packages
+KERNEL_PKGS="$(apt-cache pkgnames "kernel-image-$kernel_flavour#" | sort -V)"
+
+# check that we have at least one kernel with defined kernel_flavour
+num_available_kernels="$(echo "$KERNEL_PKGS" | grep -c "$kernel_flavour")"
+[ "$num_available_kernels" != 0 ] || fatal "There are no available kernels with kernel flavour $kernel_flavour"
+
+# check that we have at least one kernel with defined kernel package release
+# this is imprecise selection that will be filtered later
+[ -z "$release" ] || {
+	num_available_kernels="$(echo "$KERNEL_PKGS" | grep -c "$release")"
+	[ "$num_available_kernels" != 0 ] || fatal "There are no available $kernel_flavour kernels with package release $release"
+}
+
+# define how we must select available packages with needed flavour/release
+[ -z "$release" ] && pgkgrep="kernel-image-$kernel_flavour#" || pgkgrep="kernel-image-$kernel_flavour#.*\b${release//./\\.}\([@:.-]\|\$\)"
+
+# get the maximum available kernel package version
+kmaxver=
+while read -r version
+do
+	[ -n "$version" ] || continue
+	comparever="$(rpmevrdtcmp "$kmaxver" "$version")"
+	# shellcheck disable=SC2015
+	[ "$comparever" -lt 0 ] && kmaxver="$version" ||:
+done <<<"$(echo "$KERNEL_PKGS" | grep "$pgkgrep" | sed -e "s,^kernel-image-$kernel_flavour#,,g")"
+[ -z "$kmaxver" ] && fatal "Requested kernel not found."
+
+warn_stalled_kernel() {
+	local btime=$1 mons
+
+	mons=$(( (now - btime) / 2592000 ))
+	if [ "$mons" -gt 0 ]; then
+		echo >&2 "${YELLOW}ATTENTION: Selected kernel is $mons months old.${NORM}"
+	fi
+}
+
+userkmaxver=$(ufver "$kmaxver")
+if rpm -q "kernel-image-$kernel_flavour-$kmaxver" &>/dev/null ; then
+	echo "Latest available kernel ${BRIGHT}kernel-image-$kernel_flavour-$userkmaxver${NORM} is already installed on your system."
+else
+	echo "Latest available kernel is ${BRIGHT}kernel-image-$kernel_flavour-$userkmaxver${NORM}"
+fi
+
+buildtime=${kmaxver##*@}
+if [ "$buildtime" != "$kmaxver" ]; then
+	warn_stalled_kernel "$buildtime"
+fi
+
+# inherit modules from the currently booted flavour and from previously installed
+# kernels of the target flavour.
+modules_kernel_flavours=$kernel_flavour
+[ "$current_kernel_flavour" != "$kernel_flavour" ] && modules_kernel_flavours+=" $current_kernel_flavour"
+
+# add headers to update plan
+modules_to_install=
+if [ -n "$headers" ] || \
+   rpm -q "kernel-headers-$kernel_flavour" &>/dev/null; then
+	modules_to_install+=" kernel-headers-$kernel_flavour"
+fi
+# force install kernel-headers-modules if there's DKMS because it may need
+# it at once, no need to wait for user to install it manually
+if [ -n "$headers" ] || \
+   rpm -q "kernel-headers-modules-$kernel_flavour" &>/dev/null || \
+   type -p dkms &>/dev/null; then
+	modules_to_install+=" kernel-headers-modules-$kernel_flavour"
+fi
+
+# add debuginfo
+if [ -n "$debuginfo" ]; then
+	# All subpackages have slightly different (earliest and same for them all) buildtime.
+	kmaxver_no_bt=${kmaxver%@*}
+	dbg_pkg=$(apt-cache pkgnames "kernel-image-$kernel_flavour-debuginfo#$kmaxver_no_bt@")
+	if [ -z "$dbg_pkg" ]; then
+		echo "${YELLOW}Debuginfo package not found for the new kernel.${NORM}"
+	else
+		modules_to_install+=" $dbg_pkg"
+	fi
+fi
+
+###################################################################
+# update modules
+
+# Get list of all available external modules for target kernel
+# Fully versioned packages list
+ALLMODULES=$(apt-cache whatdepends "kernel-image-$kernel_flavour#$kmaxver" \
+	| grep "kernel-modules-.*-$kernel_flavour" \
+	| sed -re 's/-[^-]*-[^-]*$//;s/^ +//' \
+	| sort -u)
+
+num_modules=$(echo "$ALLMODULES" | wc -w)
+sugg_int=
+[ -z "$interactive" ] && [ "$num_modules" -gt 0 ] && sugg_int=" Use -i to select which modules to install."
+echo "Kernel ${BRIGHT}$kernel_flavour${NORM} version ${BRIGHT}$userkmaxver${NORM} has $num_modules external modules.$sugg_int"
+
+# Short modules names list
+ALLNAMES=$(echo -n "$ALLMODULES" | sed "s/-$kernel_flavour#.*//;s/kernel-modules-//" | sort -u)
+
+if [ -n "$xmodules" ]; then
+	xmodules=$(echo "$xmodules" | tr '[:space:]' '\n' | grep . | sort -u)
+	missed=$(echo "$ALLNAMES" | join -v2 - <(echo "$xmodules") | xargs)
+	ALLNAMES=$(echo "$ALLNAMES" | join -v1 - <(echo "$xmodules"))
+	[ -n "$missed" ] && echo >&2 "Modules requested for exclusion but not found: ${MAGENTA}$missed${NORM}"
+	unset missed
+fi
+
+# There is three main use cases:
+#  1) User upgrading current kernel (and flavour) to the latest and will reboot.
+#  2) User upgraded current flavour previously but didn't reboot, or rebooted to older kernel.
+#  3) User wants to try other flavour.
+# We want to check modules compatibility of
+# - Currently booted ("stable") kernel with new kernel (target). Yes.
+# - Latest kernel of this flavour with the target? No. It's irrelevant.
+# - Some kernel of target flavour with the target? Perhaps. But it's hard to determine
+#   what kernel we should check, "latest" is not necessarily even booted. Latest
+#   booted with uptime>day is complicated, and may be hard for a user to understand
+#   why we selected that version for check. So it's sort of random choice.
+# - All the kernels. Is obviously wrong and would overwhelm a user.
+
+# Check if selected kernel has all external modules as in this flavour.
+# Checking all flavours is not useful by a two reasons:
+# - you cannot guess flavour from module package name;
+# - perhaps this will overwhelm user;
+# thus only two flavours should be checked - booted and the same as selected.
+absent_modules=
+check_external_modules() {
+	local flavour=$1 evr=$2 MODINSTALLED LOSTMODS num
+	[ -n "$flavour" ] || return
+	# list of previously installed external modules
+	MODINSTALLED=$(apt-cache pkgnames kernel-modules- \
+		| grep -e "-$flavour#" \
+		| sed "s/#.*//" \
+		| sort -u \
+		| xargs rpm -q --qf '[%{NAME} %{REQUIRENEVRS}\n]' 2>/dev/null \
+		| grep "^kernel-modules-.* kernel-image-$flavour = ${evr//./\\.}:" \
+		| sed -r "s/-$flavour .*//;s/^kernel-modules-//" \
+		| sort -u)
+	LOSTMODS=$(echo "$MODINSTALLED" | join -v1 - <(echo "$ALLNAMES") | sed 's/kernel-modules-//')
+	if [ -n "$LOSTMODS" ]; then
+		num=$(echo "$LOSTMODS" | wc -w)
+		echo >&2 "${YELLOW}ATTENTION: Selected kernel does not have $num following external module(s) which you have${NORM}"
+		echo >&2 "${YELLOW}installed for your currently booted $flavour kernel:${NORM}"
+		# shellcheck disable=SC2086
+		echo >&2 "  " $LOSTMODS
+		absent_modules=1
+	fi
+}
+
+if [ -n "$current_kernel_package" ]; then
+	current_kernel_evr=$(rpm -q --qf '%{EVR}' "$current_kernel_package")
+	check_external_modules "$current_kernel_flavour" "$current_kernel_evr"
+fi
+if [ -n "$absent_modules" ]; then
+	echo >&2 "${YELLOW}Do not answer yes if these modules are important for your system.${NORM}"
+fi
+
+# user module selection interface
+user_selected_modules=
+for m in $modules; do
+	m=${m#kernel-modules-}
+	m=${m#-"$kernel_flavour"}
+	user_selected_modules+="$m$cr"
+done
+if [ -n "$interactive" ]; then
+	PS3="-- Add modules to install #/All/None/Continue? "
+	select mod in $ALLNAMES; do
+		if [ -n "$mod" ]; then
+			echo "Selected ${BRIGHT}$mod${NORM}."
+			user_selected_modules+="$mod"$'\n'
+		else
+			shopt -s nocasematch
+			case "$REPLY" in
+				q*|c*|y*)
+					echo "Continue installation"
+					break ;;
+				a|al|all)
+					echo "Select all modules"
+					all=1
+					break ;;
+				n|no|non|none)
+					echo "Deselect all modules"
+					user_selected_modules=
+					all=
+					break ;;
+				*) echo >&2 "Unknown choice $REPLY" ;;
+			esac
+			shopt -u nocasematch
+		fi
+	done || echo "Continue to installation"
+fi
+
+# actual selection process, appends to modules_to_install variable
+sel_prev=
+modules_to_show=
+declare -i modules=0
+for modname in $(echo "$ALLNAMES" | sort -u); do
+	module=$(echo "$ALLMODULES" | grep "^[[:space:]]*kernel-modules-$modname-$kernel_flavour#" | sort -r -u -V | head -1)
+	module_pkgname="${module%%#*}"
+	module_pkgname_flavourless="${module_pkgname%-"$kernel_flavour"}"
+	[ -z "$module_pkgname" ] && continue
+	include_mod=
+	sel_mode=
+	if [ -n "$all" ]; then
+		include_mod=1
+		sel_mode+="(all)"
+	fi
+	if [ -z "$include_mod" ]; then
+		userselected=$(echo "$user_selected_modules" | grep -x "$modname")
+		if [ -n "$userselected" ]; then
+			include_mod=1
+			sel_mode+="(user selected)"
+		fi
+	fi
+	if [ -z "$include_mod" ]; then
+		for mod in $modules_kernel_flavours; do
+			if rpm -q "$module_pkgname_flavourless-$mod" &>/dev/null; then
+				include_mod=1
+				sel_mode+="(auto-selected)"
+				break
+			fi
+		done
+	fi
+	[ -z "$include_mod" ] && continue
+
+	[ "$sel_prev" != "$sel_mode" ] && modules_to_show+=" $sel_mode"
+	sel_prev=$sel_mode
+	modules_to_show+=" $modname"
+	modules_to_install+=" $module"
+	modules+=1
+done
+[ -n "$modules_to_show" ] && {
+	echo "The following extra modules will be installed:"
+	echo "  $modules_to_show"
+}
+
+# do we need to work?
+needwork=$force
+if [ -z "$force" ]; then
+	for pkg in "kernel-image-$kernel_flavour#$kmaxver" $modules_to_install; do
+		rpm -q "${pkg//#/-}" &>/dev/null || needwork=1
+	done
+fi
+if [ -z "$needwork" ]; then
+	message "Everything is already installed, thus no upgrade is possible. Use -f to force install."
+	exit 0
+fi
+
+if [ -z "$dryrun" ]; then
+	# ask user
+	[ -n "$download_only" ] && action="download" || action="${reinstall:+re}install"
+	echo -n "Try to $action"
+       	echo -n " kernel ${BRIGHT}kernel-image-$kernel_flavour-$userkmaxver${NORM}"
+	if [ -n "$modules_to_show" ]; then
+		echo -n " and $modules module$([ "$modules" -gt 1 ] && echo s)"
+	fi
+	echo -n " [Y/n]? "
+	if [ -n "$force" ]; then
+		echo "yes (forced)"
+	else
+		while true; do
+			read -r || { echo "Aborting"; exit 1; }
+			shopt -s nocasematch
+			case "$REPLY" in
+				n|no|0|q) exit 0 ;;
+				y|ye|yes|'') break ;;
+				*) ;;
+			esac
+			echo -n "[Y/n] "
+			shopt -u nocasematch
+		done
+	fi
+	unset action
+fi
+
+# now install everything at once
+# shellcheck disable=SC2086
+V apt-get install -o APT::Install::Virtual=true -y $reinstall $dryrun $download_only \
+		"kernel-image-$kernel_flavour#$kmaxver" $modules_to_install \
+	|| fatal "failed to install kernel-image-$kernel_flavour-$kmaxver with modules"
+
+# proper reboot will sync, but make sure it's synced in case user press reset button
+sync
+
+if [ -n "$verbose" ] && [ -n "$download_only" ]; then
+	eval "$(apt-config shell ARCHIVES Dir::Cache::archives/f)"
+	echo >&2 "Note that downloaded-only packages should be in $ARCHIVES"
+fi
+
+# try to run x11setupdrv, x11presetdrv
+# if might need that (e.g. for nvidia_glx updates)
+# NB: x11setupdrv seems deprecated in Sisyphus as of Oct 2009
+X11SETUPDRV=/usr/bin/x11setupdrv
+X11PRESETDRV=/usr/sbin/x11presetdrv
+XORG=/usr/bin/Xorg
+
+[ ! -x "$XORG" ] || \
+case "$ALLMODULES" in
+	*drm*|*fglrx*|*nvidia*)
+		[ -x "$X11SETUPDRV" ] \
+			&& "$X11SETUPDRV"
+		if [ -x "$X11PRESETDRV" ]; then
+			"$X11PRESETDRV"
+		else
+			message "You might need to run x11presetdrv: video drivers updated but $X11PRESETDRV is missing"
+		fi
+		ldconfig
+		;;
+esac

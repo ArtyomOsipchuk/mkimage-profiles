@@ -1,0 +1,9 @@
+Important:
+  basesystem
+Required:
+  apt
+  systemd-sysvinit
+  sysvinit
+  openssh-server
+Standard:
+  postfix

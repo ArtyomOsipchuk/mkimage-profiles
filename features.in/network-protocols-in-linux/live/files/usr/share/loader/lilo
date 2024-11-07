@@ -1,0 +1,121 @@
+#!/usr/bin/perl
+# $Id: lilo,v 1.4 2004/08/17 02:03:39 at Exp $
+#--------------------------------------------------------------------
+# Copyright (C) 2000, 2001 by MandrakeSoft.
+# Chmouel Boudjnah <chmouel@mandrakesoft.com>.
+#
+# Redistribution of this file is permitted under the terms of the GNU
+# Public License (GPL)
+#--------------------------------------------------------------------
+# Copyright (C) 2003 by ALT Linux Team,
+# Alexey Tourbin <at@altlinux.org>.
+#--------------------------------------------------------------------
+# description: Add/remove entry for lilo bootloader.
+
+use strict;
+use bootloader_utils qw(getroot);
+use Getopt::Long qw(GetOptions);
+# --nolaunch is legacy option
+GetOptions "n|nolaunch" => \my $nolaunch, "r|R|remove" => \my $remove, "m|memtest" => \my $memtest,
+           "l|label=s" => \my $label
+	and (my $version = shift) and (@ARGV == 0)
+	or die "usage: $0 [-n|--nolaunch] [-r|-R|--remove] [-m|--memtest] [-l|--label <label>] version\n";
+
+
+sub add_memtest {
+	local $_ = shift;
+	my $l=($label eq '')? "memtest86-$version":$label;
+
+	$l=~tr/ /_/;
+	$l=~s/\"/\\\"/g;
+
+	/\/memtest-\Q$version.bin\E\b/
+		or $_ .= <<EOF;
+image="/boot/memtest-$version.bin"
+	label="$l"
+EOF
+	return $_;
+}
+
+sub remove_memtest {
+	local $_ = shift;
+	my @sections = split /^(?=[ \t]*(?:image|other)[ \t]*=)/m;
+	@sections =  grep { !/\/memtest-\Q$version.bin\E\b/ } @sections;
+	return join "" => @sections;
+}
+
+sub kernel_label {
+	local $_ = shift;
+	return "$_";
+}
+
+sub add_kernel {
+	local $_ = shift;
+	my $l=($label eq '')? kernel_label($version):$label;
+	my $root = getroot();
+
+	$l=~tr/ /_/;
+	$l=~s/\"/\\\"/g;
+	$root=~s/\"/\\\"/g;
+
+	/\/vmlinuz-\Q$version\E[\s"]/
+		or $_ .= <<EOF;
+image="/boot/vmlinuz-$version"
+	initrd="/boot/initrd-$version.img"
+	label="$l"
+	root="$root"
+	read-only
+	optional
+EOF
+	return $_;
+}
+
+sub remove_kernel {
+	local $_ = shift;
+	my @sections = split /^(?=[ \t]*(?:image|other)[ \t]*=)/m;
+	@sections = grep { !/\/vmlinuz-\Q$version\E[\s"]/ } @sections;
+	return join "" => @sections;
+}
+
+{
+# open lilo.conf for update
+	my $lilo_conf = $ENV{LILO_CONF} || "/etc/lilo.conf";
+
+	# don't use label if it is already used
+	if ($label ne ''){
+	  open LC, $lilo_conf;
+	  foreach (<LC>){
+	    if (/^\s*label\s*=\s*($label|\"$label\")$/){
+	      $label=''; last;
+	    }
+	  }
+	  close LC;
+	}
+
+	open my $fh, "+<", $lilo_conf
+		or die "Cannot open $lilo_conf\n";
+	my $content = do { local $/ = undef; <$fh> };
+	
+# modify the content
+	if ($memtest && $remove) {
+		$content = remove_memtest($content);
+	} elsif ($memtest) {
+		$content = add_memtest($content);
+	} elsif ($remove) {
+		$content = remove_kernel($content);
+	} else {
+		$content = add_kernel($content);
+	}
+# neat
+	$content =~ s/\n{3,}/\n\n/g;
+
+# debug
+#	print $content;
+#	exit 0;
+
+# do the update
+	seek $fh, 0, 0;
+	print $fh $content;
+	truncate $fh, tell $fh;
+# autoclosed
+}

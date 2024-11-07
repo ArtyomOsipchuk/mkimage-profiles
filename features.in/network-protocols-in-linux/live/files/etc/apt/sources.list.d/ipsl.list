@@ -1,0 +1,15 @@
+# distrib-coffee.ipsl.jussieu.fr (Institut Pierre Simon Laplace, France)
+
+# ALT Platform 10
+#rpm [p10] ftp://distrib-coffee.ipsl.jussieu.fr/pub/linux/altlinux p10/branch/x86_64 classic
+#rpm [p10] ftp://distrib-coffee.ipsl.jussieu.fr/pub/linux/altlinux p10/branch/x86_64-i586 classic
+#rpm [p10] ftp://distrib-coffee.ipsl.jussieu.fr/pub/linux/altlinux p10/branch/noarch classic
+
+#rpm [p10] http://distrib-coffee.ipsl.jussieu.fr/pub/linux/altlinux p10/branch/x86_64 classic
+#rpm [p10] http://distrib-coffee.ipsl.jussieu.fr/pub/linux/altlinux p10/branch/x86_64-i586 classic
+#rpm [p10] http://distrib-coffee.ipsl.jussieu.fr/pub/linux/altlinux p10/branch/noarch classic
+
+#rpm [p10] rsync://distrib-coffee.ipsl.jussieu.fr/pub/linux/altlinux p10/branch/x86_64 classic
+#rpm [p10] rsync://distrib-coffee.ipsl.jussieu.fr/pub/linux/altlinux p10/branch/x86_64-i586 classic
+#rpm [p10] rsync://distrib-coffee.ipsl.jussieu.fr/pub/linux/altlinux p10/branch/noarch classic
+

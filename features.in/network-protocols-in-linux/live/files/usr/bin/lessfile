@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+echo 'LESSOPEN="/usr/share/less/lessfile.sh %s"; export LESSOPEN'
+echo 'LESSCLOSE="/usr/share/less/lessclose.sh %s %s"; export LESSCLOSE'

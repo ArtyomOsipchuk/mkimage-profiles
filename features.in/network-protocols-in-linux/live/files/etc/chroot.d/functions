@@ -1,0 +1,286 @@
+#!/bin/sh -e
+#
+# Copyright (C) 2000-2005  Dmitry V. Levin <ldv@altlinux.org>
+#
+# Functions used by most of scripts to update chrooted environments.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+
+# override PATH
+export PATH="/bin:/sbin:/usr/bin:/usr/sbin"
+
+PROG="${0##*/}"
+export LANG=C LANGUAGE=C LC_ALL=C
+
+chrooted_slib="$(getconf SLIB 2>/dev/null ||:)"
+[ -n "$chrooted_slib" ] || chrooted_slib=lib
+
+Fatal()
+{
+	printf "%s: %s\n" "${0##*/}" "$*" >&2
+	exit 1
+}
+
+Verbose()
+{
+	[ -n "$verbose" ] || return 0
+	printf "%s: %s\n" "${0##*/}" "$*" >&2
+}
+
+Info()
+{
+	printf "%s: %s\n" "${0##*/}" "$*" >&2
+}
+
+is_yes()
+{
+	# Test syntax	
+	if [ $# = 0 ]; then
+		Fatal "Usage: is_yes {value}"
+		return 2
+	fi
+
+	# Check value
+	case "$1" in
+		[Yy][Ee][Ss]|[Tt][Rr][Uu][Ee]|[Oo][Nn]|[Yy]|1)
+			# true returns zero
+			return 0
+		;;
+		*)
+			# false returns one
+			return 1
+		;;
+	esac
+}
+
+# NAME
+#	Copy - copy file
+#
+# SYNOPSIS
+#	Copy [OPTIONS]... SOURCE DEST
+#
+# DESCRIPTION
+#	Copy SOURCE to DEST.
+#	Try to hardlink DEST to SOURCE if possible.
+#	Avoid copying if SOURCE is same as DEST according to cmp(1),
+#	and no "force" have been specified.
+#	Pass -o, -g, -m and -v options to cp(1)/install(1).
+#
+Copy()
+{
+	local args=
+	local verbose=
+	local force=
+	local cp='cp -L --remove-destination'
+
+	local TEMP
+	TEMP=`getopt -n Copy -o qvfo:g:m: -l quiet,verbose,force,owner:,group:,mode: -- "$@"` || return
+	eval set -- "$TEMP"
+
+	while :; do
+		case "$1" in
+			-q|--quiet)
+				verbose=
+				;;
+			-v|--verbose)
+				verbose=-v
+				;;
+			-f|--force)
+				force=-f
+				;;
+			-o|--owner)
+				shift
+				args="$args -o $1"
+				cp=install
+				;;
+			-g|--group)
+				shift
+				args="$args -g $1"
+				cp=install
+				;;
+			-m|--mode)
+				shift
+				args="$args -m $1"
+				cp=install
+				;;
+			--) shift; break ;;
+		esac
+		shift
+	done
+
+	local src="$1"
+	[ -n "$src" ] || { Info "Copy: SOURCE not specified"; return 1; }
+	shift
+
+	local dst="$1"
+	[ -n "$dst" ] || { Info "Copy: DEST not specified"; return 1; }
+	shift
+
+	[ -r "$src" ] || { Verbose "Copy: SOURCE \"$src\" is not available"; return 1; }
+
+	if [ -z "$force" ] && cmp -s "$src" "$dst"; then
+		return 0
+	fi
+	if is_yes "$DISABLE_HARDLINKS" ||
+	   ! ln -nfL $verbose "$src" "$dst" 2>/dev/null; then
+		$cp -p $verbose $args "$src" "$dst"
+	fi
+}
+
+# NAME
+#	CopyLibs - copy libraries and executables
+#
+# SYNOPSIS
+#	Copy [OPTIONS]... FILES
+#
+# DESCRIPTION
+#	Copy FILES to DESTDIR.
+#	Traces library dependencies using ldd(1).
+#	Uses Copy() for actual copying.
+#
+CopyLibs()
+{
+	local args=
+	local mode='-m 755'
+	local verbose=
+	local force=
+	local destdir=
+	local libs=
+
+	local TEMP
+	TEMP=`getopt -n CopyLibs -o qvfd:l:o:g:m: -l quiet,verbose,force,destdir:libs:owner:,group:,mode: -- "$@"` || return
+	eval set -- "$TEMP"
+
+	while :; do
+		case "$1" in
+			-q|--quiet)
+				verbose=
+				;;
+			-v|--verbose)
+				verbose=-v
+				;;
+			-f|--force)
+				force=-f
+				;;
+			-d|--destdir)
+				# This is mandatory option.
+				shift
+				destdir="$1"
+				;;
+			-l|--libs)
+				# Copy these libraries without tracing dependencies.
+				shift
+				libs="$libs $1"
+				;;
+			-o|--owner)
+				shift
+				args="$args -o $1"
+				;;
+			-g|--group)
+				shift
+				args="$args -g $1"
+				;;
+			-m|--mode)
+				shift
+				mode="-m $1"
+				;;
+			--) shift; break ;;
+		esac
+		shift
+	done
+
+	[ -n "$destdir" -a -d "$destdir" ] || { Info "CopyLibs: invalid or missing DESTDIR specified"; return 1; }
+	[ -n "$*" -o -n "$libs" ] || { Info "CopyLibs: mandatory arguments not specified"; return 1; }
+
+	libs="$(for n in "$libs" `ldd "$@" 2>/dev/null |sed -ne 's/^[[:space:]]\+\([^[:space:]]\+ => \)\?\([^[:space:]]\+\) (0x\([0-9a-f]\+\))$/\2/p'`; do echo "$n"; done |sort -u)"
+	for n in $libs; do
+		local src
+		src=$(readlink -ne "$n") && [ -n "$src" -a -e "$src" ] ||
+			continue # Skip missing files.
+		local dst="$destdir/${n##*/}"
+		Copy $verbose $force $mode $args "$src" "$dst"
+	done
+}
+
+# copy resolver configuration
+copy_resolv_conf()
+{
+	# regular config files
+	for f in hosts services {host,nsswitch,resolv}.conf; do
+		Copy $verbose $force -m644 "/etc/$f" "etc/$f"
+	done
+
+	# optional config files
+	for f in /etc/localtime /var/nis/NIS_COLD_START; do
+		if [ -f "$f" ]; then
+			Copy $verbose $force -m644 "$f" ".$f"
+		else
+			rm $verbose -f ".$f"
+		fi
+	done
+
+	# NIS/NIS+
+	d=`nisdomainname`
+	if [ -n "$d" -a "$d" != '(none)' ]; then
+		Copy $verbose $force -m644 "/var/yp/binding/$d.2" "var/yp/binding/$d.2" ||:
+	fi
+}
+
+# copy resolver libraries
+copy_resolv_lib()
+{
+	CopyLibs $verbose $force \
+		-l/${chrooted_slib}/libresolv.so.2 \
+		-l/${chrooted_slib}/libnsl.so.1 \
+		-d ${chrooted_slib}
+	# copy libraries required for NSS
+	local m
+	for m in $(sed '/^[[:space:]]*\(passwd\|group\|hosts\)[[:space:]:]\+/!d;s///' /etc/nsswitch.conf |
+			tr -s '[:space:]' '\n' |sort -u); do
+		CopyLibs $verbose $force \
+			-l/${chrooted_slib}/libnss_$m.so.2 \
+			-d ${chrooted_slib}
+	done
+}
+
+# parse common options
+force=
+verbose=
+if is_yes "$FORCE"; then
+	force="-f"
+fi
+if is_yes "$VERBOSE"; then
+	verbose="-v"
+fi
+TEMP=`getopt -n chroot.d -o f,v -l force,no-force,verbose,no-verbose -- "$@"` || exit 1
+eval set -- "$TEMP"
+unset TEMP
+
+while :; do
+	case "$1" in
+		-f|--force) [ -n "$force" ] || force="-f"
+			;;
+		-v|--verbose) [ -n "$verbose" ] || verbose="-v"
+			;;
+		--no-force) force=
+			;;
+		--no-verbose) verbose=
+			;;
+		--) shift; break
+			;;
+	esac
+	shift
+done

@@ -1,0 +1,19 @@
+#!/bin/bash -e
+
+. sh-functions
+. guess-functions
+
+iface="${GUESS_NET_IFACE-}"
+
+case "$iface" in
+	'')
+		;;
+	all)
+		for iface in "$SYSFS_PATH"/class/net/*; do
+			guess_device "${iface#$SYSFS_PATH}"
+		done
+		;;
+	*)
+		guess_device "/class/net/${iface##*/}"
+		;;
+esac

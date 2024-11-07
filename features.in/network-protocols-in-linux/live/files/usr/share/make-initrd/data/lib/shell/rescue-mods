@@ -1,0 +1,4 @@
+#!/bin/bash -efu
+
+. /.initrd/initenv
+[ -z "${RESCUE_MODULES-}" ] || modprobe $RESCUE_MODULES

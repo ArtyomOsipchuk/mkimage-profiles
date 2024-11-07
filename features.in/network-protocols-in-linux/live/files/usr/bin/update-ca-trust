@@ -1,0 +1,22 @@
+#!/bin/sh -ue
+
+# At this time, while this script is trivial, we ignore any parameters given.
+# However, for backwards compatibility reasons, future versions of this script must
+# support the syntax "update-ca-trust extract" trigger the generation of output
+# files in $EXTRACT_DIRECTORY.
+
+export EXTRACT_DIR=/etc/pki/ca-trust/extracted
+
+# Prevent p11-kit from reading user configuration files.
+export P11_KIT_NO_USER_CONFIG=1
+
+ret=0
+for f in /usr/libexec/ca-trust/update.d/*.hook; do
+	[ -f "$f" -a -x "$f" ] || continue
+
+	"$f" "$@" || {
+		echo >&2 "${0##*/}: $f failed"
+		ret=1
+	}
+done
+exit $ret

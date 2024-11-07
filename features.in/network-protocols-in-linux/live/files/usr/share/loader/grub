@@ -1,0 +1,133 @@
+#!/usr/bin/perl
+# $Id: grub,v 1.7 2004/08/17 02:03:39 at Exp $
+#--------------------------------------------------------------------
+# Copyright (C) 2000, 2001, 2002 by MandrakeSoft.
+# Chmouel Boudjnah <chmouel@mandrakesoft.com>.
+#
+# Redistribution of this file is permitted under the terms of the GNU
+# Public License (GPL)
+#--------------------------------------------------------------------
+# Copyright (C) 2003 by ALT Linux Team,
+# Alexey Tourbin <at@altlinux.org>.
+#--------------------------------------------------------------------
+# description: Add/remove entry for grub bootloader.
+
+use strict;
+use bootloader_utils qw(getroot mnt2dev);
+
+use Getopt::Long qw(GetOptions);
+GetOptions "r|R|remove" => \my $remove, "m|memtest" => \my $memtest,
+	"l|label=s" => \my $label
+	and (my $version = shift) and (@ARGV == 0)
+	or die "usage: $0 [-r|-R|--remove] [-m|--memtest] [-l|--label <label>] version\n";
+
+sub dev2grub {
+	my $dev = shift;
+	$dev=`convertdev.sh $dev`;
+	my ($disk, $part) = $dev =~ /([^\d\s]+)(\d+)/
+		or return;
+# Sample device.map entry:
+# (hd0) /dev/hda
+# Sample convertion:
+# /dev/hda5 => (hd0,4)
+	$part--;
+	my $map = $ENV{GRUB_DEVICE_MAP} || "/boot/grub/device.map";
+	open my $fh, $map
+		or return;
+	my $grub_part;
+	while (<$fh>) {
+		if (/\((\w+d\d+)\)\s+\Q$disk\E$/) {
+			$grub_part = "($1,$part)";
+			last;
+		}
+	}
+	return $grub_part;
+}
+
+my $bootdev = mnt2dev("/boot");
+my $boot = $bootdev ? "" : "/boot";
+my $root = getroot;
+my $grub_part = dev2grub($bootdev ? $bootdev : $root);
+die "Can't convert grub partition\n" unless $grub_part;
+
+sub add_memtest {
+	local $_ = shift;
+	my $l=($label eq '')? "memtest86-$version":$label;
+	/\/memtest-\Q$version.bin\E\b/
+		or $_ .= <<EOF;
+
+title $l
+kernel $grub_part$boot/memtest-$version.bin
+EOF
+	return $_;
+}
+
+sub remove_memtest {
+	local $_ = shift;
+	my @sections = split /^(?=[ \t]*title\s)/m;
+	@sections =  grep { !/\/memtest-\Q$version.bin\E\b/ } @sections;
+	return join "" => @sections;
+}
+
+sub add_kernel {
+	local $_ = shift;
+	my $l=($label eq '')? $version:$label;
+	/\/vmlinuz-\Q$version\E\s/
+		or $_ .= <<EOF;
+
+title $l
+kernel $grub_part$boot/vmlinuz-$version root=$root
+initrd $grub_part$boot/initrd-$version.img
+EOF
+	return $_;
+}
+
+sub remove_kernel {
+	local $_ = shift;
+	my @sections = split /^(?=[ \t]*title\s)/m;
+	@sections = grep { !/\/vmlinuz-\Q$version\E\s/ } @sections;
+	return join "" => @sections;
+}
+
+{
+# open menu.lst for update
+	my $menu_lst = $ENV{GRUB_MENU_LST} || "/boot/grub/menu.lst";
+
+	# don't use label if it is already used
+	if ($label ne ''){
+	  open ML, $menu_lst;
+	  foreach (<ML>){
+	    if (/^\s*title\s+$label$/){
+	      $label=''; last;
+	    }
+	  }
+	  close ML;
+	}
+
+	open my $fh, "+<", $menu_lst
+		or die "Cannot open $menu_lst\n";
+	my $content = do { local $/ = undef; <$fh> };
+	
+# modify the content
+	if ($memtest && $remove) {
+		$content = remove_memtest($content);
+	} elsif ($memtest) {
+		$content = add_memtest($content);
+	} elsif ($remove) {
+		$content = remove_kernel($content);
+	} else {
+		$content = add_kernel($content);
+	}
+# neat
+	$content =~ s/\n{3,}/\n\n/g;
+
+# debug
+#	print $content;
+#	exit 0;
+
+# do the update
+	seek $fh, 0, 0;
+	print $fh $content;
+	truncate $fh, tell $fh;
+# autoclosed
+}

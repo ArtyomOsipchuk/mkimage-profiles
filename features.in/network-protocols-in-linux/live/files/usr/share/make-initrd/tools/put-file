@@ -1,0 +1,3 @@
+#!/bin/bash -efu
+
+exec initrd-put ${IMAGEFILES:+--log="$IMAGEFILES"} "$@"

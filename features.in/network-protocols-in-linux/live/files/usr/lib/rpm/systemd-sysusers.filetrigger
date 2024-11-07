@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+LC_ALL=C grep -E -qs '^/(lib|etc)/sysusers.d/.+\.conf' && systemd-sysusers >/dev/null 2>&1 ||:

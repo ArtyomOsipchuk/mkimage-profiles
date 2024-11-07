@@ -1,0 +1,10 @@
+#%PAM-1.0
+auth		[success=1 default=ignore]	pam_pkcs11.so
+auth		substack	system-auth-local
+auth		required	pam_permit.so
+
+account		include		system-auth-local
+
+password	include		system-auth-local
+
+session		include		system-auth-local

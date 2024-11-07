@@ -1,0 +1,90 @@
+#!/bin/sh
+#
+# Acpid - starts the acpi daemon
+#
+# chkconfig: 2345 34 65
+# description:  Listen and dispatch ACPI \
+#		events from the kernel
+#
+# processname: acpid
+# pidfile: /run/acpid.pid
+# Do not load RH compatibility interface.
+WITHOUT_RC_COMPAT=1
+
+# Source function library.
+. /etc/init.d/functions
+
+PIDFILE=/run/acpid.pid
+LOCKFILE=/run/lock/subsys/acpid
+RETVAL=0
+
+SourceIfNotEmpty /etc/sysconfig/acpid
+
+start()
+{
+	start_daemon --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user root -- acpid $ACPID_ARGS
+	RETVAL=$?
+	return $RETVAL
+}
+
+stop()
+{
+	stop_daemon --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user root -- acpid
+	RETVAL=$?
+	return $RETVAL
+	rm -f $PIDFILE
+}
+
+restart()
+{
+	stop
+	start
+}
+
+reload()
+{
+	msg_reloading acpid
+	stop_daemon --pidfile "$PIDFILE" --expect-user root -HUP -- acpid
+	RETVAL=$?
+	return $RETVAL
+} 
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	reload)
+		reload
+		;;
+	restart)
+		restart
+		;;
+	condstop)
+		if [ -e "$LOCKFILE" ]; then
+			stop
+		fi
+		;;
+	condrestart)
+		if [ -e "$LOCKFILE" ]; then
+			restart
+		fi
+		;;
+	condreload)
+		if [ -e "$LOCKFILE" ]; then
+			reload
+		fi
+		;;
+	status)
+		status --pidfile "$PIDFILE" --expect-user root -- acpid
+		RETVAL=$?
+		;;
+	*)
+		msg_usage "${0##*/} {start|stop|reload|restart|condstop|condrestart|condreload|status}"
+		RETVAL=1
+esac
+
+exit $RETVAL

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+CONFIG=/etc/passwdqc.conf
+
+new_subst everyone \
+	'^enforce=everyone$' \
+	's/^enforce=.*$/enforce=everyone/'
+
+new_subst users \
+	'^enforce=users$' \
+	's/^enforce=.*$/enforce=users/'
+
+new_help everyone 'Enforce strong passwords for everyone'
+new_help users 'Enforce strong passwords for non-root users only'
+
+new_summary 'Password quality enforcement rules'
+
+control_subst "$CONFIG" "$*"

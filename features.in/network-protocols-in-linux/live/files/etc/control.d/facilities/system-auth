@@ -1,0 +1,94 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+CONFIG1=/etc/pam.d/system-auth
+CONFIG2=/etc/pam.d/system-auth-use_first_pass
+CONFIGP=/etc/pam.d/system-policy
+
+new_summary 'system authentication type'
+
+system_auth_helpstring()
+{
+	case "$1" in
+	local)
+		echo 'local authentication'
+		;;
+	ldap)
+		echo 'authentication via LDAP'
+		;;
+	krb5)
+		echo 'authentication via Kerberos 5'
+		;;
+	krb5_ccreds)
+		echo 'authentication via Kerberos 5 with local caching'
+		;;
+	winbind)
+		echo 'authentication via Winbind'
+		;;
+	*)
+		echo "use $1 authentication method"
+	esac
+}
+
+for f in $CONFIG1-*; do
+	v="${f#$CONFIG1-}"
+	case "$v" in
+		*.*|*~)
+			continue # ignore backup files
+			;;
+		common|only|*-common|*-only)
+			continue # ignore auxiliary files
+			;;
+	esac
+
+	# check whether both configuration file exist
+	if [ ! -f "$CONFIG1-$v" -o ! -f "$CONFIG2-$v" ]; then
+		continue
+	fi
+
+	new_help "$v" "$(system_auth_helpstring $v)"
+done
+
+REQUEST="$*"
+
+case "$REQUEST" in
+	help|'help '*)
+		control_help "${REQUEST#help}"
+		;;
+	list)
+		control_list
+		;;
+	summary)
+		control_summary
+		;;
+	status)
+		CURRENT="$(readlink -e "$CONFIG1")"
+		CURRENT="${CURRENT#$CONFIG1-}"
+		CURRENT="${CURRENT##*/}"
+		echo "${CURRENT:-unknown}"
+		;;
+	*)
+		if [ ! -f "$CONFIG1-$REQUEST" -o ! -f "$CONFIG2-$REQUEST" ]; then
+			printf '%s: %s\n' "${0##*/}" "Invalid mode: $REQUEST" >&2
+			exit 1
+		fi
+		CURRENT="$(readlink -e "$CONFIG1")"
+		CURRENT="${CURRENT#$CONFIG1-}"
+		CURRENT="${CURRENT##*/}"
+		ln -sf "${CONFIG1##*/}-$REQUEST" "$CONFIG1"
+		ln -sf "${CONFIG2##*/}-$REQUEST" "$CONFIG2"
+
+		if [ "$CURRENT" != "$REQUEST" ]; then
+			POLICY="$(readlink -e "$CONFIGP")"
+			POLICY="${POLICY#$CONFIGP-}"
+			POLICY="${POLICY##*/}"
+			if [ "$REQUEST" = "local" -a "$POLICY" != "local" ]; then
+				ln -sf "${CONFIGP##*/}-local" "$CONFIGP"
+			fi
+			if [ "$REQUEST" != "local" -a "$POLICY" = "local" ]; then
+				ln -sf "${CONFIGP##*/}-remote" "$CONFIGP"
+			fi
+		fi
+		;;
+esac

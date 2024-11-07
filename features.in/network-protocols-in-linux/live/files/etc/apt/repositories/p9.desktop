@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Icon=sisyphus
+Terminal=false
+Name=ALT Linux Platform 9
+Name[ru]=Девятая платформа
+X-Sign=p9
+X-Path=/p9/branch
+X-Has-Noarch=yes
+X-Components=classic
+X-Has-Arepo=yes
+X-Has-Arches=armh aarch64 ppc64le i586 x86_64

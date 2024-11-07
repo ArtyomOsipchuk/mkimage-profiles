@@ -1,0 +1,137 @@
+#!/bin/bash -efu
+
+if [ -z "${__included_make_initrd_guess_functions-}" ]; then
+__included_make_initrd_guess_functions=1
+
+. sh-functions
+
+get_device() {
+	case "$1" in
+		*=*)
+			blkid -c /dev/null -t "$1" -o device
+			return 0
+			;;
+		/*)
+			printf '%s\n' "$1"
+			return 0
+			;;
+	esac
+	return 1
+}
+
+guess_modalias() {
+	printf '%s\n' "$1" >> "$guessdir/guess:modalias${GUESS_SUFFIX:+:$GUESS_SUFFIX}"
+}
+
+guess_module() {
+	printf '%s\n' "$1" >> "$guessdir/guess:modules${GUESS_SUFFIX:+:$GUESS_SUFFIX}"
+}
+
+guess_feature() {
+	printf '%s\n' "$1" >> "$guessdir/guess:features${GUESS_SUFFIX:+:$GUESS_SUFFIX}"
+}
+
+guess_variable() {
+	[ "$#" -ge 2 ] ||
+		return 0
+
+	local var="$1"
+	shift
+
+	printf '%s\n' "$@" >> "$guessdir/guess:variables:$var"
+}
+
+guess_fstype() {
+	for m in ${GUESS_FSTYPE_SCRIPTS-}; do
+		"$m" "$@"
+	done
+}
+
+guess_device() {
+	local device_file
+	device_file="$(readlink -ev "$SYSFS_PATH$1" 2>/dev/null)" ||
+		return 0
+	shift
+
+	[ -z "${device_file##$SYSFS_PATH/devices/*}" ] ||
+		return 0
+
+	for m in modalias parent slaves supplier ${GUESS_DEVICE_SCRIPTS-}; do
+		"$m" "${device_file#$SYSFS_PATH}"
+	done
+}
+
+# mmc_block module does not have a "modalias" file in the sysfs,
+# but it has "MODALIAS=mmc:block" in the "uevent" file.
+uevent_modalias() {
+	[ -f "$SYSFS_PATH$1"/uevent ] ||
+		return 0
+
+	local string eof
+
+	eof=
+	while [ -z "$eof" ]; do
+		string=
+		read -r string ||
+			eof=1
+		[ -n "$string" ] ||
+			continue
+		[ -n "${string##MODALIAS=*}" ] ||
+			guess_modalias "${string#MODALIAS=}"
+	done < "$SYSFS_PATH$1"/uevent
+}
+
+modalias() {
+	if [ ! -f "$SYSFS_PATH$1"/modalias ]; then
+		uevent_modalias "$1"
+		return $?
+	fi
+	local alias=
+	readline alias "$SYSFS_PATH$1"/modalias
+	[ -z "$alias" ] || guess_modalias "$alias"
+}
+
+parent() {
+	guess_device "$1/.."
+}
+
+slaves() {
+	[ -d "$SYSFS_PATH$1/slaves" ] ||
+		return 0
+	for slave in "$SYSFS_PATH$1/slaves"/*; do
+		[ ! -e "$slave" ] ||
+			guess_device "$1/slaves/${slave##*/}"
+	done
+}
+
+devlink_visited=" "
+
+supplier() {
+	local supplier devlink
+
+	for supplier in "$SYSFS_PATH$1/"supplier:*; do
+		[ -e "$supplier" ] ||
+			continue
+
+		devlink="$(readlink -ev "$supplier")" ||
+			continue
+
+		devlink="${devlink#$SYSFS_PATH/devices/virtual/devlink/}"
+
+		if [ -n "${devlink_visited##* $devlink *}" ]; then
+			devlink_visited="$devlink_visited$devlink "
+			guess_device "${supplier#$SYSFS_PATH}/supplier"
+		fi
+	done
+}
+
+is_active_feature()
+{
+	local n
+	for n in ${ALL_ACTIVE_FEATURES-}; do
+		[ "$1" != "$n" ] || return 0
+	done
+	return 1
+}
+
+fi #__included_make_initrd_guess_functions

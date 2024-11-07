@@ -1,0 +1,306 @@
+#!/bin/sh
+#
+# iptables	Start iptables firewall
+#
+# chkconfig: - 08 92
+# description: Automates an IPv4 packet filtering firewall with iptables
+#
+# config: /etc/sysconfig/iptables
+# config: /etc/sysconfig/iptables_params
+
+WITHOUT_RC_COMPAT=1
+
+# Source function library
+. /etc/init.d/functions
+
+IPTABLES=iptables
+IPTABLES_FILTER=cat
+IPTABLES_RESTORE="$IPTABLES-restore"
+IPTABLES_RESTORE_ARGS=
+IPTABLES_SAVE="$IPTABLES-save"
+IPTABLES_SAVE_ARGS=
+IPTABLES_STATUS_ARGS=
+IPTABLES_SAVE_ON_STOP=no
+IPTABLES_SAVE_ON_RESTART=no
+IPTABLES_DATA="/etc/sysconfig/$IPTABLES"
+IPTABLES_MODULES="/etc/sysconfig/${IPTABLES}_modules"
+IPTABLES_CONFIG="/etc/sysconfig/${IPTABLES}_params"
+LOCKFILE="/var/lock/subsys/$IPTABLES"
+IPV="${IPTABLES%tables}" # ip for ipv4 | ip6 for ipv6
+IPTABLES_TABLES_NAMES="/proc/net/${IPV}_tables_names"
+
+# Source config
+SourceIfNotEmpty "$IPTABLES_CONFIG"
+RETVAL=0
+
+load_modules()
+{
+	[ -s "$IPTABLES_MODULES" ] || return 0
+
+	# Loop over every line in $IPTABLES_MODULES
+	(cat "$IPTABLES_MODULES"; echo) |while read module args; do
+		# Ignore empty lines and comments
+		[ -n "${module##\#*}" ] || continue
+
+		action "Loading module $module for $IPTABLES:" \
+			modprobe "$module" $args 2>/dev/null
+	done
+}
+
+start()
+{
+	local tmp
+	tmp=`mktemp -t "$IPTABLES.XXXXXXXX"` &&
+	$IPTABLES_FILTER <"$IPTABLES_DATA" |
+		egrep -v '^[[:space:]]*(#|$)' >"$tmp" &&
+	[ -s "$tmp" ]
+	RETVAL=$?
+	if [ $RETVAL -ne 0 ]; then
+		[ -z "$tmp" ] || rm -f "$tmp"
+		printf %s $"$IPTABLES firewall is not configured"
+		passed "$IPTABLES start"
+		echo
+		return $RETVAL
+	fi
+
+	if [ -e /proc/net/ip_fwchains ]; then
+		printf %s $"ipchains and $IPTABLES can not be used together"
+		passed "$IPTABLES $*"
+		echo
+		RETVAL=1
+		return $RETVAL
+	fi
+
+	load_modules
+
+	action $"Applying $IPTABLES firewall rules:" \
+		$IPTABLES_RESTORE $IPTABLES_RESTORE_ARGS <"$tmp"
+	RETVAL=$?
+	rm -f "$tmp"
+	if [ $RETVAL = 0 ]; then
+		touch "$LOCKFILE"
+	else
+		rm -f "$LOCKFILE"
+	fi
+
+	return $RETVAL
+}
+
+tables=
+read_tables()
+{
+	tables="$(cat "$IPTABLES_TABLES_NAMES" 2>/dev/null)"
+	[ -n "$tables" ]
+}
+
+set_policy()
+{
+	local policy i
+	policy="$1"
+
+	printf %s $"Setting chains policy to $policy: "
+	RETVAL=0
+	for i in $tables; do
+		printf %s "$i "
+		case "$i" in
+			raw)
+				$IPTABLES -t raw -P PREROUTING $policy &&
+				$IPTABLES -t raw -P OUTPUT $policy ||
+				RETVAL=1
+				;;
+			filter)
+				$IPTABLES -t filter -P INPUT $policy &&
+				$IPTABLES -t filter -P OUTPUT $policy &&
+				$IPTABLES -t filter -P FORWARD $policy ||
+				RETVAL=1
+				;;
+			nat)
+				$IPTABLES -t nat -P PREROUTING $policy &&
+				$IPTABLES -t nat -P POSTROUTING $policy &&
+				$IPTABLES -t nat -P OUTPUT $policy ||
+				RETVAL=1
+				;;
+			mangle)
+				$IPTABLES -t mangle -P PREROUTING $policy &&
+				$IPTABLES -t mangle -P POSTROUTING $policy &&
+				$IPTABLES -t mangle -P INPUT $policy &&
+				$IPTABLES -t mangle -P OUTPUT $policy &&
+				$IPTABLES -t mangle -P FORWARD $policy ||
+				RETVAL=1
+				;;
+	        esac
+	done
+	[ "$RETVAL" -eq 0 ] &&
+		success "Setting chains policy to $policy" ||
+		failure "Setting chains policy to $policy"
+	echo
+	return $RETVAL
+}
+
+flush_delete()
+{
+	local i
+	RETVAL=0
+
+	printf %s $"Flushing firewall rules: "
+	for i in $tables; do
+		printf %s "$i "
+		$IPTABLES -t $i -F || RETVAL=1
+	done
+	[ "$RETVAL" -eq 0 ] &&
+		success "Flushing firewall rules" ||
+		failure "Flushing firewall rules"
+	echo
+	[ "$RETVAL" -eq 0 ] || return $RETVAL
+
+	printf %s $"Removing user defined chains: "
+	for i in $tables; do
+		printf %s "$i "
+		$IPTABLES -t $i -X || RETVAL=1
+	done
+	[ "$RETVAL" -eq 0 ] &&
+		success "Removing user defined chains" ||
+		failure "Removing user defined chains"
+	echo
+	[ "$RETVAL" -eq 0 ] || return $RETVAL
+
+	printf %s $"Zeroing packet and byte counters: "
+	for i in $tables; do
+		printf %s "$i "
+		$IPTABLES -t $i -Z || RETVAL=1
+	done
+	[ "$RETVAL" -eq 0 ] &&
+		success "Zeroing packet and byte counters" ||
+		failure "Zeroing packet and byte counters"
+	echo
+	return $RETVAL
+}
+
+unload_modules()
+{
+	local t
+
+	for t in $tables; do
+		local m="${IPV}table_${t}"
+		action "Unloading module $m:" modprobe -r "$m"
+	done
+	return 0
+}
+
+fwstatus()
+{
+	local i
+
+	if read_tables; then
+		for i in $tables; do
+			printf %s\\n $"Table: $i"
+			$IPTABLES -t $i --list $IPTABLES_STATUS_ARGS && echo
+		done
+		RETVAL=0
+	else
+		printf %s\\n $"$IPTABLES firewall is not started"
+		RETVAL=1
+	fi
+
+	return $RETVAL
+}
+
+save()
+{
+	local tmp
+
+	if read_tables; then
+		printf %s $"Saving current rules to $IPTABLES_DATA: "
+		if tmp=`mktemp "$IPTABLES_DATA.XXXXXXXX"` &&
+		   $IPTABLES_SAVE $IPTABLES_SAVE_ARGS >"$tmp"; then
+			[ -s "$IPTABLES_DATA" ] &&
+				ln -f "$IPTABLES_DATA" "$IPTABLES_DATA.save"
+			mv -f "$tmp" "$IPTABLES_DATA"
+			RETVAL=$?
+		else
+			RETVAL=1
+		fi
+		if [ $RETVAL -eq 0 ]; then
+			success "Saving current rules to $IPTABLES_DATA"
+		else
+			failure "Saving current rules to $IPTABLES_DATA"
+			[ -z "$tmp" ] || rm -f "$tmp"
+		fi
+		echo
+	else
+		printf %s $"$IPTABLES firewall is not started"
+		passed "$IPTABLES save"
+		echo
+		RETVAL=1
+	fi
+
+	return $RETVAL
+}
+
+stop()
+{
+	if read_tables; then
+		set_policy ACCEPT &&
+		flush_delete &&
+		unload_modules
+		RETVAL=$?
+	else
+		printf %s $"$IPTABLES firewall is not started"
+		passed "$IPTABLES stop"
+		echo
+		RETVAL=1
+	fi
+
+	rm -f "$LOCKFILE"
+	return $RETVAL
+}
+
+panic()
+{
+	if read_tables; then
+		set_policy DROP &&
+		flush_delete &&
+		RETVAL=$?
+	else
+		printf %s $"$IPTABLES firewall is not started"
+		passed "$IPTABLES panic"
+		echo
+		RETVAL=1
+	fi
+
+	return $RETVAL
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	save)
+		save
+		;;
+	status)
+		fwstatus
+		;;
+	panic)
+		panic
+		;;
+	stop)
+		is_yes "$IPTABLES_SAVE_ON_STOP" && save
+		stop
+		;;
+	restart|reload)
+		is_yes "$IPTABLES_SAVE_ON_RESTART" && save
+		start
+		;;
+	condrestart)
+		[ -e "$LOCKFILE" ] && start
+		;;
+	condstop)
+		[ -e "$LOCKFILE" ] && stop
+		;;
+	*)
+		msg_usage "${0##*/} {condrestart|condstop|panic|restart|save|start|status|stop}"
+		RETVAL=1
+esac
+
+exit $RETVAL

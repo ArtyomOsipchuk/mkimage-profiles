@@ -1,0 +1,21 @@
+# Turn on some additional features related to recoding (the essential 
+# part of recoding is not optional, so it isn't reflected by the 
+# options) and 8bit data transfer negotiation (these may be of some use 
+# to people writing messages in non-Latin).
+
+# List of features; see Pine's Setup/options menu for the current set.
+# e.g. feature-list= select-without-confirm, signature-at-bottom
+# Default condition for all of the features is no-.
+feature-list=recode-text-for-reply,
+	recode-header,
+	add-x-recoded-line,
+	enable-8bit-esmtp-negotiation,
+	enable-8bit-nntp-posting
+
+# Reflects capabilities of the display you have. Default: US-ASCII.
+# Typical alternatives include ISO-8859-x, (x is a number between 1 and 9).
+character-set=cp1251
+
+# Indeed: "reflects". The name of the charset put here shouldn't be the 
+# same as in the system locale settings, but it should reflect those 
+# settings in such a way that PINE understands the name (as in Content-Type:).

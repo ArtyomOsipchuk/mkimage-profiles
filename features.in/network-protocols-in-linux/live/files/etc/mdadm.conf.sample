@@ -1,0 +1,14 @@
+#
+#  /etc/mdadm.conf  --  mdadm configuration file
+#
+#  Customized for ALTLinux
+#  See complete sample on manual page and in documentation directory
+#
+#  This is a minimalistic skeleton but it should work out-of:a+box!
+#
+
+MAILADDR root
+PROGRAM /sbin/mdadm-syslog-events
+DEVICE partitions
+
+## EOF ##

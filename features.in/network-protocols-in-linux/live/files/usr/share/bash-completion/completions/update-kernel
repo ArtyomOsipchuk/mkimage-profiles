@@ -1,0 +1,54 @@
+# bash completion for update-kernel                        -*- shell-script -*-
+# shellcheck disable=SC2207,SC2155
+
+__update_kernel_flavours()
+{
+    apt-cache pkgnames 'kernel-image-' |
+        LC_ALL=C grep -Eo '^[^#]+' |
+        LC_ALL=C sed -E 's/^kernel-image-(domU-)?//;s/-debuginfo$//' |
+        LC_ALL=C sort -u
+}
+
+_update_kernel()
+{
+    # shellcheck disable=SC2034
+    local cur prev words cword
+    _init_completion || return
+
+    local cmd=${1##*/}
+
+    case $prev in
+        -t | --type)
+            # shellcheck disable=SC2034
+            local flavours=$(__update_kernel_flavours)
+            COMPREPLY=( $(compgen -W "\$flavours" -- "$cur") )
+            return
+            ;;
+        -A)
+            return
+            ;;
+        -r | --release)
+            return
+            ;;
+    esac
+
+    if [[ $cur == -* ]]; then
+        local script="/usr/sbin/$cmd"
+
+        if [ -f "$script" ]; then
+            local short=$(LC_ALL=C grep -oP 'getopt.*-o \K[^\s]+' "$script" | LC_ALL=C sed -E 's/://g; s/(^|,)/\n-/g')
+            local  long=$(LC_ALL=C grep -oP 'getopt.*-l \K[^\s]+' "$script" | LC_ALL=C sed -E 's/://g; s/(^|,)/\n--/g')
+            # shellcheck disable=SC2034
+            local  opts=$(LC_ALL=C printf '%s' "$short" "$long" | LC_ALL=C sort)
+            COMPREPLY=( $(compgen -W "\$opts" -- "$cur") )
+        else
+            # Fallback to a buggy `_parse_help` which misses some short options.
+            # https://github.com/scop/bash-completion/issues/831
+            COMPREPLY=( $(compgen -W "\$(_parse_help $1)" -- "$cur") )
+        fi
+    fi
+
+} &&
+    complete -F _update_kernel update-kernel remove-old-kernels debuginfo-kernel-install
+
+# ex: filetype=sh sw=4 et

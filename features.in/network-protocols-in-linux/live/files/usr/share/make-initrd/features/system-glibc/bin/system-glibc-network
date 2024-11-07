@@ -1,0 +1,29 @@
+#!/bin/bash -efu
+
+. sh-functions
+
+case "${1-}" in
+	files)
+		;;
+	dirs)
+		DIR="$WORKDIR/root"
+
+		mkdir -p -- "$DIR"/etc
+
+		echo '127.0.0.1 localhost.localdomain localhost' >"$DIR"/etc/hosts
+		echo ''                                          >"$DIR"/etc/resolv.conf
+
+		for n in protocols rpc services; do
+			:> "$DIR/etc/$n"
+			[ ! -e "/etc/$n" ] ||
+				grep -E -v '^[[:space:]]*(#.*)?$' "/etc/$n" > "$DIR/etc/$n" ||:
+		done
+
+		cat >"$DIR"/etc/host.conf <<-EOF
+			order hosts,bind
+			multi on
+		EOF
+
+		printf '%s\n' "$DIR"
+		;;
+esac

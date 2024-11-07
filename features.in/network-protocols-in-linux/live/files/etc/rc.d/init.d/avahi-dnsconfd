@@ -1,0 +1,87 @@
+#!/bin/sh
+#
+# avahi-dnsconfd: Starts the Avahi dns configuration daemon
+#
+# chkconfig:      - 55 01
+# description:    avahi-dnsconfd connects to a running avahi-daemon and runs  the  script
+#                 /etc/avahi/dnsconf.action for each unicast DNS server that is announced
+#                 on the local LAN. This is useful for configuring unicast DNS servers in
+#                 a DHCP-like fashion with mDNS.
+# processname:    avahi-dnsconfd
+# config: 
+
+WITHOUT_RC_COMPAT=1
+
+# Source function library.
+. /etc/init.d/functions
+
+RETVAL=0
+LOCKFILE=/var/lock/subsys/avahi-dnsconfd
+
+start() {
+    start_daemon --lockfile "$LOCKFILE" --expect-user root -- avahi-dnsconfd -D
+    RETVAL=$?
+    return $RETVAL
+}
+
+stop() {
+    stop_daemon --lockfile "$LOCKFILE" --expect-user root -- avahi-dnsconfd
+    RETVAL=$?
+    return $RETVAL
+}
+
+reload() {
+    msg_reloading avahi-dnsconfd
+    stop_daemon --expect-user root -HUP -- avahi-dnsconfd
+    RETVAL=$?
+    return $RETVAL
+}
+
+restart() {
+    stop
+    start
+}
+
+case "$1" in
+    start)
+    start
+    ;;
+    stop)
+    stop
+    ;;
+    restart)
+    restart
+    ;;
+    reload)
+    reload
+    ;;
+    status)
+    status --expect-user root -- avahi-dnsconfd
+    RETVAL=$?
+    ;;
+    condstart)
+    if ! [ -f "$LOCKFILE" ]; then
+	start
+    fi
+    ;;
+    condstop)
+    if [ -f "$LOCKFILE" ]; then
+	stop
+    fi
+    ;;
+    condrestart)
+    if [ -f "$LOCKFILE" ]; then
+	restart
+    fi
+    ;;
+    condreload)
+    if [ -f "$LOCKFILE" ]; then
+	reload
+    fi
+    ;;
+    *)
+    msg_usage "${0##*/} {start|stop|status|restart|reload|condstart|condstop|condrestart|condreload}"
+    RETVAL=1
+    ;;
+esac
+exit $RETVAL

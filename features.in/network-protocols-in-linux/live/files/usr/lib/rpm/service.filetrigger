@@ -1,0 +1,37 @@
+#!/bin/sh -efu
+#
+# Process services postponed by pre_service and post_service_postponed.
+#
+# Copyright (C) 2021  Vladimir D. Seleznev <vseleznv@altlinux.org>
+# Copyright (C) 2021  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2021  Vitaly Chikunov <vt@altlinux.org>
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+SD_UPDATE_HELPER=/lib/systemd/systemd-update-helper
+if [ -x "$SD_UPDATE_HELPER" ] && sd_booted; then
+	"$SD_UPDATE_HELPER" system-reload-restart ||:
+fi
+
+process_services()
+{
+	local file
+	file="/run/service/postponed_$1"
+
+	if [ -s "$file" ]; then
+		{
+			flock 0
+			cat -n |
+				sort -k2,2 -u |
+				sort -k1,1 -n |
+				cut -f2 |
+				while read -r service; do
+					service "$service" "$1" </dev/null ||:
+				done
+			> "$file"
+		} < "$file"
+	fi
+}
+
+process_services condrestart
+process_services start

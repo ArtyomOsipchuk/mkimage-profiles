@@ -1,0 +1,9 @@
+#!/bin/sh
+
+LC_ALL=C grep -Eqs '^/etc/pam\.d/system-auth-.' || exit 0
+
+CURRENT="$(control system-auth)"
+
+if [ ! -e "/etc/pam.d/system-auth-$CURRENT" ]; then
+	control system-auth local
+fi

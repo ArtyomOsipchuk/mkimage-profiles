@@ -1,0 +1,20 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+CONFIG=/etc/sysconfig/rpcbind
+
+new_subst server \
+	'^#CONTROL_ARGS="-l"$' \
+	's/^CONTROL_ARGS="-l"$/#CONTROL_ARGS="-l"/'
+
+new_subst local \
+	'^CONTROL_ARGS="-l"$' \
+	's/^#CONTROL_ARGS="-l"$/CONTROL_ARGS="-l"/'
+
+new_help server 'Listen to the network'
+new_help local 'Listen to localhost only'
+
+new_summary 'RPC portmap listener'
+
+control_subst "$CONFIG" "$*"

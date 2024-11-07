@@ -1,0 +1,19 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+CONFIG=/etc/openssh/sshd_config
+
+new_subst enabled \
+	'^AllowGroups[[:space:]]' \
+	's/^#\(AllowGroups[[:space:]]\)/\1/'
+new_subst disabled \
+	'^#AllowGroups[[:space:]]' \
+	's/^AllowGroups[[:space:]]/#&/'
+
+new_help enabled 'Enable AllowGroups restriction'
+new_help disabled 'Disable AllowGroups restriction'
+
+new_summary 'OpenSSH server AllowGroups configuration'
+
+control_subst "$CONFIG" "$*"

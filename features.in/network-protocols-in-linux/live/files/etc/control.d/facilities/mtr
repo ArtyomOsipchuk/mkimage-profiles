@@ -1,0 +1,15 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+BINARY='/usr/bin/mtr'
+
+new_fmode public 4711 root root
+new_fmode netadmin 4710 root netadmin
+new_fmode restricted 700 root root
+
+new_help public "Any user can execute $BINARY"
+new_help netadmin "Only \"netadmin\" group members can execute $BINARY"
+new_help restricted "Only root can execute $BINARY"
+
+control_fmode "$BINARY" "$*" || exit 1

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+[ -f /etc/firsttime.flag ] || exit 0
+rm -f /etc/firsttime.flag
+run-parts /etc/firsttime.d

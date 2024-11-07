@@ -1,0 +1,63 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+CONFIG=/etc/pam.d/system-policy
+
+new_summary 'system session policy type'
+
+system_auth_helpstring()
+{
+	case "$1" in
+	local)
+		echo 'local session policy'
+		;;
+	remote)
+		echo 'remote session policy with mkhomedir'
+		;;
+	*)
+		echo "use $1 session policy"
+	esac
+}
+
+for f in $CONFIG-*; do
+	v="${f#$CONFIG-}"
+	# ignore backup files
+	case "$v" in
+		*.*|*~) continue;;
+	esac
+
+	# check configuration file exist
+	if [ ! -f "$CONFIG-$v"  ]; then
+		continue
+	fi
+
+	new_help "$v" "$(system_auth_helpstring $v)"
+done
+
+REQUEST="$*"
+
+case "$REQUEST" in
+	help|'help '*)
+		control_help "${REQUEST#help}"
+		;;
+	list)
+		control_list
+		;;
+	summary)
+		control_summary
+		;;
+	status)
+		CURRENT="$(readlink -e "$CONFIG")"
+		CURRENT="${CURRENT#$CONFIG-}"
+		CURRENT="${CURRENT##*/}"
+		echo "${CURRENT:-unknown}"
+		;;
+	*)
+		if [ ! -f "$CONFIG-$REQUEST" ]; then
+			printf '%s: %s\n' "${0##*/}" "Invalid mode: $REQUEST" >&2
+			exit 1
+		fi
+		ln -sf "${CONFIG##*/}-$REQUEST" "$CONFIG"
+		;;
+esac

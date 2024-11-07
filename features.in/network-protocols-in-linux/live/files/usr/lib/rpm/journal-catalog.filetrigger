@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+
+LC_ALL=C grep -E -qs '^/usr/lib/systemd/catalog/.+\.catalog' && journalctl --update-catalog >/dev/null 2>&1 ||:

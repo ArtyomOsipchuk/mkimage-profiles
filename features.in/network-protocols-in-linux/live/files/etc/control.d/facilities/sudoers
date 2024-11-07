@@ -1,0 +1,19 @@
+#!/bin/sh
+
+. /etc/control.d/functions
+
+CONFIG=/etc/sudoers
+
+new_subst strict \
+	'^#[[:space:]]*Defaults:WHEEL_USERS[[:space:]]+!env_reset$' \
+	's,^\(Defaults:WHEEL_USERS[[:space:]]\+!env_reset\)$,#\1,'
+new_subst relaxed \
+	'^Defaults:WHEEL_USERS[[:space:]]+!env_reset$' \
+	's,^#[[:space:]]*\(Defaults:WHEEL_USERS[[:space:]]\+!env_reset\)$,\1,'
+
+new_help strict 'Enable strict environment rules'
+new_help relaxed 'Disable strict environment rules'
+
+new_summary 'sudoers environment rules'
+
+control_subst "$CONFIG" "$*"

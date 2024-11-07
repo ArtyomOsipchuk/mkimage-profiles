@@ -1,0 +1,8 @@
+#!/bin/bash -efu
+
+. /.initrd/initenv
+. uevent-sh-functions
+
+event="$(make_event console)"
+release_event "ev" "$event"
+

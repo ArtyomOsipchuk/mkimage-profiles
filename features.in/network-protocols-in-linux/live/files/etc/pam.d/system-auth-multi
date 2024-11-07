@@ -1,0 +1,28 @@
+#%PAM-1.0
+auth		[success=4 default=ignore]	pam_tcb.so shadow fork nullok
+auth		requisite	pam_succeed_if.so uid >= 500 quiet
+-auth		[success=2 default=ignore]	pam_krb5.so use_first_pass
+-auth		[success=1 default=ignore]	pam_ldap.so use_first_pass
+auth		required	pam_deny.so
+auth		required	pam_permit.so
+
+account		[success=4 default=ignore]	pam_tcb.so shadow fork
+account		requisite	pam_succeed_if.so uid >= 500 quiet
+-account	[success=2 default=ignore]	pam_krb5.so
+-account	[success=1 default=ignore]	pam_ldap.so
+account		required	pam_deny.so
+account		required	pam_permit.so
+
+password	required	pam_passwdqc.so config=/etc/passwdqc.conf
+password	[success=4 default=ignore]	pam_tcb.so use_authtok shadow fork nullok write_to=tcb
+password	requisite	pam_succeed_if.so uid >= 500 quiet
+-password	[success=2 default=ignore]	pam_krb5.so use_authtok
+-password	[success=1 default=ignore]	pam_ldap.so use_authtok
+password	required	pam_deny.so
+
+session		[success=4 default=ignore]	pam_tcb.so
+session		requisite	pam_succeed_if.so uid >= 500 quiet
+-session	[success=2 default=ignore]	pam_krb5.so
+-session	[success=1 default=ignore]	pam_ldap.so
+session		required	pam_deny.so
+session		substack	system-auth-common

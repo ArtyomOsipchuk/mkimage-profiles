@@ -1,0 +1,197 @@
+#!/bin/sh
+#
+# Copyright (c) 2003,2004 ALT Linux Ltd.
+# Copyright (c) 2003,2004 Stanislav Ievlev <inger@altlinux.org>
+#
+# alternatives-update - utility from alternatives subsystem
+# updates current status of alternatives symlinks
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+# USA.
+#
+
+case "$0" in
+	/*) lib_dir= ;;
+	*/*) lib_dir="${0%/*}" ;;
+	*) lib_dir= ;;
+esac
+
+. "${lib_dir:-/usr/share/alternatives}/functions"
+
+AVAIL= NEW= CHANGES=
+cleanup()
+{
+	trap - EXIT
+	rm -f -- $AVAIL $NEW $CHANGES
+	exit "$@"
+}
+
+exit_handler()
+{
+	cleanup $?
+}
+
+signal_handler()
+{
+	cleanup 143
+}
+
+trap exit_handler EXIT
+trap signal_handler HUP PIPE INT QUIT TERM
+
+#setup new alternative symlinks
+new_alternative()
+{
+#    echo "setup_new:$1"
+    from=$1
+    to=$(cat $AVAIL|grep "^$from	"|cut -f2)
+    [ -f "$to" -o -d "$to" ] || return #skip non-existence files or directories
+    int_link=$(echo $from|alternatives_encode)
+
+    #move if external name is not symlink
+    [ -e $fake_dir/$from -a ! -h $fake_dir/$from ] && mv $fake_dir/$from $fake_dir/$from.alternatives_save
+    ln -snf "$links_dir/$int_link" "$fake_dir/$from" && ln -snf "$to" "$links_dir/$int_link"
+}
+
+#remove obsolete symlinks
+remove_alternative()
+{
+#    echo "remove_alternative:$1"
+    from=$1
+    int_link=$(echo $from|alternatives_encode)
+    if [ -h $fake_dir/$from ]; then
+	#remove external only if it is alternatives symlink
+	readlink "$fake_dir/$from" | grep -q '^/etc/alternatives/links/' && rm -f "$fake_dir/$from"
+    fi
+    rm -f "$links_dir/$int_link" #always remove internal links
+}
+
+#try to relink symlinks if needed
+#FIXME: update also an external link if we need it
+update_alternative()
+{
+    from=$1
+    to=$2
+    int_link=$(echo $from|alternatives_encode)
+    ret=0
+    points_to=$(readlink $links_dir/$int_link)
+    if [ "$points_to" != "$to" ]; then
+	ln -snf "$to" "$links_dir/$int_link" && ret=1
+    fi
+    ext_link=$(readlink $fake_dir/$from)
+    if [ ! -h $fake_dir/$from -o "$ext_link" != "$links_dir/$int_link" ]; then
+	ln -nsf "$links_dir/$int_link" "$fake_dir/$from" && ret=1
+    fi
+    return $ret
+}
+
+show_help()
+{
+	cat <<EOF
+Usage: $PROG [options]
+
+alternatives-update syncs alternatives subsystem state  with  database:
+creates nessesary symlinks, deletes old one, fix broken.
+
+For example, you have some packages sub1, sub2 and sub3.  All  of  them
+have  candidates for one alternative and also require some common package.
+You can place database with all candidates to common package.
+This allows you to made only update requests from packages.
+All register/unregister procedures will be done by common package.
+
+Valid options are:
+  -h, --help	display help screen
+  -v, --version	display version information
+
+Report bugs to <inger@altlinux.org>
+EOF
+	exit
+}
+
+TEMP=`getopt -n $PROG -o $getopt_common_opts -l $getopt_common_longopts -- "$@"` ||
+	show_usage
+eval set -- "$TEMP"
+
+while :; do
+	case "$1" in
+		--) shift; break ;;
+		*) parse_common_option "$1" ;;
+	esac
+	shift
+done
+
+
+#autofix of invalid manual alternatives
+#echo "invalid manual alternatives"
+if [ -s "$manual_file" ]; then
+cat $manual_file|
+while read i
+do
+    name="${i#*	}"
+    name=${name%%	*}
+    [ -f "$name" -o -d "$name" ] || alternatives-auto ${i%%	*} #file not exist in filesystem
+    grep -F -qs "	$name	" "$package_dir"/* || alternatives-auto ${i%%	*} #file not exist in configs
+done
+fi
+
+#FIXME: bound cycle with number of lines in alternatives
+REPEAT=1
+while [ $REPEAT -eq 1 ]
+do
+#    echo "update cycle"
+    REPEAT=0
+
+    AVAIL= NEW= CHANGES=
+    AVAIL=`mktemp -t $PROG.avail.XXXXXX` || exit
+    CHANGES=`mktemp -t $PROG.changes.XXXXXX` || exit
+    NEW=`mktemp -t $PROG.new.XXXXXX` || exit
+
+    #calculate two lists: available configs and available symlinks
+    get_list $*|sort -u >$AVAIL
+    ls -1 $links_dir|alternatives_decode|sort -u>$NEW
+
+    #calculate files to update
+    cat $AVAIL|cut -f1|sort -u|comm - $NEW| sed $sed_options 's,.*,&		,'>$CHANGES
+    
+#    echo "need to create:"
+    for i in $(cat $CHANGES|cut -f1|sed $sed_options '/[[:print:]]/! d')
+    do
+    	new_alternative $i && REPEAT=1
+    done
+    
+    #calculate files to remove
+#    echo "need to remove:"
+    for i in $(cat $CHANGES|cut -f2|sed $sed_options '/[[:print:]]/! d')
+    do
+    	remove_alternative $i && REPEAT=1
+    done
+
+    #all other to update
+#    echo "try to update:"
+    cat $CHANGES|cut -f3|sed $sed_options '/[[:print:]]/! d'|sort -u|join - $AVAIL|
+    (REPEAT=0
+	while read i
+	do
+	    update_alternative $i #note: we really pass _two_ args here
+	    res=$?
+    	    [ $REPEAT -eq 0 ] && REPEAT=$res
+	done;
+    exit $REPEAT)
+    res=$?
+    [ $REPEAT -eq 0 ] && REPEAT=$res
+    
+#    echo "end of cycle rep = $REPEAT"
+    rm -f $AVAIL $NEW $CHANGES
+done

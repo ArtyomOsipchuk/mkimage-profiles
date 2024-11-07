@@ -1,0 +1,17 @@
+#!/bin/bash -efu
+
+. guess-functions
+
+if [ ! -f "$imagefile" ]; then
+	guess_feature compress
+	exit 0
+fi
+
+init="$(initrd-ls -nC "$imagefile" |grep ' \./init$' |tail -1)"
+
+for method in gzip bzip2 xz lzma lzo lz4 zstd; do
+	if [ -z "${init##* $method *}" ]; then
+		guess_feature compress
+		break
+	fi
+done

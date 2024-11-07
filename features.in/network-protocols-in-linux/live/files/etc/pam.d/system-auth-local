@@ -1,0 +1,9 @@
+#%PAM-1.0
+auth		include		system-auth-local-only
+auth		include		system-auth-common
+account		include		system-auth-local-only
+account		include		system-auth-common
+password	include		system-auth-local-only
+password	include		system-auth-common
+session		include		system-auth-local-only
+session		include		system-auth-common

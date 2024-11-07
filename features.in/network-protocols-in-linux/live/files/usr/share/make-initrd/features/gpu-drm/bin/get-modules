@@ -1,0 +1,50 @@
+#!/bin/bash -efu
+
+. shell-quote
+
+. sh-functions
+. guess-functions
+
+guess_modalias()
+{
+	# For some modalias, the module may not be found. Until a better
+	# device filtering is invented, we should ignore the error.
+	depinfo ${KERNEL:+-k "$KERNEL"} --no-prefix --no-deps --no-firmware "$1" 2>/dev/null ||:
+}
+
+in_cards()
+{
+	local card="$1"
+
+	set -- ${GPUDRM_CARD_PATTERNS-}
+
+	while [ "$#" -gt 0 ]; do
+		[ -n "${card##$1}" ] ||
+			return 0
+		shift
+	done
+	return 1
+}
+
+for p in $(set +f; echo "$SYSFS_PATH"/class/drm/*); do
+	[ -e "$p" ] ||
+		break
+
+	in_cards "${p##*/}" ||
+		continue
+
+	enabled=
+	{ read -r enabled < "$p/enabled"; } 2>/dev/null ||
+		continue
+
+	if [ "$enabled" != 'enabled' ]; then
+		status=
+		{ read -r status < "$p/status"; } 2>/dev/null ||
+			continue
+
+		[ "$status" = 'connected' ] ||
+			continue
+	fi
+
+	guess_device "${p#$SYSFS_PATH}"
+done

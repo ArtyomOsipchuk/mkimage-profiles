@@ -1,0 +1,4 @@
+#!/bin/sh
+
+ADJUST_KERNEL_HEADERS=/usr/sbin/adjust_kernel_headers
+[ -x "$ADJUST_KERNEL_HEADERS" ] && exec "$ADJUST_KERNEL_HEADERS" "$@"

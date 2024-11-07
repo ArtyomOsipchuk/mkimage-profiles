@@ -1,0 +1,118 @@
+#!/bin/sh
+#
+# bird		Starts the Internet Routing Daemon.
+#
+# chkconfig: - 32 75
+# description:	Internet routing daemon supporting IPv4 routing protocols:
+#              BGP4, RIPv2 and OSPFv2.
+# processname: bird
+# config: /etc/bird.conf
+# pidfile: /var/run/bird.pid
+### BEGIN INIT INFO
+# Provides:          bird
+# Required-Start:    $syslog $network
+# Required-Stop:     $syslog $network
+# Default-Start:     3 4 5
+# Default-Stop:      0 1 2 6
+# Short-Description: BIRD Internet Routing Daemon
+# Description:       BIRD Internet Routing Daemon
+#	with support of BGP, RIP and OSPF
+### END INIT INFO
+
+# Do not load RH compatibility interface.
+WITHOUT_RC_COMPAT=1
+
+# Source function library.
+. /etc/init.d/functions
+
+# Source networking configuration.
+SourceIfNotEmpty /etc/sysconfig/network
+
+PIDFILE=/var/run/bird.pid
+LOCKFILE=/var/lock/subsys/bird
+RETVAL=0
+
+check()
+{
+	echo -n "Checking configuration of bird: "
+	if bird -p > /dev/null 2>&1 ; then
+		success "bird check"
+		RETVAL=0
+	else
+		failure "bird check"
+		RETVAL=1
+	fi
+	echo
+	return $RETVAL
+}
+start()
+{
+	is_yes "$NETWORKING" || return 0
+	check || return
+	start_daemon --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user root -- bird -P "$PIDFILE"
+	RETVAL=$?
+	return $RETVAL
+}
+
+stop()
+{
+	stop_daemon --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user root -- bird
+	RETVAL=$?
+	return $RETVAL
+}
+
+restart()
+{
+	stop
+	start
+}
+
+reload()
+{
+	stop_daemon --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user root -HUP -- bird
+	RETVAL=$?
+	return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	reload)
+		reload
+		;;
+	status)
+		status --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user root -- bird
+		RETVAL=$?
+		;;
+	restart)
+		restart
+		;;
+	condstop)
+		if [ -e "$LOCKFILE" ]; then
+			stop
+		fi
+		;;
+	condrestart)
+		if [ -e "$LOCKFILE" ]; then
+			restart
+		fi
+		;;
+	condreload)
+		if [ -e "$LOCKFILE" ]; then
+			reload
+		fi
+		;;
+	check)
+		check
+		;;
+	*)
+		msg_usage "${0##*/} {start|stop|check|reload|restart|condstop|condrestart|condreload|status}"
+		RETVAL=1
+esac
+
+exit $RETVAL

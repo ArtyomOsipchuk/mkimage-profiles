@@ -1,0 +1,63 @@
+#! /bin/sh
+#
+# pesign       The pesign PE signing daemon
+#
+# chkconfig: - 95 05
+# processname: /usr/bin/pesign
+# pidfile: /var/run/pesign.pid
+
+WITHOUT_RC_COMPAT=1
+. /etc/init.d/functions
+
+EXTRAOPTIONS=
+PIDFILE=/var/run/pesign.pid
+LOCKFILE=/var/lock/subsys/pesign
+SourceIfNotEmpty /etc/sysconfig/pesign
+
+RETVAL=0
+
+start()
+{
+    start_daemon --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user pesign -- pesign --daemonize $EXTRAOPTIONS
+    RETVAL=$?
+    return $RETVAL
+    /usr/lib//pesign/pesign-authorize
+}
+
+stop()
+{
+    stop_daemon --pidfile "$PIDFILE" --lockfile "$LOCKFILE" --expect-user pesign -- pesign
+    RETVAL=$?
+    return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+    start)
+	start
+	;;
+    stop)
+	stop
+	;;
+    status)
+	status --pidfile "$PIDFILE" --expect-user pesign -- pesign
+	;;
+    reload|restart)
+	stop; start
+	;;
+    condstop)
+	if [ -e "$LOCKFILE" ]; then
+	        stop
+	fi
+	;;
+    condreload|condrestart)
+	if [ -e "$LOCKFILE" ]; then
+		stop; start
+	fi
+	;;
+    *)
+	msg_usage "${0##*/} {start|stop|reload|restart|condstop|condrestart|condreload|status}"
+	RETVAL=1
+esac
+
+exit $RETVAL

@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+# RPM filetrigger for grub2 menu update.
+#
+
+. /etc/sysconfig/grub2
+
+[ "x$GRUB_AUTOUPDATE_CFG" != "xno" ] || exit 0
+[ "x$GRUB_AUTOUPDATE_CFG" != "xfalse" ] || exit 0
+
+[ ! -z "$GRUB_AUTOUPDATE_CFGNAME" ] || GRUB_AUTOUPDATE_CFGNAME=/boot/grub/grub.cfg
+
+warn() { echo "WARNING: $*"; }
+
+if grep -E '^/boot/(vmlinuz|xen|memtest)|^/usr/lib(64|)/grub'; then
+	grub-mkconfig -o "$GRUB_AUTOUPDATE_CFGNAME" ||:
+fi | if grep -Eqs '^/usr/lib(64|)/grub'; then
+	if [ -z "$GRUB_AUTOUPDATE_DEVICE" -a ! -d /sys/firmware/efi ]; then
+		warn "GRUB_AUTOUPDATE_DEVICE not set in /etc/sysconfig/grub2"
+		warn "so next boot may fail unless you have another bootloader;"
+		warn "you might want to define it there and run grub-autoupdate"
+	fi
+fi

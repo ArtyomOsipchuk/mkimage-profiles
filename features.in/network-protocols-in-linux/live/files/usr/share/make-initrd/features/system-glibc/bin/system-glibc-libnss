@@ -1,0 +1,31 @@
+#!/bin/bash -efu
+
+. sh-functions
+
+verbose "Copying files from libnss_files.so* ..."
+
+case "${1-}" in
+	files)
+		list_libs |
+			grep \
+				-e '/libnss_files\.so.*' \
+				-e '/libnss_dns\.so.*' ||:
+		;;
+	dirs)
+		DIR="$WORKDIR/root"
+
+		mkdir -p -- "$DIR"/etc
+		cat >"$DIR"/etc/nsswitch.conf <<-EOF
+			passwd:    files
+			group:     files
+			shadow:    files
+			hosts:     files dns
+			networks:  files
+			rpc:       files
+			services:  files
+			protocols: files
+		EOF
+
+		printf '%s\n' "$DIR"
+		;;
+esac
