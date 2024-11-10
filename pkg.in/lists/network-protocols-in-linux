@@ -68,7 +68,6 @@ nano
 passwdqc-control
 sudo
 avahi-dnsconfd
-glibc-gconv-modules
 wireguard-tools-wg-quick
 dmidecode
 bind-utils
@@ -157,8 +156,6 @@ systemd-modules-common
 libfastjson
 systemd-tmpfiles-common
 alt-gpgkeys
-glibc-preinstall
-glibc-pthread
 libpasswdqc
 zlib
 libzstd
@@ -182,7 +179,6 @@ libpopt
 libkrb5
 libssh2
 libdb4.7
-glibc-utils
 liblua5.3
 libiperf3
 sh
@@ -236,7 +232,6 @@ lsblk
 hwclock
 zstd
 vim-minimal
-glibc-nss
 ethtool
 dbus-tools
 acpid-events-power
@@ -279,7 +274,6 @@ jnettop
 acl
 systemd-sysctl-common
 libnetfilter_cttimeout
-glibc-core
 control
 libcrypto1.1
 libpam0
