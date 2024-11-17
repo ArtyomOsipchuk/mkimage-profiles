@@ -7,7 +7,7 @@ vm/protocols-jeos: vm/.base-grub use/init/systemd \
 	use/deflogin use/02protocols \
 	use/repo \
 	use/net/etcnet use/net/dhcp \
-	use/ntp/chrony \
+        use/ntp/chrony \
 	use/services/lvm2-disable
 ifneq (,$(filter-out i586 x86_64,$(ARCH)))
 	@$(call add,DEFAULT_SERVICES_DISABLE,multipathd)
@@ -16,6 +16,7 @@ endif
 	@$(call add,DEFAULT_SERVICES_ENABLE,getty@tty1 livecd-net-eth)
 	@$(call add,THE_LISTS,network-protocols-in-linux)
 	@$(call add,THE_PACKAGES,livecd-net-eth)
+	@$(call add,USERS,user:user:1:1)
 
 # В мейкфайлах неудобные комментарии :)
 #
