@@ -27,13 +27,14 @@ else
 				VBoxManage storagectl "$Name" --name "SATA Controller" --add sata --controller IntelAhci
 				VBoxManage storageattach "$Name" --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium $Path
 				# Надо ли нам экспортировать ova?
-				VBoxManage export "$Name" --output ALT_m.ova
+				VBoxManage export "$Name" --output "${Name}.ova"
 			fi
-			VBSnap="vbsnap `date +%Y%m%d %H:%M`"
+			echo "Снапшотим"
+			VBSnap="vbsnap `date +%Y%m%d` `date +%H`:`date +%M`"
 			VBoxManage snapshot "$Name" take "$VBSnap"
-			# надо ли клонировать нашу машину?
-			#Group="`VBoxManage showvminfo "$Name" | sed -En 's/^Groups:[[:space:]]+([^,[:space:]]+).*/\1/p'`"
-			#VBoxManage clonevm "$Name" --groups="$Group" --name="${Name}_clone" --options=Link --register --snapshot "$VBSnap"
+			echo "Клонируем"
+			Group="`VBoxManage showvminfo "$Name" | sed -En 's/^Groups:[[:space:]]+([^,[:space:]]+).*/\1/p'`"
+			VBoxManage clonevm "$Name" --groups="$Group" --name="${Name}_clone" --options=Link --register --snapshot "$VBSnap"
 			#VBoxManage clonevm "$Name" --groups="$Group" --name="$VBSnap" --register
 			echo "Пробрасываем наше соединение через порт 2222 уже после создания снимка"
 			VBoxManage modifyvm "$Name" --nic1 nat
