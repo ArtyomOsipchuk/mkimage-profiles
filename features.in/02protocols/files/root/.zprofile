@@ -1,0 +1,3 @@
+# ~/.zprofile
+
+mesg n
