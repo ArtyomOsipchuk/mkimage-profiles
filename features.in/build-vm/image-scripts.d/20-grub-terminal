@@ -10,5 +10,5 @@ GRUBTHEME="${GRUBTHEME##*/}"
 
 [ -z "$GRUBTHEME" ] || exit 0
 
-sed '/^GRUB_TERMINAL_OUTPUT=.*/d' -i "$GRUB_CFG"
-echo 'GRUB_TERMINAL_OUTPUT="console"' >> "$GRUB_CFG"
+#sed '/^GRUB_TERMINAL_OUTPUT=.*/d' -i "$GRUB_CFG"
+#echo 'GRUB_TERMINAL_OUTPUT="console"' >> "$GRUB_CFG"
