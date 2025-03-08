@@ -5,8 +5,6 @@ vm/protocols-bare: vm/.base-grub vm/systemd use/deflogin/root use/02protocols
 # актуальная версия с большим функционалом
 vm/protocols-jeos: vm/.base-grub use/init/systemd \
 	use/deflogin use/02protocols \
-	use/repo \
-	use/net/etcnet use/net/dhcp \
         use/ntp/chrony \
 	use/services/lvm2-disable \
 	use/tty/S0
@@ -14,11 +12,12 @@ ifneq (,$(filter-out i586 x86_64,$(ARCH)))
 	@$(call add,DEFAULT_SERVICES_DISABLE,multipathd)
 endif
 	@$(call add,DEFAULT_SERVICES_ENABLE,sshd)
+	@$(call add,DEFAULT_SERVICES_ENABLE,sethostname)
 	@$(call add,DEFAULT_SERVICES_ENABLE,getty@tty1 livecd-net-eth)
 	@$(call add,THE_LISTS,network-protocols-in-linux)
 	@$(call add,THE_PACKAGES,livecd-net-eth)
-	@$(call add,USERS,user:user:1:1)
 
+# use/repo \
 # В мейкфайлах неудобные комментарии :)
 #
 #vm/protocols-jeos: vm/.base-grub use/init/systemd \ нужная строчка, про неё нет сомнений
