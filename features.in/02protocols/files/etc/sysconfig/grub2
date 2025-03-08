@@ -30,7 +30,7 @@ GRUB_VMLINUZ_FAILSAFE=default
 #GRUB_PRELOAD_MODULES=''
 
 # Set normal timeout
-#GRUB_TIMEOUT=5
+GRUB_TIMEOUT=4
 
 # Set hidden timeout (do not show menu)
 #GRUB_HIDDEN_TIMEOUT=3
