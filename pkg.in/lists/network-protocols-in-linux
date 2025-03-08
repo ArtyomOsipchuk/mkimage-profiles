@@ -1,4 +1,6 @@
 apt
+apt-repo
+tmux
 vixie-cron
 strace
 nfs-utils
@@ -8,7 +10,6 @@ libffi7
 setproctitle
 libe2fs
 psmisc
-sniffit
 libnetfilter_conntrack
 traceroute
 libpci
@@ -71,7 +72,6 @@ avahi-dnsconfd
 wireguard-tools-wg-quick
 dmidecode
 bind-utils
-python3
 dbus
 libattr
 libapt
@@ -205,7 +205,6 @@ rpm-macros-alternatives
 libbind
 libdevmapper
 ioctl
-python3-base
 ca-certificates
 make-initrd
 libacl
@@ -224,7 +223,6 @@ procps
 bootloader-utils
 systemd-networkd
 grub-pc
-mc
 termutils
 rsyslog-classic
 less
@@ -269,7 +267,6 @@ libss
 nss_tcb
 which
 nftables
-jnettop
 acl
 systemd-sysctl-common
 libnetfilter_cttimeout
