@@ -47,5 +47,5 @@ else
 			;;
 	esac
 	#LC_ALL=C LC_COLLATE=C LANG=C ssh user@localhost -p 2222
-	socat -,cfmakeraw,echo=0,escape=15 TCP4:localhost:2025
+	socat -,cfmakeraw,echo=0,escape=15 TCP4:localhost:2325
 fi
