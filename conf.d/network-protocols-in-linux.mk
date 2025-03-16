@@ -14,6 +14,8 @@ endif
 	@$(call add,DEFAULT_SERVICES_ENABLE,sshd)
 	@$(call add,DEFAULT_SERVICES_ENABLE,sethostname)
 	@$(call add,DEFAULT_SERVICES_ENABLE,getty@tty1 livecd-net-eth)
+	@$(call add,DEFAULT_SERVICES_DISABLE,avahi-daemon.service)
+	@$(call add,DEFAULT_SERVICES_DISABLE,avahi-daemon.socket)
 	@$(call add,THE_LISTS,network-protocols-in-linux)
 	@$(call add,THE_PACKAGES,livecd-net-eth)
 
