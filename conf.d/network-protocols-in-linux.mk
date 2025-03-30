@@ -5,7 +5,6 @@ vm/protocols-bare: vm/.base-grub vm/systemd use/deflogin/root use/02protocols
 # актуальная версия с большим функционалом
 vm/protocols-jeos: vm/.base-grub use/init/systemd \
 	use/deflogin use/02protocols \
-        use/ntp/chrony \
 	use/services/lvm2-disable \
 	use/tty/S0
 ifneq (,$(filter-out i586 x86_64,$(ARCH)))
