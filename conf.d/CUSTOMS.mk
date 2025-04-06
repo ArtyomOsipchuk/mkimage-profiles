@@ -1,39 +1,22 @@
 # Пользовательские образы как цель этого гит-форка
-# Образ для практикума по питону для сетевой загрузки в компьютерных классах
 
-# make prac-xfce.iso BRANCH=sisyphus
-distro/prac-xfce: distro/.regular-gtk mixin/regular-xfce \
-	use/03prac use/04mount use/05cmcldap-base use/06workshop-base; @:
-	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,sshd)
-	@$(call add,DEFAULT_SERVICES_ENABLE,rpc.statd)
-	@$(call add,SYSTEMD_SERVICES_ENABLE,uuid-mount.service)
-	@$(call add,SYSTEMD_SERVICES_ENABLE,readme.service)
-	@$(call add,SYSTEMD_SERVICES_ENABLE,vncshare.service)
-	@$(call add,SYSTEMD_SERVICES_ENABLE,replace-localdomain.service)
-	@$(call add,DEFAULT_SERVICES_ENABLE,NetworkManager ModemManager)
-	@$(call add,CLEANUP_PACKAGES,etcnet)
-	@$(call add,CLEANUP_PACKAGES,sudo)
-	@$(call add,CLEANUP_PACKAGES,chromium)
-	@$(call add,THE_LISTS,prac-class)
-	@$(call add,THE_LISTS,prac-asm)
+# make nvidia-asm-mate.iso BRANCH=sisyphus
+distro/nvidia-asm-mate: distro/.regular-gtk mixin/regular-mate \
+	use/x11/3d; @:
+	@$(call add,THE_LISTS,nvidia-asm-mate)
 
-use/05cmcldap-base: use/05cmcldap;
-	@$(call add,DEFAULT_SERVICES_ENABLE,nscd)
-	@$(call add,DEFAULT_SERVICES_ENABLE,nslcd)
-	@$(call add,DEFAULT_SERVICES_ENABLE,nfs-client.target)
-	@$(call add,DEFAULT_SERVICES_ENABLE,prometheus-node_exporter.socket)
-	@$(call add,DEFAULT_SERVICES_ENABLE,node_exporter-smart.timer)
-	@$(call add,THE_LISTS,prac-ldap)
-
-use/06workshop-base: use/06workshop;
-	@$(call add,DEFAULT_SERVICES_ENABLE,libvirtd)
-	@$(call add,DEFAULT_SERVICES_ENABLE,avahi-daemon)
-	@$(call add,DEFAULT_SERVICES_ENABLE,openssh-server)
-	@$(call add,THE_LISTS,prac-workshop)
-
-# !!! на этой ветке удалена цель use/net/etcnet
-# !!! на этой ветке модифицирована цель use/net/nm
-# !!! на этой ветке у use/live/x11 удалена цель use/x11-autologin
-# TODO !!! на этой ветке в use/live/base: удалена цель use/deflogin/live
-# #	@$(call add,DEFAULT_SERVICES_ENABLE,replace-localdomain.service)
-# #	@$(call add,DEFAULT_SERVICES_ENABLE,readme.service)
+# make ROOTPW=root vm/protocols-jeos.vdi BRANCH=sisyphus VM_SIZE=4294967296
+vm/protocols-jeos: vm/.base-grub use/init/systemd \
+	use/deflogin use/02protocols \
+	use/services/lvm2-disable \
+	use/tty/S0
+ifneq (,$(filter-out i586 x86_64,$(ARCH)))
+	@$(call add,DEFAULT_SERVICES_DISABLE,multipathd)
+endif
+	@$(call add,DEFAULT_SERVICES_ENABLE,sshd)
+	@$(call add,DEFAULT_SERVICES_ENABLE,sethostname)
+	@$(call add,DEFAULT_SERVICES_ENABLE,getty@tty1 livecd-net-eth)
+	@$(call add,DEFAULT_SERVICES_DISABLE,avahi-daemon.service)
+	@$(call add,DEFAULT_SERVICES_DISABLE,avahi-daemon.socket)
+	@$(call add,THE_LISTS,network-protocols-in-linux)
+	@$(call add,THE_PACKAGES,livecd-net-eth)
