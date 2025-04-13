@@ -2,7 +2,11 @@
 
 # make nvidia-asm-mate.iso BRANCH=sisyphus
 distro/nvidia-asm-mate: distro/.regular-gtk mixin/regular-mate \
-	use/x11/3d; @:
+	use/x11/3d use/stage2/kms/nvidia; @:
+	@$(call add,THE_LISTS,nvidia-asm-mate)
+
+distro/unroot-mate: distro/.regular-gtk mixin/regular-mate \
+	use/x11/3d use/stage2/kms/nvidia use/03unroot; @:
 	@$(call add,THE_LISTS,nvidia-asm-mate)
 
 # make ROOTPW=root vm/protocols-jeos.vdi BRANCH=sisyphus VM_SIZE=4294967296
@@ -15,8 +19,7 @@ ifneq (,$(filter-out i586 x86_64,$(ARCH)))
 endif
 	@$(call add,DEFAULT_SERVICES_ENABLE,sshd)
 	@$(call add,DEFAULT_SERVICES_ENABLE,sethostname)
-	@$(call add,DEFAULT_SERVICES_ENABLE,getty@tty1 livecd-net-eth)
+	@$(call add,DEFAULT_SERVICES_ENABLE,getty@tty1)
 	@$(call add,DEFAULT_SERVICES_DISABLE,avahi-daemon.service)
 	@$(call add,DEFAULT_SERVICES_DISABLE,avahi-daemon.socket)
 	@$(call add,THE_LISTS,network-protocols-in-linux)
-	@$(call add,THE_PACKAGES,livecd-net-eth)
