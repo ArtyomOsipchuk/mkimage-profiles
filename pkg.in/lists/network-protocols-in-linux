@@ -1,6 +1,8 @@
 apt
 apt-repo
+bc
 tmux
+inotify-tools
 vixie-cron
 strace
 nfs-utils
