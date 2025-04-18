@@ -1,13 +1,6 @@
 # Пользовательские образы как цель этого гит-форка
+# Профиль образа для кафедрального курса «Практические аспекты сетевых протоколов в Linux» АСВК
 
-# make nvidia-asm-mate.iso BRANCH=sisyphus
-distro/nvidia-asm-mate: distro/.regular-gtk mixin/regular-mate \
-	use/x11/3d use/stage2/kms/nvidia; @:
-	@$(call add,THE_LISTS,nvidia-asm-mate)
-
-distro/unroot-mate: distro/.regular-gtk mixin/regular-mate \
-	use/x11/3d use/stage2/kms/nvidia use/03unroot; @:
-	@$(call add,THE_LISTS,nvidia-asm-mate)
 
 # make ROOTPW=root vm/protocols-jeos.vdi BRANCH=sisyphus VM_SIZE=4294967296
 vm/protocols-jeos: vm/.base-grub use/init/systemd \
