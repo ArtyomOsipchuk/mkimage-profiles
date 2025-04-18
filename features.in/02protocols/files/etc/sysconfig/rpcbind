@@ -1,8 +1,0 @@
-# Parameters for rpcbind daemon.
-# See rpcbind(8) for more details.
-
-# Specifies additional parameters for rpcbind.
-#RPCBIND_ARGS=
-
-# Specifies parameters under control(1)
-CONTROL_ARGS="-l"
