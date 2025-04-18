@@ -1,0 +1,16 @@
+#rpm file:/mnt/myhdd/repo/p11/branch x86_64 classic gostcrypto
+#rpm file:/mnt/myhdd/repo/p11/branch x86_64-i586 classic
+#rpm file:/mnt/myhdd/repo/p11/branch noarch classic
+rpm http://ftp.altlinux.org/pub/distributions/archive/p11/date/2025/03/13 x86_64 classic gostcrypto
+rpm http://ftp.altlinux.org/pub/distributions/archive/p11/date/2025/03/13 x86_64-i586 classic
+rpm http://ftp.altlinux.org/pub/distributions/archive/p11/date/2025/03/13 noarch classic
+#rpm file:/space/ALT/p11 x86_64 classic gostcrypto
+#rpm file:/space/ALT/p11 x86_64-i586 classic
+#rpm file:/space/ALT/p11 noarch classic
+#rpm http://git.altlinux.org repo/365391/x86_64 task # snoop
+#rpm http://git.altlinux.org repo/326743/x86_64 task # memtest
+#rpm http://git.altlinux.org repo/319748/x86_64 task # plymouth
+#rpm http://git.altlinux.org repo/331325/x86_64 task # gnome-session
+#rpm http://altlinuxclub.ru/repo/repo_s/ x86_64 hasher
+#rpm file:/home/antohami/hasher_repo/my_repo/ x86_64 my_repo
+#rpm file:/home/antohami/hasher_repo/my_repo/ noarch my_repo

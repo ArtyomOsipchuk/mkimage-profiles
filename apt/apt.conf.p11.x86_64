@@ -1,0 +1,6 @@
+Dir::Etc::SourceList "/home/artos/apt/sources.list.p11.x86_64";
+Dir::Etc::SourceParts /var/empty;
+Dir::Etc::main "/dev/null";
+APT::Architecture "64";
+Debug::pkgMarkInstall "true";
+Debug::pkgProblemResolver "true";
