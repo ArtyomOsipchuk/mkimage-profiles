@@ -5,3 +5,5 @@ chmod 600 /etc/openssh/ssh_host_dsa_key
 chmod 600 /etc/openssh/ssh_host_ecdsa_key
 chmod 600 /etc/openssh/ssh_host_ed25519_key
 chmod 600 /etc/openssh/ssh_host_rsa_key
+chmod 600 /root/.ssh/authorized_keys
+chmod 600 /root/.ssh/id_ed25519
