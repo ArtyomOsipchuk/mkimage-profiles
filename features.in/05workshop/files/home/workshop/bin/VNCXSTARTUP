@@ -1,0 +1,32 @@
+#!/bin/sh
+
+test -r "$HOME/.VNCRC" && . "$HOME/.VNCRC"
+exit_handler() {
+  trap - EXIT
+  test -z "$PUBPID" || kill "$PUBPID"
+  test -r "$KEYFILE" && ssh-add -d "$KEYFILE"
+  test -r "$KEYFILE" && rm -rf "$KEYFILE"
+  test -r "$KEYFILE.pub" && rm -rf "$KEYFILE.pub"
+  exit $rc
+}
+trap exit_handler EXIT HUP INT QUIT PIPE TERM
+
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
+[ -r /etc/sysconfig/i18n ] && . /etc/sysconfig/i18n
+export LANG
+
+test -r "$HOME/.VNCRC" && . "$HOME/.VNCRC"
+V_PORT="${DISPLAY##*:}"; V_PORT="${V_PORT%%.*}";
+V_HOST=`hostname -f`
+
+KEYFILE=`mktemp`
+rm -f "$KEYFILE" && ssh-keygen -N '' -t ed25519 -f "$KEYFILE" < /dev/null
+ssh-add "$KEYFILE" < /dev/null
+avahi-publish -s $VNCDESKTOP _rfb._tcp $((5900+$V_PORT)) "`cat "$KEYFILE.pub"`"&
+PUBPID="$!"
+case "$XDG_SESSION_DESKTOP" in
+  /*) $XDG_SESSION_DESKTOP;;
+  *) runwm ${XDG_SESSION_DESKTOP:-mate};;
+esac
+

@@ -1,0 +1,3 @@
+#!/bin/sh -ue
+ID=`xwininfo | sed -En 's/xwininfo: Window id: ([^[:space:]]+).*/\1/p'`
+x11vnc -shared -viewonly -avahi -forever -id "$ID"

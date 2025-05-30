@@ -1,0 +1,49 @@
+#!/bin/sh
+
+V_D=$HOME/.vnc
+V_P=$V_D/passwd
+V_NAME=demo
+V_SHAREDPW=shared
+V_ACCESSPW=access
+V_T_START=$V_D/tempstart
+test -r "$HOME/.VNCRC" && . "$HOME/.VNCRC"
+
+mkdir -p $V_D
+test -r $V_P || {
+echo "$V_ACCESSPW" | vncpasswd -f
+echo "$V_SHAREDPW" | vncpasswd -f
+} > $V_P && chmod 700 $V_P
+
+W=$(xwininfo -root | awk '/Width:/{print $2}')
+H=$(xwininfo -root | awk '/Height:/{print $2}')
+
+SH=$(($H*10/11))
+SW=$(($W*10/21))
+GEOMETRY="$SW"x"$SH"
+
+for arg; do
+  case "$arg" in
+    -geometry*) GEOMETRY="$2"; shift ;;
+    -s) SW=$((W*$2)); SH=$((H*$2)); GEOMETRY="$SW"x"$SH"; shift ;;
+    --|-) shift ; break ;;
+    *) break ;;
+  esac
+  shift
+done
+
+if [ $# -gt 0 ]; then
+  # TODO
+  printf "$*\n" > $V_T_START
+  chmod +x $V_T_START
+  VNCXSTARTUP="$V_T_START"
+else
+  VNCXSTARTUP="VNCXSTARTUP"
+fi
+
+V_ID="`vncserver -xstartup $VNCXSTARTUP -autokill -geometry $GEOMETRY -name $V_NAME-$V_SHAREDPW -BlacklistThreshold 30 2>&1 | grep '^New'`"
+
+PORT="${V_ID##*:}"
+case "$1" in
+  "") yad --title "Доска запущена" --text "$V_ID" ;;
+  *) VNCVIEWER localhost ":$PORT" "$V_ACCESSPW"
+esac
