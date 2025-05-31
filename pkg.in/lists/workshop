@@ -1,2 +1,7 @@
+virt-manager
 virt-viewer
-apt
+tigervnc
+tigervnc-server
+libvirt
+yad
+xwininfo
