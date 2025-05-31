@@ -1,1 +1,0 @@
-sudo echo -en 'publicmount=UUID/subdirectory' >> /proc/cmdline
