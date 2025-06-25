@@ -5,3 +5,5 @@ tigervnc-server
 libvirt
 yad
 xwininfo
+qemu-block-curl
+qemu-system-x86

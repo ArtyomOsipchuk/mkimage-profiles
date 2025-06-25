@@ -6,7 +6,8 @@ distro/workshop-mate: distro/.regular-gtk mixin/regular-mate \
 	use/deflogin/live use/05workshop; @:
 	@$(call add,DEFAULT_SERVICES_ENABLE,openssh-server)
 	@$(call add,DEFAULT_SERVICES_ENABLE,avahi-daemon)
+	@$(call add,DEFAULT_SERVICES_ENABLE,libvirtd.socket)
+	@$(call add,DEFAULT_SERVICES_ENABLE,sshd)
 	@$(call add,DEFAULT_SERVICES_ENABLE,publicmount)
 	@$(call add,USERS,altlinux:::)
-	@$(call add,THE_LISTS,workshop)
-	
+	@$(call add,THE_LISTS,workshop)	

@@ -5,8 +5,8 @@ PUBLIC_MOUNT=$(grep -oP 'publicmount=\K[^ ]+' /proc/cmdline || echo "")
 
 # Если параметр не передан, используем значения по умолчанию
 if [ -z "$PUBLIC_MOUNT" ]; then
-    UUID="default-uuid"
-    SUBDIR="default-subdir"
+    UUID=$UUID
+    SUBDIR="vm_images"
 else
     # Разделяем UUID и подкаталог
     IFS='/' read -r UUID SUBDIR <<< "$PUBLIC_MOUNT"
@@ -19,8 +19,8 @@ if [ -z "$UUID" ]; then
 fi
 
 # Монтируем устройство по UUID в /opt
-MOUNT_POINT="/opt"
-DEVICE="/dev/disk/by-uuid/$UUID"
+MOUNT_POINT="$UUID:$SUBDIR"
+# DEVICE="/dev/disk/by-uuid/$UUID"
 
 # Создаём точку монтирования, если её нет
 mkdir -p "$MOUNT_POINT"
