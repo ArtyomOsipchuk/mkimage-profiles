@@ -1,25 +1,22 @@
 # Пользовательские образы как цель этого гит-форка
+# Образ для практикума по питону для сетевой загрузки в компьютерных классах
 
-# make nvidia-asm-mate.iso BRANCH=sisyphus
-distro/nvidia-asm-mate: distro/.regular-gtk mixin/regular-mate \
-	use/x11/3d use/stage2/kms/nvidia; @:
-	@$(call add,THE_LISTS,nvidia-asm-mate)
+# WM base target
+# !!! на этой ветке в distro/.regular-wm удалил use/live-install/desktop , чтобы не было иконки установщика ОС в live режиме
+# use/live/x11: use/live/base use/deflogin/desktop \ убрана цель use/x11-autologin
 
-distro/unroot-mate: distro/.regular-gtk mixin/regular-mate \
-	use/x11/3d use/stage2/kms/nvidia use/03unroot; @:
-	@$(call add,THE_LISTS,nvidia-asm-mate)
-
-# make ROOTPW=root vm/protocols-jeos.vdi BRANCH=sisyphus VM_SIZE=4294967296
-vm/protocols-jeos: vm/.base-grub use/init/systemd \
-	use/deflogin use/02protocols \
-	use/services/lvm2-disable \
-	use/tty/S0
-ifneq (,$(filter-out i586 x86_64,$(ARCH)))
-	@$(call add,DEFAULT_SERVICES_DISABLE,multipathd)
-endif
-	@$(call add,DEFAULT_SERVICES_ENABLE,sshd)
-	@$(call add,DEFAULT_SERVICES_ENABLE,sethostname)
-	@$(call add,DEFAULT_SERVICES_ENABLE,getty@tty1)
-	@$(call add,DEFAULT_SERVICES_DISABLE,avahi-daemon.service)
-	@$(call add,DEFAULT_SERVICES_DISABLE,avahi-daemon.socket)
-	@$(call add,THE_LISTS,network-protocols-in-linux)
+# make prac-xfce.iso BRANCH=sisyphus
+distro/prac-xfce: distro/.regular-gtk mixin/regular-xfce \
+	use/deflogin/live use/03unroot use/04cmcldap use/06mount ; @:
+	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,sshd)
+	@$(call add,DEFAULT_SERVICES_ENABLE,rpc.statd)
+	@$(call add,DEFAULT_SERVICES_ENABLE,nscd)
+	@$(call add,DEFAULT_SERVICES_ENABLE,nslcd)
+	@$(call add,DEFAULT_SERVICES_ENABLE,nfs-client.target)
+	@$(call add,DEFAULT_SERVICES_ENABLE,prometheus-node_exporter.socket)
+	@$(call add,DEFAULT_SERVICES_ENABLE,node_exporter-smart.timer)
+	@$(call add,SYSTEMD_SERVICES_ENABLE,uuid-mount.service)
+	@$(call add,USERS,altlinux:::1)
+	@$(call add,CLEANUP_PACKAGES,sudo)
+	@$(call add,THE_LISTS,prac-xfce)
+	@$(call add,THE_LISTS,prac-ldap)
