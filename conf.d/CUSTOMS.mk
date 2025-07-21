@@ -4,6 +4,7 @@
 # WM base target
 # !!! на этой ветке в distro/.regular-wm удалил use/live-install/desktop , чтобы не было иконки установщика ОС в live режиме
 # use/live/x11: use/live/base use/deflogin/desktop \ убрана цель use/x11-autologin
+# !!! на этой ветке в use/live/base: удалена цель use/deflogin/live
 # !!! изменена цель use/net/nm
 
 # make prac-xfce.iso BRANCH=sisyphus
