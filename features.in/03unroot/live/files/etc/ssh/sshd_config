@@ -1,3 +1,0 @@
-AllowTcpForwarding yes
-PermitTunnel yes
-PermitRootLogin yes
