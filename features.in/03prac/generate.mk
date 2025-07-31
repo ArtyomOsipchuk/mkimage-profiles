@@ -10,9 +10,9 @@
 
 include $(BUILDDIR)/distcfg.mk
 
-ifeq (,$(02NPL))
-$(warning this is a "network-protocols-in-linux" feature, who might want to include it? :])
+ifeq (,$(03NPL))
+$(warning this is a "ASVK prac" feature, who might want to include it? :P )
 endif
 
 all:
-	echo "network-protocols-in-linux added"
+	echo "03prac added"

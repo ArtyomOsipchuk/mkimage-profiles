@@ -8,6 +8,6 @@
 #
 # for somewhat more involved example, see syslinux feature
 
-use/02protocols:
+use/03prac:
 	@$(call add_feature)
-	@$(call add,02NPL)
+	@$(call add,03NPL)
