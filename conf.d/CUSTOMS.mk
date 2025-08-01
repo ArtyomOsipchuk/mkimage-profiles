@@ -5,3 +5,4 @@
 distro/prac-xfce: distro/.regular-gtk mixin/regular-xfce \
 	use/03prac; @:
 	@$(call add,CLEANUP_PACKAGES,sudo)
+	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,sshd)
