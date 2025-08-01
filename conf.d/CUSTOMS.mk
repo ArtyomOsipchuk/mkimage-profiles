@@ -16,3 +16,5 @@ distro/prac-xfce: distro/.regular-gtk mixin/regular-xfce \
 	@$(call add,SYSTEMD_SERVICES_ENABLE,readme.service)
 	@$(call add,DEFAULT_SERVICES_ENABLE,readme.service)
 	@$(call add,CLEANUP_PACKAGES,chromium)
+	@$(call add,SYSTEMD_SERVICES_ENABLE,replace-localdomain.service)
+	@$(call add,DEFAULT_SERVICES_ENABLE,replace-localdomain.service)
