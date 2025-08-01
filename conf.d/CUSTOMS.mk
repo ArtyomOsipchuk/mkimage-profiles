@@ -13,3 +13,5 @@ distro/prac-xfce: distro/.regular-gtk mixin/regular-xfce \
 	@$(call add,DEFAULT_SERVICES_ENABLE,nfs-client.target)
 	@$(call add,DEFAULT_SERVICES_ENABLE,prometheus-node_exporter.socket)
 	@$(call add,DEFAULT_SERVICES_ENABLE,node_exporter-smart.timer)
+	@$(call add,SYSTEMD_SERVICES_ENABLE,readme.service)
+	@$(call add,DEFAULT_SERVICES_ENABLE,readme.service)
