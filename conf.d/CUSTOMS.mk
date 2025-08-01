@@ -3,6 +3,7 @@
 
 # make prac-xfce.iso BRANCH=sisyphus
 distro/prac-xfce: distro/.regular-gtk mixin/regular-xfce \
-	use/03prac; @:
+	use/03prac use/04mount; @:
 	@$(call add,CLEANUP_PACKAGES,sudo)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,sshd)
+	@$(call add,SYSTEMD_SERVICES_ENABLE,uuid-mount.service)
