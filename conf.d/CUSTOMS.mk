@@ -3,7 +3,13 @@
 
 # make prac-xfce.iso BRANCH=sisyphus
 distro/prac-xfce: distro/.regular-gtk mixin/regular-xfce \
-	use/03prac use/04mount; @:
+	use/03prac use/04mount use/05cmcldap; @:
 	@$(call add,CLEANUP_PACKAGES,sudo)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,sshd)
 	@$(call add,SYSTEMD_SERVICES_ENABLE,uuid-mount.service)
+	@$(call add,DEFAULT_SERVICES_ENABLE,rpc.statd)
+	@$(call add,DEFAULT_SERVICES_ENABLE,nscd)
+	@$(call add,DEFAULT_SERVICES_ENABLE,nslcd)
+	@$(call add,DEFAULT_SERVICES_ENABLE,nfs-client.target)
+	@$(call add,DEFAULT_SERVICES_ENABLE,prometheus-node_exporter.socket)
+	@$(call add,DEFAULT_SERVICES_ENABLE,node_exporter-smart.timer)
