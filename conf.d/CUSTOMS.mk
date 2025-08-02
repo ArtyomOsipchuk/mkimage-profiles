@@ -20,7 +20,9 @@ distro/prac-xfce: distro/.regular-gtk mixin/regular-xfce \
 	@$(call add,DEFAULT_SERVICES_ENABLE,replace-localdomain.service)
 	@$(call add,DEFAULT_SERVICES_ENABLE,NetworkManager ModemManager)
 	@$(call add,CLEANUP_PACKAGES,etcnet)
-
+	@$(call add,THE_LISTS,prac-ldap)
+	@$(call add,THE_LISTS,prac-class)
+	@$(call add,THE_LISTS,prac-asm)
 
 # !!! на этой ветке удалена цель use/net/etcnet
 # !!! на этой ветке модифицирована цель use/net/nm
