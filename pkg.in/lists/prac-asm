@@ -1,0 +1,6 @@
+sasm
+gcc
+nasm
+i586-gcc
+i586-glibc-devel-static
+i586-glibc-devel
