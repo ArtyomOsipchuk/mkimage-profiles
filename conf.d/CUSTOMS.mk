@@ -24,3 +24,4 @@ distro/prac-xfce: distro/.regular-gtk mixin/regular-xfce \
 
 # !!! на этой ветке удалена цель use/net/etcnet
 # !!! на этой ветке модифицирована цель use/net/nm
+# !!! на этой ветке у use/live/x11 удалена цель use/x11-autologin
