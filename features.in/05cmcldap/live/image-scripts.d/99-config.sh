@@ -3,15 +3,16 @@ umask 077
 cat > /etc/nslcd.conf <<@@@
 uid _nslcd
 gid _nslcd
-uri ldap://practicum.cs.msu.su
-base dc=PRACTICUM,dc=CS,dc=MSU,dc=SU
-binddn adread@practicum.cs.msu.su
-bindpw wH=8L9k!4%Ry
-tls_reqcert never
+uri XXX
+base dc=XXX
+binddn XXX
+bindpw XXX
+tls_reqcert XXX
 filter passwd (&(objectClass=user)(objectClass=person)(!(objectClass=computer)))
-map    passwd uid           sAMAccountName
-map    passwd homeDirectory "/home/\$sAMAccountName"
-map    passwd gecos         displayName
+map    passwd uid           XXX
+map    passwd homeDirectory XXX
+map    passwd gecos         XXX
+>>>>>>> 3f788ec6 (Squashed commit of new branch result_prac)
 map     passwd  gidNumber          "117"
 map    passwd loginShell    "/bin/bash"
 filter group (|(objectClass=group)(objectClass=person))
