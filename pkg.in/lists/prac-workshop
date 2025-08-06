@@ -1,0 +1,11 @@
+# workshop
+libvirt
+virt-manager
+virt-viewer
+apt
+qemu-block-curl
+qemu-system-x86
+tigervnc
+tigervnc-server
+yad
+xwininfo

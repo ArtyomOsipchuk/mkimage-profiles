@@ -46,6 +46,7 @@ use/live-install/desktop: use/live-install
 else
 use/live-install/desktop: use/live-install; @:
 endif
+# deleted @$(call add,LIVE_PACKAGES,installer-common-desktop)
 
 # set up remote repositories within installed system out-of-box
 use/live-install/repo: use/live-install; @:

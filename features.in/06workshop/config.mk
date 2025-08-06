@@ -8,6 +8,6 @@
 #
 # for somewhat more involved example, see syslinux feature
 
-use/04mount:
+use/06workshop:
 	@$(call add_feature)
-	@$(call add,04NPL)
+	@$(call add,06NPL)

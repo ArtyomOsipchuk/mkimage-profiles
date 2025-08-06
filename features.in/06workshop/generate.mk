@@ -10,9 +10,9 @@
 
 include $(BUILDDIR)/distcfg.mk
 
-ifeq (,$(04NPL))
-$(warning this is a "mount" feature, who might want to include it? :P )
+ifeq (,$(06NPL))
+$(warning this is a "workshop" feature, who might want to include it? :P )
 endif
 
 all:
-	echo "04mount added"
+	echo "06workshop added"
