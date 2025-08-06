@@ -7,7 +7,7 @@ endif
 
 mixin/mobile-base: use/ntp/chrony use/repo use/branding/notes use/x11-autostart \
 	use/deflogin/privileges use/deflogin/xgrp use/deflogin/hardware \
-	use/deflogin/root use/l10n/ru_RU use/xdg-user-dirs \
+	use/l10n/ru_RU use/xdg-user-dirs \
 	use/drm use/firmware mixin/ttyescape +plymouth +pipewire \
 	use/services/bluetooth-enable use/luks/touchscreen \
 	use/browser/firefox use/wireless
@@ -15,6 +15,8 @@ ifeq (sisyphus,$(BRANCH))
 	@$(call set,BRANDING,alt-mobile-sisyphus)
 	@$(call set,VM_FSTYPE,f2fs)
 	@$(call add,THE_PACKAGES,gnome-software-plugin-flatpak)
+	@$(call try,ROOTPW,altlinux)
+	@$(call add,USERS,altlinux:271828:1:1)
 else
 	@$(call set,BRANDING,alt-mobile)
 ifneq (,$(filter-out riscv64,$(ARCH)))
@@ -33,7 +35,6 @@ endif
 	@$(call add,THE_PACKAGES,eg25-manager)
 	@$(call add,THE_PACKAGES,udev-rules-modem-power)
 	@$(call set,UBOOT_TIMEOUT,5)
-	@$(call add,USERS,altlinux:271828:1:1)
 	@$(call set,LOCALES,ru_RU en_US)
 	@$(call set,LOCALE,ru_RU)
 	@$(call add,CONTROL,fusermount:public)
@@ -56,7 +57,7 @@ ifeq (sisyphus,$(BRANCH))
 	@$(call add,DEFAULT_SERVICES_ENABLE,phosh)
 else
 	@$(call add,DEFAULT_SERVICES_ENABLE,phrog)
-	@$(call add,THE_PACKAGES,phrog)
+	@$(call add,THE_PACKAGES,phrog ready-set-on-phrog)
 endif
 	@$(call set,DEFAULT_SESSION,phosh)
 ifeq (sisyphus,$(BRANCH))
