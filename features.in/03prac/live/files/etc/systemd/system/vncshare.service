@@ -1,0 +1,12 @@
+[Unit]
+Description=makes icons for VNC screen share scripts
+Before=default.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/vncshare-xfce4-panel-default-vncshare.sh -i
+
+[Install]
+WantedBy=multi-user.target
+
+

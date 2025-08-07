@@ -8,20 +8,14 @@ if [ -n "$PUBLIC_MOUNT" ]; then
     IFS=';' read -r -a pairs <<< "$PUBLIC_MOUNT"
     for pair in ${pairs[@]}; do
 	IFS='^' read -r -a parts <<< "$pair"
-	if [ ${#parts[@]} -eq 4 ]; then
-		DEVICE="${parts[0]}"
-		MOUNT_POINT="${parts[1]}"
-		SUBDIR="${parts[2]}"
-		BIND_MOUNT_POINT="${parts[3]}"
-                mkdir -p "$MOUNT_POINT"
-                mount "$DEVICE" "$MOUNT_POINT"
-		mount --bind $MOUNT_POINT/$SUBDIR $BIND_MOUNT_POINT
-	elif [ ${#parts[@]} -eq 2 ]; then
-		DEVICE="${parts[0]}"
-		MOUNT_POINT="${parts[1]}"
-                mkdir -p "$MOUNT_POINT"
-                mount "$DEVICE" "$MOUNT_POINT"
-        fi
+	DEVICE="${parts[0]}"
+	MOUNT_POINT="${parts[1]}"
+        mkdir -p "$MOUNT_POINT"
+	if [ -d "$DEVICE" ] && [ -d "$MOUNT_POINT" ]; then
+		mount --bind "$DEVICE" "$MOUNT_POINT"
+	else
+		mount "$DEVICE" "$MOUNT_POINT"
+	fi
     done
 fi
 exit 0

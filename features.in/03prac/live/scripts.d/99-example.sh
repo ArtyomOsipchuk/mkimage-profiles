@@ -5,5 +5,6 @@
 # # NB: to be executed, it must be marked executable first :)
 #
 # # let's do something very useful
-echo "$0: WORKDIR=$WORKDIR; directory listing:"
-ls -l "$WORKDIR"
+echo "FFF"
+echo "$0: WORKDIR=$WORKDIR; directory listing:" > ../1.txt
+echo "$0: WORKDIR=$WORKDIR; directory listing:" > 2.txt

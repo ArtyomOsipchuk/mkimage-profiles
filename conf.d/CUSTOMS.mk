@@ -8,6 +8,7 @@ distro/prac-xfce: distro/.regular-gtk mixin/regular-xfce \
 	@$(call add,DEFAULT_SERVICES_ENABLE,rpc.statd)
 	@$(call add,SYSTEMD_SERVICES_ENABLE,uuid-mount.service)
 	@$(call add,SYSTEMD_SERVICES_ENABLE,readme.service)
+	@$(call add,SYSTEMD_SERVICES_ENABLE,vncshare.service)
 	@$(call add,SYSTEMD_SERVICES_ENABLE,replace-localdomain.service)
 	@$(call add,DEFAULT_SERVICES_ENABLE,NetworkManager ModemManager)
 	@$(call add,CLEANUP_PACKAGES,etcnet)
