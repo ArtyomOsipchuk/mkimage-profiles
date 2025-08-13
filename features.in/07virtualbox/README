@@ -1,0 +1,6 @@
+=== features.in/07virtualbox===
+
+Фича для обеспечения работосопособности VirtualBox.
+* Отключение модулей ядра kvm
+* Пакеты VirtualBox
+* Патч polkit вместо назначения группы vboxusers
