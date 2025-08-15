@@ -10,11 +10,9 @@
 distro/prac-xfce: distro/.regular-gtk mixin/regular-xfce \
 	use/.03prac use/04mount use/.05cmcldap use/.06workshop; @:
 
-# make prac-xfce-vb.iso BRANCH=sisyphus
+# make prac-xfce-virtualbox.iso BRANCH=sisyphus
 distro/prac-xfce-virtualbox: distro/.regular-gtk mixin/regular-xfce \
-	use/.03prac use/04mount use/.05cmcldap use/07virtualbox; @:
-	@$(call add,THE_LISTS,prac-virtualbox)
-	@$(call add,DEFAULT_SERVICES_ENABLE,virtualbox)
+	use/.03prac use/04mount use/.05cmcldap use/.07virtualbox; @:
 
 use/.03prac: use/03prac;
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,sshd)
@@ -46,6 +44,11 @@ use/.06workshop: use/06workshop;
 	@$(call add,DEFAULT_SERVICES_ENABLE,avahi-daemon)
 	@$(call add,DEFAULT_SERVICES_ENABLE,openssh-server)
 	@$(call add,THE_LISTS,prac-workshop)
+
+use/.07virtualbox: use/07virtualbox;
+	@$(call add,THE_LISTS,prac-virtualbox)
+	@$(call add,DEFAULT_SERVICES_ENABLE,virtualbox)
+
 
 #	@$(call add,SYSTEMD_SERVICES_ENABLE,readme.service)
 #	@$(call add,SYSTEMD_SERVICES_ENABLE,replace-localdomain.service)
