@@ -1,0 +1,10 @@
+[Unit]
+Description=Imports protocols.ova to VirtualBox
+ConditionPathIsDirectory=!%h/VirtualBox\ VMs
+
+[Service]
+ExecStart=VBoxManage registervm "%h/VirtualBox VMs/LinuxNetwork2025/protocols-jeos-20250512-x86_64/protocols-jeos-20250512-x86_64.vbox"
+Type=oneshot
+
+[Install]
+WantedBy=default.target

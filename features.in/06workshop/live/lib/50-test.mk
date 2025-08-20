@@ -1,1 +1,0 @@
-CHROOT_PACKAGES += figlet

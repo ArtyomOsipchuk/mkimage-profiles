@@ -1,6 +1,3 @@
 virtualbox
 kernel-modules-virtualbox-6.12
 kernel-modules-virtualbox-addition-6.12
-virtualbox-guest-additions
-virtualbox-guest-common
-virtualbox-guest-utils
