@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=README
+Comment=Открывает текстовый MD файл
+Exec=xdg-open /usr/share/doc/FEATURES/README.md
+MimeType=text/markdown;text/plain;
+Categories=Utility;TextEditor;
+NoDisplay=true

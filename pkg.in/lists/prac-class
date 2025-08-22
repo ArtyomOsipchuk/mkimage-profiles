@@ -1,13 +1,9 @@
-# libs
-bc
-libncursesw
-
 # progs for linux development
+bc
 xterm
 dialog
 make
 zsh
-mktemp
 grep
 sed
 termutils
@@ -30,6 +26,7 @@ qgit
 cowsay
 meld
 patch
+patchutils
 
 # more
 autoconf
@@ -43,10 +40,11 @@ libpcre16
 meson
 ninja-build
 geany
-vim
+vim-console
 
 #списокпакетов ACBK Prac
 gcc-c++
+gcc-doc
 xxdiff
 valgrind
 gdbserver
@@ -63,8 +61,11 @@ vim-spell-ru
 vim-plugin-moin-syntax
 python3-tools
 python3-modules-sqlite3
+python3-modules-tkinter
+screen
+tmux
 
-vncshare
 firefox
+vncshare
 vncshare-installers
 installer-alterator-livecd-stage2

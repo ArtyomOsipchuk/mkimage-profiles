@@ -9,9 +9,9 @@ use/net: use/services use/pkgpriorities
 	@$(call set,THE_NET_SUBSYS,network-config-subsystem)
 	@$(call xport,TARGET_HOSTNAME)
 
-#use/net/etcnet: use/net
-#	@$(call set,THE_NET_SUBSYS,etcnet)
-#	@$(call add,DEFAULT_SERVICES_ENABLE,network)
+use/net/etcnet: use/net
+	@$(call set,THE_NET_SUBSYS,etcnet)
+	@$(call add,DEFAULT_SERVICES_ENABLE,network)
 
 use/net/ifupdown2: use/net
 	@$(call set,THE_NET_SUBSYS,ifupdown2)
@@ -22,12 +22,12 @@ use/net/dhcp: use/net
 
 # base service, no GUI; see x11 feature for those
 use/net/nm: use/net
-#	@$(call set,THE_NET_SUBSYS,NetworkManager)
-#	@$(call add,THE_LISTS,network/NetworkManager)  # NB: won't get overridden
-#	@$(call add,DEFAULT_SERVICES_ENABLE,network) # need for NM?
-#	@$(call add,DEFAULT_SERVICES_ENABLE,NetworkManager ModemManager)
-#	@$(call add,DEFAULT_SERVICES_ENABLE,livecd-save-nfs) # keep interface up
-#	@$(call xport,NM_native)
+	@$(call set,THE_NET_SUBSYS,NetworkManager)
+	@$(call add,THE_LISTS,network/NetworkManager)  # NB: won't get overridden
+	@$(call add,DEFAULT_SERVICES_ENABLE,network) # need for NM?
+	@$(call add,DEFAULT_SERVICES_ENABLE,NetworkManager ModemManager)
+	@$(call xport,NM_native)
+	@$(call add,DEFAULT_SERVICES_ENABLE,livecd-save-nfs) # keep interface up
 
 # use NetworkManager(native)
 use/net/nm/native:
