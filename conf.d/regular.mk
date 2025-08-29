@@ -46,6 +46,12 @@ distro/.regular-desktop-base: distro/.regular-base use/branding/full \
 	use/live/suspend use/grub/ui/gfxboot
 	@$(call add,THE_BRANDING,bootloader)
 	@$(call add,LIVE_PACKAGES,livecd-rescue-base-utils)
+
+# WM base target
+distro/.regular-wm: distro/.regular-x11 \
+	mixin/regular-desktop use/vmguest/dri \
+	use/live/rw +live-installer \
+	use/live-install/repo
 	@$(call set,GRUB_DEFAULT,live)
 	@$(call set,SYSLINUX_DEFAULT,live)
 
