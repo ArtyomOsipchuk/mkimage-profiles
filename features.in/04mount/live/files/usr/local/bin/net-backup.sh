@@ -13,6 +13,8 @@ for file in "${DEFAULT_FILES[@]}"; do
 		if [ "$file" == ".ssh/" ]; then
 			mkdir -p "$BACKUP_DIR/$file"
 			chmod 700 "$BACKUP_DIR/$file"
+		elif [ "$file" == ".vimrc" ]; then
+			echo "let g:ale_virtualtext_cursor = 'disabled'" > "$BACKUP_DIR/$file"
 		else
 			touch "$BACKUP_DIR/$file"
 		fi
