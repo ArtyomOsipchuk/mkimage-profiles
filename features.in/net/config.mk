@@ -57,3 +57,8 @@ use/net/networkd/resolved: use/net/networkd
 use/net/networkd/resolved-stub: use/net/networkd
 	@$(call add,DEFAULT_SERVICES_ENABLE,systemd-resolved)
 	@$(call set,SYSTEMD_RESOLVED,stub)
+
+use/net/networkd/live: use/net/networkd
+	@$(call add,DEFAULT_SERVICES_DISABLE,systemd-network-generator)
+	@$(call add,LIVE_PACKAGES,systemd-networkd-wait-one-interface)
+	@$(call add,LIVE_PACKAGES,livecd-net-eth)
