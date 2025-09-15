@@ -1,0 +1,9 @@
+#!/bin/sh
+
+cd "$WORKDIR"/.disk/pkglists || exit 1
+
+for pkg in $GLOBAL_BLACKLIST_PKGS; do
+	grep -- "$pkg" $(find . -name rpm.txt) || continue
+	echo "Error: $pkg in blacklist found! See .disk/pklists/*/*/rpm.txt" >&2
+	exit 1
+done
