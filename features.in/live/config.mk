@@ -1,7 +1,7 @@
 +live: use/live/desktop; @:
 
 # service defaults
-_ON = alteratord cpufreq-simple \
+_ON = alteratord \
       livecd-evms livecd-fstab livecd-auto-hostname \
       livecd-setauth livecd-setlocale livecd-timezone livecd-net-eth livecd-install-wmaker \
       random rpcbind plymouth avahi-daemon livecd-backlight-max
