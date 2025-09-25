@@ -2,6 +2,7 @@ glibc-locales
 tzdata
 
 lsblk
+cpio
 
 xfsprogs
 jfsprogs
