@@ -22,8 +22,7 @@ distro/alt-platform-builder: \
 	use/stage2/rtc use/stage2/sbc use/stage2/scsi use/stage2/usb \
 	use/stage2/drm use/stage2/sbc use/tty
 	@$(call set,BRANDING,alt-platform-builder)
-#	@$(call set,INSTALLER,alt-platform-builder)
-	@$(call set,INSTALLER,centaurus)
+	@$(call set,INSTALLER,builder)
 #	@$(call set,DOCS,alt-platform-builder)
 	@$(call set,DISABLE_LANG_MENU,1)
 	@$(call set,META_PUBLISHER,BaseALT Ltd)
