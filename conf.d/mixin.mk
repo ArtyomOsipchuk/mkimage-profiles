@@ -143,6 +143,8 @@ else
 	@$(call add,THE_PACKAGES,gnome-terminal)
 	@$(call add,THE_PACKAGES,evince)
 endif
+	@$(call add,THE_PACKAGES,switcheroo-control)
+	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,switcheroo-control.service)
 	@$(call add,THE_PACKAGES,chrome-gnome-shell)
 	@$(call add,THE_PACKAGES,qt5-wayland qt6-wayland)
 	@$(call add,THE_PACKAGES,cups-pk-helper cups)
