@@ -99,6 +99,8 @@ reports/contents: reports/prep
 
 reports/packages: SHELL = /bin/bash
 reports/packages: reports/prep
+	@[ -d  $(BUILDDIR)/.work/chroot/.image/.disk ] && \
+		cp -r $(BUILDDIR)/.work/chroot/.image/.disk "$(REPORTDIR)"/disk ||:
 	@grep -E 'chroot/.in/[^/]*.rpm' < $(BUILDLOG) | \
 		cut -d' ' -f 1 | tr -d "'"'`' | \
 		tee /dev/stderr 2> >(sed 's,^.*/,,' | \
