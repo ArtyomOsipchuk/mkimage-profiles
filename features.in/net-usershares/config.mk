@@ -1,5 +1,5 @@
 # requires thunar-shares-plugin or mate-user-share to make sense
-use/net-usershares: use/control use/services \
+use/net-usershares: use/control use/services
 	@$(call add,CONTROL,libnss-role:enabled)
 	@$(call add,CONTROL,role-usershares:enabled)
 	@$(call add,CONTROL,smb-conf-usershares:enabled)
