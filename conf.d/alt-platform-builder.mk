@@ -47,7 +47,7 @@ endif
 	@$(call add,SYSTEM_PACKAGES,mdadm-tool lvm2 multipath-tools fdisk xfsprogs btrfs-progs file)
 	@$(call add,DEFAULT_SERVICES_ENABLE,getty@tty1)
 	@$(call add,DEFAULT_SERVICES_ENABLE,ahttpd alteratord)
-	@$(call add,DEFAULT_SERVICES_ENABLE,sshd)
+	@$(call add,SYSTEMD_SERVICES_ENABLE,sshd.service)
 	@$(call add,DEFAULT_SERVICES_DISABLE,powertop bridge gpm)
 	@$(call add,DEFAULT_SERVICES_DISABLE,consolesaver)
 
