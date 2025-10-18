@@ -1,7 +1,7 @@
 #!/bin/sh
 # Для "Сетевых протоколов в линукс"
-if [ "$#" -lt 2 ]; then
-	echo "Usage: ./vb-script.sh [Path to our file (.vdi or .img)] [qemu | vb]"
+if [ "$#" -lt 3 ]; then
+	echo "Usage: ./vb-script.sh [Path to our file (.vdi or .img)] [qemu | vb] [win | mac]"
 else
 	echo $1
 	Name="`echo $1 | sed -e 's/.*\///'`"
@@ -9,7 +9,7 @@ else
 	Name="`echo $Name | sed -e 's/.img$//'`"
 	echo "Имя виртуальной машины $Name, откроется в $2."
 	Path=$1
-	Memory=256
+	Memory=1024
 	Vram=16
 	case "$2" in
 		qemu)
@@ -20,12 +20,21 @@ else
 			#else
     				echo "Создаём машину с нуля..."
 				# базовые настройки
-				VBoxManage createvm --name "$Name" --register
-				VBoxManage modifyvm "$Name" --memory $Memory --vram $Vram --groups "/LinuxNetwork2025"
+				if [ "$3" = "mac" ]; then
+					VBoxManage createvm --name "$Name" --register ‑‑platform‑architecture=arm
+				else
+					VBoxManage createvm --name "$Name" --register
+				fi
+				VBoxManage modifyvm "$Name" --memory $Memory --vram $Vram --groups "/LinuxNetwork2025" ‑‑graphicscontroller=qemuramfb
+				if [ "$3" = "mac" ]; then
+					VBoxManage modifyvm "$Name" ‑‑graphicscontroller=qemuramfb
+				else
+					VBoxManage modifyvm "$Name" ‑‑graphicscontroller=vboxvga
+				fi
 				VBoxManage setextradata "$Name" GUI/ScaleFactor 2.0
 				# Подключаем наш образ
-				VBoxManage storagectl "$Name" --name "SATA Controller" --add sata --controller IntelAhci
-				VBoxManage storageattach "$Name" --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium $Path
+				VBoxManage storagectl "$Name" --name "Disks" --add virtio
+				VBoxManage storageattach "$Name" --storagectl "Disks" --port 0 --device 0 --type hdd --medium $Path
 				VBoxManage modifyvm "$Name" --usb on
 				VBoxManage modifyvm "$Name" --nic1 nat --nictype1 Am79C970A
 				VBoxManage modifyvm "$Name" --nic2 null --nicpromisc2 allow-all

@@ -1,3 +1,5 @@
+jot
+rs
 openssl
 apt
 apt-repo
@@ -83,7 +85,7 @@ update-kernel
 pesign
 bzlib
 make-initrd-mdadm
-startup
+# startup
 pciids
 sh4
 altlinux-repos
@@ -150,7 +152,7 @@ time
 make
 bird
 libgdbm
-shim-signed
+# shim-signed
 libseccomp
 libpng16
 libfreetype
@@ -185,7 +187,7 @@ libdb4.7
 liblua5.3
 libiperf3
 sh
-mokutil
+# mokutil
 libexpat
 fatresize
 acpi
@@ -225,7 +227,7 @@ chrony
 procps
 bootloader-utils
 systemd-networkd
-grub-pc
+# grub-pc
 termutils
 rsyslog-classic
 less
