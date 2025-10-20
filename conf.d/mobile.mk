@@ -52,9 +52,6 @@ mixin/phosh: use/services +nm-gtk4 +nm-native
 ifeq (sisyphus,$(BRANCH))
 	@$(call add,THE_PACKAGES,gnome-maps)
 endif
-ifeq (x86_64,$(ARCH))
-	@$(call add,THE_PACKAGES,udev-rules-MIG-goodix-touchpad)
-endif
 
 mixin/sway: use/services +nm-gtk +nm-native
 	@$(call add,THE_BRANDING,sway-settings)
