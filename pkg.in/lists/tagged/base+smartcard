@@ -12,3 +12,9 @@ pam_pkcs11
 openssl
 openssl-engines
 openssl-engine_pkcs11
+
+gnutls-utils
+
+librtpkcs11ecp
+libjcpkcs11
+isbc-pkcs11
