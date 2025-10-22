@@ -91,6 +91,7 @@ use/.03prac: use/03prac
 
 use/.04mount: use/04mount
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,uuid-mount)
+	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,nftable-rules)
 	@$(call add,SYSTEMD_USER_SERVICES_ENABLE,net-backup.service)
 	@$(call add,SYSTEMD_USER_SERVICES_ENABLE,nfs-link.service)
 

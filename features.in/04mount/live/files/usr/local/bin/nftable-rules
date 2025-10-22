@@ -1,0 +1,8 @@
+#!/bin/bash
+
+RULES_URL=$(grep -oP 'nft-rules=\K[^ ]+' /proc/cmdline || echo "")
+TEMP_FILE=/tmp/nft-rules.tmp
+curl -s -f "$RULES_URL" -o "$TEMP_FILE"
+nft -c -f "$TEMP_FILE" || exit 1
+nft flush ruleset
+nft -f "$TEMP_FILE"

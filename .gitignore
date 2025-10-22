@@ -5,4 +5,5 @@ image.in/files/*
 !image.in/files/.empty
 99-config.sh
 99-hashed-passwd.sh
-protocols-jeos-20250512-x86_64-disk001.vdi
+practicum-1.crt
+protocols-jeos-*-*-disk001.vdi

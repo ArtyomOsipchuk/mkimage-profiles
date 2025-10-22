@@ -1,0 +1,12 @@
+[Unit]
+Description=downloads nftable rules
+After=network-online.target
+Before= systemd-user-sessions.service
+ConditionKernelCommandLine=nft-rules
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/nftable-rules
+
+[Install]
+WantedBy=multi-user.target
