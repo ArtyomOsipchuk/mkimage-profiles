@@ -192,9 +192,6 @@ mixin/mate-base: use/x11/mate use/fonts/ttf/google +nm-gtk
 	@$(call add,THE_LISTS,$(call tags,mobile mate))
 
 mixin/regular-mate: mixin/mate-base use/domain-client; @:
-ifneq (,$(filter-out riscv64,$(ARCH)))
-	@$(call add,THE_LISTS,$(call tags,base smartcard))
-endif
 
 mixin/office: use/fonts/ttf/google use/fonts/ttf/xo
 	@$(call add,THE_LISTS,$(call tags,desktop && (cups || office)))
