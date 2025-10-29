@@ -6,7 +6,7 @@ ConditionKernelCommandLine=nft-rules
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/nftable-rules
+ExecStart=/usr/local/bin/nftable-rules
 
 [Install]
 WantedBy=multi-user.target
