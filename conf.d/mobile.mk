@@ -13,6 +13,7 @@ mixin/mobile-base: use/ntp/chrony use/repo use/branding/notes use/x11-autostart 
 	use/wireless
 ifeq (sisyphus,$(BRANCH))
 	@$(call set,BRANDING,alt-mobile-sisyphus)
+	@$(call set,VM_FSTYPE,f2fs)
 else
 	@$(call set,BRANDING,alt-mobile)
 endif
