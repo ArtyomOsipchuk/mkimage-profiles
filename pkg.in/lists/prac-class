@@ -79,3 +79,10 @@ firefox
 vncshare
 vncshare-installers
 installer-alterator-livecd-stage2
+
+# artos_repo
+livecd-uuid-mount
+livecd-replace-localdomain
+livecd-netuser-services
+# only local packages
+livecd-cmc-ldap
