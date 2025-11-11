@@ -47,7 +47,12 @@ mixin/phosh: use/services +nm-gtk4 +nm-native
 	@$(call add,THE_BRANDING,phosh-settings)
 	@$(call add,THE_LISTS,mobile/phosh)
 	@$(call add,THE_LISTS,mobile/gnome-apps)
+ifeq (sisyphus,$(BRANCH))
 	@$(call add,DEFAULT_SERVICES_ENABLE,phosh)
+else
+	@$(call add,DEFAULT_SERVICES_ENABLE,phrog)
+	@$(call add,THE_PACKAGES,phrog)
+endif
 	@$(call set,DEFAULT_SESSION,phosh)
 ifeq (sisyphus,$(BRANCH))
 	@$(call add,THE_PACKAGES,gnome-maps)
