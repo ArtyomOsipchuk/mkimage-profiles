@@ -64,6 +64,8 @@ include::../features.in/arm-rpi4/README[]
 
 include::../features.in/auto-resize/README[]
 
+include::../features.in/blacklist-pkgs/README[]
+
 include::../features.in/bootloader/README[]
 
 include::../features.in/branding/README[]
