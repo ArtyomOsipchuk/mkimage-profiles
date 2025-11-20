@@ -188,8 +188,6 @@ include::../features.in/server/README[]
 
 include::../features.in/services/README[]
 
-include::../features.in/slinux/README[]
-
 include::../features.in/sound/README[]
 
 include::../features.in/speech/README[]
