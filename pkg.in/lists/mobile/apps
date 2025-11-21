@@ -3,7 +3,7 @@ telegram-desktop
 
 # web
 chromium@x86_64,aarch64,riscv64
-firefox
+firefox-esr
 mobile-config-firefox
 
 # Messaging app
