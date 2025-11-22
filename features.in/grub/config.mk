@@ -12,6 +12,7 @@ use/grub: sub/stage1 $(ISOHYBRID:%=use/isohybrid)
 use/grub/ui/%: use/grub
 ifeq (,$(filter-out i586 x86_64 aarch64 loongarch64,$(ARCH)))
 	@$(call set,GRUB_UI,$*)
+	@$(call try,GRUB_GFXMODE,auto)
 	@if [ "$*" == gfxboot ]; then \
 		$(call add,STAGE1_BRANDING,bootloader); \
 		$(call add,STAGE1_PACKAGES,grub-common); \

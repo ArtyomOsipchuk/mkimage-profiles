@@ -99,6 +99,9 @@ bootargs: clean
 	@if [ -n "$(LOCALES)" ]; then \
 		sed -i "s,@LOCALES@,$(LOCALES),g" $(DSTCFGS); \
 	fi
+	@if [ -n "$(GRUB_GFXMODE)" ]; then \
+		sed -i "s|@GRUB_GFXMODE@|$(GRUB_GFXMODE)|g" $(DSTCFGS); \
+	fi
 	@GRUBTHEME=$(GRUBTHEME); \
 	[ -n "$$GRUBTHEME" ] || GRUBTHEME=$$(cut -d "-" -f2 <<< $(BRANDING)); \
 	sed -i "s,@grubtheme@,$$GRUBTHEME,g" $(DSTCFGS)
