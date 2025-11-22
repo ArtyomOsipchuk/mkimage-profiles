@@ -41,3 +41,6 @@ resources
 
 # tools
 hashsum
+
+# doc
+gnome-user-docs
