@@ -64,7 +64,7 @@ endif
 use/x11/3d: use/x11/intel use/x11/radeon use/x11/amdgpu use/x11/nvidia; @:
 
 # somewhat lacking compared to radeon but still
-use/x11/nouveau: use/x11 use/firmware use/drm/nouveau
+use/x11/nouveau: use/x11 use/firmware/nouveau use/drm/nouveau
 	@$(call try,NVIDIA_PACKAGES,xorg-drv-nouveau)
 	@$(call add,THE_PACKAGES,$$(NVIDIA_PACKAGES))
 
