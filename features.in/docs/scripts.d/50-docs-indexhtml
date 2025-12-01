@@ -23,7 +23,7 @@ find "$indexdir" -xtype l 2>/dev/null -exec rm {} \;
 cp -aL "$indexdir" "$dest"
 
 # delete links with absolute PATH
-sed -i -e '/file:\/\/\//d' -e '/href="\//d' "$dest"/index-*.html
+sed -i -e '/file:\/\/\//d' -e '/href="\//d' "$dest"/index*.html
 
 mkredir() {
 	cat >"${1}index.html" <<-EOF
