@@ -76,7 +76,9 @@ vm/.sway: vm/systemd mixin/mobile-base mixin/sway +systemd \
 	mixin/waydroid use/fonts/ttf/google \
 	use/auto-resize; @:
 
-vm/alt-mobile-phosh-tablet-def: vm/.phosh-base mixin/mobile-def; @:
+vm/alt-mobile-phosh-tablet-def: vm/.phosh-base mixin/mobile-def
+	@$(call add,THE_PACKAGES,udev-rules-da280-accelerometer)
+
 vm/alt-mobile-phosh-def: vm/.phosh mixin/mobile-def; @:
 
 vm/alt-mobile-sway-def: vm/.sway mixin/mobile-def; @:
