@@ -4,6 +4,7 @@ distro/alt-platform-builder: \
 	use/cleanup \
 	+systemd \
 	use/live/rescue/default \
+	use/syslinux/localboot.cfg use/grub/localboot_bios.cfg \
 	use/memtest +efi \
 	use/dev/builder/base \
 	use/net/dhcp use/ntp/chrony \
