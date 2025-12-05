@@ -122,12 +122,11 @@ mixin/regular-gnustep: use/x11/gnustep
 	@$(call add,THE_BRANDING,graphics)
 
 mixin/regular-cinnamon: use/x11/cinnamon use/x11/lightdm/slick +nm-gtk \
-	use/fonts/ttf/google use/im use/domain-client
+	use/fonts/ttf/google use/im
 	@$(call add,THE_PACKAGES,xdg-user-dirs-gtk)
 	@$(call add,THE_PACKAGES,gnome-disk-utility gnome-system-monitor)
 
-mixin/regular-gnome: use/x11/gnome use/fonts/ttf/redhat +nm-gtk4 \
-	use/domain-client
+mixin/regular-gnome: use/x11/gnome use/fonts/ttf/redhat +nm-gtk4
 	@$(call add,BASE_PACKAGES,gnome-software)
 	@$(call add,BASE_PACKAGES,gnome-tour)
 ifneq (,$(filter-out p10,$(BRANCH)))
@@ -153,8 +152,7 @@ endif
 
 mixin/regular-kde: use/x11/kde \
 	use/x11/kde-display-manager-lightdm \
-	use/fonts/ttf/google use/fonts/ttf/redhat use/fonts/zerg \
-	use/domain-client
+	use/fonts/ttf/google use/fonts/ttf/redhat use/fonts/zerg
 ifneq (,$(filter-out p10,$(BRANCH)))
 	@$(call add,THE_PACKAGES,xdg-desktop-portal-kde)
 	@$(call add,BASE_PACKAGES,plasma-discover)
@@ -178,7 +176,7 @@ mixin/xfce-base: use/x11/xfce +nm-gtk \
 	@$(call add,THE_PACKAGES,xdg-user-dirs-gtk)
 	@$(call add,THE_PACKAGES,xkill)
 
-mixin/regular-xfce: mixin/xfce-base use/domain-client +pipewire
+mixin/regular-xfce: mixin/xfce-base +pipewire
 	@$(call add,THE_PACKAGES,pavucontrol xscreensaver-frontend)
 	@$(call add,THE_PACKAGES,xfce4-pulseaudio-plugin xfce-polkit)
 	@$(call set,DEFAULT_SESSION,xfce)
@@ -186,12 +184,12 @@ mixin/regular-xfce: mixin/xfce-base use/domain-client +pipewire
 mixin/regular-lxde: use/x11/lxde use/im +nm-gtk
 	@$(call add,THE_PACKAGES,qasmixer qpdfview)
 
-mixin/regular-lxqt: use/x11/lxqt +nm-gtk use/domain-client; @:
+mixin/regular-lxqt: use/x11/lxqt +nm-gtk; @:
 
 mixin/mate-base: use/x11/mate use/fonts/ttf/google +nm-gtk
 	@$(call add,THE_LISTS,$(call tags,mobile mate))
 
-mixin/regular-mate: mixin/mate-base use/domain-client; @:
+mixin/regular-mate: mixin/mate-base; @:
 
 mixin/office: use/fonts/ttf/google use/fonts/ttf/xo
 	@$(call add,THE_LISTS,$(call tags,desktop && (cups || office)))
