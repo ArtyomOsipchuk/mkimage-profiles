@@ -110,6 +110,9 @@ use/live/rescue: use/live use/grub/live-rescue.cfg use/syslinux/live-rescue.cfg
 	@$(call add,LIVE_PACKAGES,livecd-rescue)
 	@$(call add,LIVE_PACKAGES,livecd-rescue-base-utils)
 
+use/live/rescue/default: use/live/rescue use/deflogin use/live/no-cleanup
+	@$(call set,ROOTPW_EMPTY,1)
+
 use/live/rescue/extra: use/live/rescue
 	@$(call add,LIVE_LISTS,\
 	$(call tags,(base || extra || server || misc || fs) \
