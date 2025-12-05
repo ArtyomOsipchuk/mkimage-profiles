@@ -3,6 +3,7 @@ distro/alt-platform-builder: \
 	distro/.base use/live-install/pkg \
 	use/cleanup \
 	+systemd \
+	use/live/rescue/default \
 	use/memtest +efi \
 	use/dev/builder/base \
 	use/net/dhcp use/ntp/chrony \
