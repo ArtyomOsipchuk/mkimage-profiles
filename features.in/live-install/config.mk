@@ -10,7 +10,8 @@ use/live-install: use/live use/metadata use/repo/main \
 	@$(call set,STAGE2_LIVE_INST,yes)
 	@$(call try,MAIN_KERNEL_SAVE,no)
 	@$(call xport,MAIN_KERNEL_SAVE)
-	@$(call add,INSTALL2_PACKAGES,installer-common-stage2)
+	@$(call try,LIVE_INSTALLER,installer-common-stage2)
+	@$(call add,INSTALL2_PACKAGES,$$(LIVE_INSTALLER))
 	@$(call add,THE_PACKAGES,alterator-wizardface)
 	@$(call add,THE_LISTS,$(call tags,basesystem && !alterator))
 	@$(call add,THE_PACKAGES,e2fsprogs mdadm lvm2 cryptsetup)
@@ -38,6 +39,10 @@ use/live-install/full: use/live-install \
 use/live-install/pkg: use/live-install
 	@$(call set,LIVE_INSTALL_PKG,)
 	@$(call set,GLOBAL_LIVE_INSTALL,)
+
+use/live-install/wayland: use/live-install
+	@$(call set,LIVE_INSTALLER,installer-common-wayland-stage2)
+	@$(call add,STAGE2_BOOTARGS,wayland)
 
 ifneq (,$(filter-out p10,$(BRANCH)))
 use/live-install/desktop: use/live-install
