@@ -41,8 +41,11 @@ use/live-install/pkg: use/live-install
 	@$(call set,GLOBAL_LIVE_INSTALL,)
 
 use/live-install/wayland: use/live-install
-	@$(call set,LIVE_INSTALLER,installer-common-wayland-stage2)
+	@$(call set,LIVE_INSTALLER,installer-common-x11-stage2 installer-common-wayland-stage2)
 	@$(call add,STAGE2_BOOTARGS,wayland)
+
+use/live-install/wayland/only: use/live-install/wayland
+	@$(call set,LIVE_INSTALLER,installer-common-wayland-stage2)
 
 ifneq (,$(filter-out p10,$(BRANCH)))
 use/live-install/desktop: use/live-install
