@@ -7,6 +7,19 @@ mixin/desktop-installer: +vmguest \
 		$(call tags,(base || desktop) && (l10n || network)))
 	@$(call add,INSTALL2_PACKAGES,ntfs-3g)
 
+### installer-feature-nfs-server
+mixin/nfs-server-base: use/control
+	@$(call add,BASE_PACKAGES,rpcbind, nfs-clients)
+	@$(call add,CONTROL,rpcbind:server)
+	@$(call add,DEFAULT_SERVICES_ENABLE,rpcbind)
+	@$(call add,DEFAULT_SERVICES_ENABLE,nfslock)
+
+### installer-feature-nfs-client
+mixin/nfs-client-base: use/control
+	@$(call add,BASE_PACKAGES,rpcbind)
+	@$(call add,CONTROL,rpcbind:local)
+	@$(call add,DEFAULT_SERVICES_ENABLE,rpcbind)
+
 ### e2k.mk
 mixin/e2k-base: use/tty/S0 use/net-eth/dhcp; @:
 
