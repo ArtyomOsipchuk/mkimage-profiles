@@ -34,13 +34,16 @@ save_packages_to_lists:
 		$(filter-out NO_SORT_% CLEANUP_% %CLEANUP_PACKAGES GLOBAL_% PINNED_%,$(filter %_PACKAGES,$(sort \
 		$(.VARIABLES)))),echo $($V) | sed -e 's/\s\+/\n/g' \
 		| sort -u > $(TARGET)/$V;)
+	@for i in $(KFLAVOURS) $(STAGE1_KFLAVOURS); do \
+		echo kernel-image-$$i >$(TARGET)/KFLAVOURS; \
+	done
 
 check-lists:
 	@APTBOX=$(BUILDDIR)/.work/pkgbox/aptbox; \
 	if [ -d "$$APTBOX" ] && [ -z "$(NOCHECK)" ]; then \
 		check-pkg-list --aptbox "$$APTBOX" `find $(TARGET) -type f`; \
 	fi
-	@rm -f $(TARGET)/*_PACKAGES*
+	@rm -f $(TARGET)/*_PACKAGES* $(TARGET)/KFLAVOURS
 
 copy-groups: PKGDIR = ..
 copy-groups:
