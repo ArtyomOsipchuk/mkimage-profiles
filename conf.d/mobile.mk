@@ -10,12 +10,15 @@ mixin/mobile-base: use/ntp/chrony use/repo use/branding/notes use/x11-autostart 
 	use/deflogin/root use/l10n/ru_RU use/xdg-user-dirs \
 	use/drm use/firmware mixin/ttyescape +plymouth +pipewire \
 	use/services/bluetooth-enable use/luks/touchscreen \
-	use/wireless
+	use/browser/firefox use/wireless
 ifeq (sisyphus,$(BRANCH))
 	@$(call set,BRANDING,alt-mobile-sisyphus)
 	@$(call set,VM_FSTYPE,f2fs)
 else
 	@$(call set,BRANDING,alt-mobile)
+ifneq (,$(filter-out riscv64,$(ARCH)))
+	@$(call set,FX_FLAVOUR,-esr)
+endif
 endif
 	@$(call try,CAMERA,snapshot)
 	@$(call add,THE_PACKAGES,$$(CAMERA))
