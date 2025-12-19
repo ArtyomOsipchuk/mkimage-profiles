@@ -6,7 +6,7 @@
 
 # Enable wayland compositor
 if [ "$GLOBAL_OEM_WAYLAND" = yes ]; then
-	sed -i 's/^ALTERATOR_SETUP_WAYLAND=.*/ALTERATOR_SETUP_WAYLAND=1/' \
+	sed -i 's/#ALTERATOR_SETUP_WAYLAND=.*/ALTERATOR_SETUP_WAYLAND=1/' \
 		/etc/alterator-setup/config
 fi
 
