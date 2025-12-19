@@ -1,7 +1,8 @@
 use/oem: use/services use/branding use/deflogin/root use/l10n
 	@$(call add_feature)
 	@$(call add,DEFAULT_SERVICES_ENABLE,messagebus alteratord)
-	@$(call add,BASE_PACKAGES,alterator-setup)
+	@$(call add,BASE_PACKAGES,$$(OEM_PACKAGES))
+	@$(call try,OEM_PACKAGES,alterator-setup)
 	@$(call add,BASE_PACKAGES,rootfs-installer-features)
 	@$(call add,PINNED_PACKAGES,rootfs-installer-features)
 	@$(call add,THE_BRANDING,alterator notes)
@@ -18,7 +19,7 @@ use/oem/vnc: use/oem
 	@$(call add,BASE_PACKAGES,x11vnc x11vnc-service xorg-drv-dummy)
 
 use/oem/wayland: use/oem
-	@$(call add,BASE_PACKAGES,alterator-setup-wayland)
+	@$(call set,OEM_PACKAGES,alterator-setup-wayland)
 	@$(call set,OEM_WAYLAND,yes)
 
 use/oem/no-cleanup: use/oem
