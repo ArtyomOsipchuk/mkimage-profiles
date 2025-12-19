@@ -40,6 +40,7 @@ use/live-install/pkg: use/live-install
 	@$(call set,LIVE_INSTALL_PKG,)
 	@$(call set,GLOBAL_LIVE_INSTALL,)
 
+ifneq (,$(filter-out p10,$(BRANCH)))
 use/live-install/wayland: use/live-install
 	@$(call set,LIVE_INSTALLER,installer-common-x11-stage2 installer-common-wayland-stage2)
 	@$(call add,STAGE2_BOOTARGS,wayland)
@@ -47,12 +48,12 @@ use/live-install/wayland: use/live-install
 use/live-install/wayland/only: use/live-install/wayland
 	@$(call set,LIVE_INSTALLER,installer-common-wayland-stage2)
 
-ifneq (,$(filter-out p10,$(BRANCH)))
 use/live-install/desktop: use/live-install
 	@$(call add,INSTALL2_PACKAGES,installer-common-desktop)
 	@$(call add,BASE_PACKAGES,installer-alterator-livecd-stage3)
 else
-use/live-install/desktop: use/live-install; @:
+use/live-install/desktop use/live-install/wayland use/live-install/wayland/only: \
+	use/live-install; @:
 endif
 
 # set up remote repositories within installed system out-of-box
