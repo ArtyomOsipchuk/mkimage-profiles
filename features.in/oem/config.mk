@@ -18,9 +18,13 @@ use/oem/vnc: use/oem
 	@$(call add,BASE_PACKAGES,alterator-vnc)
 	@$(call add,BASE_PACKAGES,x11vnc x11vnc-service xorg-drv-dummy)
 
+ifneq (,$(filter-out p10,$(BRANCH)))
 use/oem/wayland: use/oem
 	@$(call set,OEM_PACKAGES,alterator-setup-wayland)
 	@$(call set,OEM_WAYLAND,yes)
+else
+use/oem/wayland: use/oem; @:
+endif
 
 use/oem/no-cleanup: use/oem
 	@$(call set,OEM_NO_CLEANUP,yes)
