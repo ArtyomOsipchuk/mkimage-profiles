@@ -11,7 +11,7 @@ use/oem: use/services use/branding use/deflogin/root use/l10n
 	@$(call xport,OEM_NO_CLEANUP)
 	@$(call xport,OEM_STEPS)
 	@$(call xport,OEM_INSTALL)
-	@$(call xport,OEM_ON_WAYLAND)
+	@$(call xport,OEM_WAYLAND)
 
 use/oem/vnc: use/oem
 	@$(call add,BASE_PACKAGES,alterator-vnc)
@@ -19,7 +19,7 @@ use/oem/vnc: use/oem
 
 use/oem/wayland: use/oem
 	@$(call add,BASE_PACKAGES,alterator-setup-wayland)
-	@$(call set,OEM_ON_WAYLAND,yes)
+	@$(call set,OEM_WAYLAND,yes)
 
 use/oem/no-cleanup: use/oem
 	@$(call set,OEM_NO_CLEANUP,yes)
