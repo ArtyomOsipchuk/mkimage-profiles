@@ -49,7 +49,7 @@ distro/.regular-desktop-base: distro/.regular-base use/branding/full \
 	@$(call set,GRUB_DEFAULT,live)
 	@$(call set,SYSLINUX_DEFAULT,live)
 
-distro/.regular-desktop: distro/.regular-desktop-base use/x11/wacom +vmguest \
+distro/.regular-desktop: distro/.regular-desktop-base +vmguest \
 	+systemd +plymouth; @:
 
 # common base for the very bare distros
