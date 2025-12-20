@@ -118,7 +118,7 @@ distro/regular-cinnamon: distro/.regular-desktop mixin/regular-cinnamon; @:
 
 distro/regular-gnome: distro/.regular-desktop mixin/regular-gnome \
 	+plymouth use/browser/epiphany \
-	use/live-install/vnc/listen; @:
+	use/live-install/vnc/listen use/live-install/oem/wayland; @:
 
 distro/regular-lxqt: distro/.regular-desktop mixin/regular-lxqt +plymouth; @:
 
