@@ -74,14 +74,11 @@ endif
 
 ### regular.mk
 mixin/regular-desktop: +alsa +nm +nm-native use/x11/lightdm/gtk \
-	use/x11/xorg use/xdg-user-dirs use/l10n use/l10n/xkb/switch/alt_shift \
+	use/xdg-user-dirs use/l10n use/l10n/xkb/switch/alt_shift \
 	use/fonts/otf/adobe use/fonts/otf/mozilla use/branding/notes \
 	use/services/bluetooth-enable use/browser/chromium \
 	use/branding use/ntp/chrony use/services/lvm2-disable \
 	use/firmware/laptop
-ifeq (,$(filter-out i586 x86_64,$(ARCH)))
-	@$(call add,THE_PACKAGES,xorg-drv-vmware) # for virtualbox with VMSVGA
-endif
 	@$(call set,LOCALES,en_US ru_RU pt_BR)
 	@$(call add,THE_LISTS,task-common/system-base)
 	@$(call add,THE_LISTS,task-common/desktop-base)
@@ -122,19 +119,19 @@ mixin/regular-desktop-install: +live-installer use/live-install/desktop \
 mixin/desktop-extra:
 	@$(call add,BASE_LISTS,$(call tags,(archive || base) && extra))
 
-mixin/regular-wmaker: use/fonts/ttf/redhat use/x11/wmaker +nm-gtk
+mixin/regular-wmaker: use/fonts/ttf/redhat use/x11/wmaker +nm-gtk use/x11/xorg
 	@$(call add,LIVE_PACKAGES,installer-feature-no-xconsole-stage3)
 	@$(call add,MAIN_PACKAGES,wmgtemp wmhdaps wmxkbru xxkb)
 
-mixin/regular-icewm: use/fonts/ttf/redhat +icewm +nm-gtk
+mixin/regular-icewm: use/fonts/ttf/redhat use/x11/xorg +icewm +nm-gtk
 	@$(call add,THE_LISTS,$(call tags,regular icewm))
 	@$(call add,THE_PACKAGES,icewm-startup-networkmanager)
 	@$(call add,THE_PACKAGES,mnt)
 
-mixin/regular-gnustep: use/x11/gnustep
+mixin/regular-gnustep: use/x11/gnustep use/x11/xorg
 	@$(call add,THE_BRANDING,graphics)
 
-mixin/regular-cinnamon: use/x11/cinnamon use/x11/lightdm/slick +nm-gtk \
+mixin/regular-cinnamon: use/x11/cinnamon use/x11/xorg use/x11/lightdm/slick +nm-gtk \
 	use/fonts/ttf/google use/im
 	@$(call add,THE_PACKAGES,xdg-user-dirs-gtk)
 	@$(call add,THE_PACKAGES,gnome-disk-utility gnome-system-monitor)
@@ -163,7 +160,7 @@ endif
 	@$(call add,THE_PACKAGES,fonts-ttf-lxgw-wenkai)
 	@$(call add,THE_PACKAGES,xdg-user-dirs-gtk)
 
-mixin/regular-kde: use/x11/kde \
+mixin/regular-kde: use/x11/kde use/x11/xorg \
 	use/x11/kde-display-manager-lightdm \
 	use/fonts/ttf/google use/fonts/ttf/redhat use/fonts/zerg
 ifneq (,$(filter-out p10,$(BRANCH)))
@@ -182,7 +179,7 @@ endif
 	@$(call add,THE_PACKAGES,accountsservice)
 	@$(call add,THE_PACKAGES,gtk-theme-breeze)
 
-mixin/xfce-base: use/x11/xfce +nm-gtk \
+mixin/xfce-base: use/x11/xfce use/x11/xorg +nm-gtk \
 	use/fonts/ttf/redhat use/fonts/ttf/google/extra
 	@$(call add,THE_PACKAGES,xfce4-regular)
 	@$(call add,THE_PACKAGES,xreader)
@@ -194,15 +191,15 @@ mixin/regular-xfce: mixin/xfce-base +pipewire
 	@$(call add,THE_PACKAGES,xfce4-pulseaudio-plugin xfce-polkit)
 	@$(call set,DEFAULT_SESSION,xfce)
 
-mixin/regular-lxde: use/x11/lxde use/im +nm-gtk
+mixin/regular-lxde: use/x11/lxde use/x11/xorg use/im +nm-gtk
 	@$(call add,THE_PACKAGES,qasmixer qpdfview)
 
-mixin/regular-lxqt: use/x11/lxqt +nm-gtk; @:
+mixin/regular-lxqt: use/x11/lxqt use/x11/xorg +nm-gtk; @:
 
 mixin/mate-base: use/x11/mate use/fonts/ttf/google +nm-gtk
 	@$(call add,THE_LISTS,$(call tags,mobile mate))
 
-mixin/regular-mate: mixin/mate-base; @:
+mixin/regular-mate: mixin/mate-base use/x11/xorg; @:
 
 mixin/office: use/fonts/ttf/google use/fonts/ttf/xo
 	@$(call add,THE_LISTS,$(call tags,desktop && (cups || office)))
