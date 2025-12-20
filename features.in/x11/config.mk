@@ -98,8 +98,7 @@ use/x11/nvidia/optimus:: use/drm/nvidia/optimus
 	@$(call add,NVIDIA_PACKAGES,bumblebee)
 endif
 
-use/x11/wacom: use/x11
-	@$(call add,THE_PACKAGES,xorg-drv-wacom)
+use/x11/wacom: use/x11; @:
 
 ## display managers
 use/x11/dm: use/x11-autostart use/pkgpriorities
