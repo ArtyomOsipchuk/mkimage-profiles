@@ -77,5 +77,14 @@ use/live-install/suspend:
 
 use/live-install/oem: use/live-install
 	@$(call add,INSTALL2_PACKAGES,installer-feature-oem-stage2)
-	@$(call add,MAIN_PACKAGES,alterator-setup)
+	@$(call add,MAIN_PACKAGES,$$(OEM_MAIN_PACKAGES))
+	@$(call try,OEM_MAIN_PACKAGES,alterator-setup)
 	@$(call add,MAIN_PACKAGES,installer-feature-alterator-setup-stage2)
+
+ifneq (,$(filter-out p10,$(BRANCH)))
+use/live-install/oem/wayland: use/live-install/oem
+	@$(call set,OEM_MAIN_PACKAGES,alterator-setup-wayland)
+	@$(call add,INSTALL2_PACKAGES,installer-feature-oem-wayland-only-stage2)
+else
+use/live-install/oem/wayland: use/live-install/oem; @:
+endif
