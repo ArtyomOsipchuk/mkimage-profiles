@@ -1,5 +1,6 @@
 # various VM guest modules/tools
 +vmguest: use/vmguest/complete; @:
++vmguest-wayland: use/vmguest/dri; @:
 
 use/vmguest:
 	@$(call add_feature)
