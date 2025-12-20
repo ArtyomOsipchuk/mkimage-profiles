@@ -128,15 +128,17 @@ mixin/regular-icewm: use/fonts/ttf/redhat use/x11/xorg +icewm +nm-gtk
 	@$(call add,THE_PACKAGES,icewm-startup-networkmanager)
 	@$(call add,THE_PACKAGES,mnt)
 
-mixin/regular-gnustep: use/x11/gnustep use/x11/xorg
+mixin/regular-gnustep: use/x11/gnustep use/x11/xorg +vmguest
 	@$(call add,THE_BRANDING,graphics)
 
-mixin/regular-cinnamon: use/x11/cinnamon use/x11/xorg use/x11/lightdm/slick +nm-gtk \
+mixin/regular-cinnamon: use/x11/cinnamon use/x11/xorg use/x11/lightdm/slick \
+	 +vmguest +nm-gtk \
 	use/fonts/ttf/google use/im
 	@$(call add,THE_PACKAGES,xdg-user-dirs-gtk)
 	@$(call add,THE_PACKAGES,gnome-disk-utility gnome-system-monitor)
 
-mixin/regular-gnome: use/x11/gnome use/fonts/ttf/redhat +nm-gtk4
+mixin/regular-gnome: use/x11/gnome use/fonts/ttf/redhat +nm-gtk4 \
+	+vmguest-wayland
 	@$(call add,BASE_PACKAGES,gnome-software)
 	@$(call add,BASE_PACKAGES,gnome-tour)
 ifneq (,$(filter-out p10,$(BRANCH)))
@@ -160,7 +162,7 @@ endif
 	@$(call add,THE_PACKAGES,fonts-ttf-lxgw-wenkai)
 	@$(call add,THE_PACKAGES,xdg-user-dirs-gtk)
 
-mixin/regular-kde: use/x11/kde use/x11/xorg \
+mixin/regular-kde: use/x11/kde use/x11/xorg +vmguest \
 	use/x11/kde-display-manager-lightdm \
 	use/fonts/ttf/google use/fonts/ttf/redhat use/fonts/zerg
 ifneq (,$(filter-out p10,$(BRANCH)))
@@ -179,24 +181,24 @@ endif
 	@$(call add,THE_PACKAGES,accountsservice)
 	@$(call add,THE_PACKAGES,gtk-theme-breeze)
 
-mixin/xfce-base: use/x11/xfce use/x11/xorg +nm-gtk \
+mixin/xfce-base: use/x11/xfce use/x11/xorg +nm-gtk +vmguest \
 	use/fonts/ttf/redhat use/fonts/ttf/google/extra
 	@$(call add,THE_PACKAGES,xfce4-regular)
 	@$(call add,THE_PACKAGES,xreader)
 	@$(call add,THE_PACKAGES,xdg-user-dirs-gtk)
 	@$(call add,THE_PACKAGES,xkill)
 
-mixin/regular-xfce: mixin/xfce-base +pipewire
+mixin/regular-xfce: mixin/xfce-base +pipewire +vmguest
 	@$(call add,THE_PACKAGES,pavucontrol xscreensaver-frontend)
 	@$(call add,THE_PACKAGES,xfce4-pulseaudio-plugin xfce-polkit)
 	@$(call set,DEFAULT_SESSION,xfce)
 
-mixin/regular-lxde: use/x11/lxde use/x11/xorg use/im +nm-gtk
+mixin/regular-lxde: use/x11/lxde use/x11/xorg use/im +nm-gtk +vmguest
 	@$(call add,THE_PACKAGES,qasmixer qpdfview)
 
-mixin/regular-lxqt: use/x11/lxqt use/x11/xorg +nm-gtk; @:
+mixin/regular-lxqt: use/x11/lxqt use/x11/xorg +nm-gtk +vmguest; @:
 
-mixin/mate-base: use/x11/mate use/fonts/ttf/google +nm-gtk
+mixin/mate-base: use/x11/mate use/fonts/ttf/google +nm-gtk +vmguest
 	@$(call add,THE_LISTS,$(call tags,mobile mate))
 
 mixin/regular-mate: mixin/mate-base use/x11/xorg; @:
