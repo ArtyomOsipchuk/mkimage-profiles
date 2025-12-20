@@ -45,7 +45,8 @@ vm/regular-builder: vm/regular-jeos-systemd mixin/regular-builder; @:
 
 vm/regular-cinnamon: vm/.regular-desktop mixin/regular-cinnamon mixin/vm-archdep-x11; @:
 
-vm/regular-gnome: vm/.regular-desktop mixin/regular-gnome mixin/vm-archdep-x11 use/oem/wayland; @:
+vm/regular-gnome: vm/.regular-desktop mixin/regular-gnome \
+	mixin/vm-archdep-wayland use/oem/wayland; @:
 
 vm/regular-mate: vm/.regular-gtk mixin/mate-base mixin/vm-archdep-x11; @:
 ifeq (,$(filter-out riscv64,$(ARCH)))

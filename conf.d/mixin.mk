@@ -53,7 +53,8 @@ mixin/e2k-mate: use/e2k/x11 use/x11/xorg use/fonts/install2 \
 mixin/vm-archdep: use/auto-resize use/uboot use/arm-rpi4 +efi
 	@$(call add,THE_LISTS,uboot)
 
-mixin/vm-archdep-x11: mixin/vm-archdep use/vmguest/kvm/x11; @:
+mixin/vm-archdep-x11: mixin/vm-archdep +vmguest; @:
+mixin/vm-archdep-wayland: mixin/vm-archdep +vmguest-wayland; @:
 
 mixin/uboot-extlinux: use/uboot
 	@$(call set,EFI_BOOTLOADER,)
