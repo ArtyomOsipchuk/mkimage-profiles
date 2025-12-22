@@ -15,6 +15,6 @@ openssl-engine_pkcs11
 
 gnutls-utils
 
-librtpkcs11ecp
-libjcpkcs11
-isbc-pkcs11
+librtpkcs11ecp@!riscv64,loongarch64
+libjcpkcs11@!riscv64,loongarch64
+isbc-pkcs11@!riscv64,loongarch64
