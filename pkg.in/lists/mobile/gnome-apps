@@ -1,7 +1,6 @@
 # base applications
 gnome-control-center
 gnome-software
-gnome-software-plugin-flatpak
 foldy
 
 # terminal
