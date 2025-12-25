@@ -1,7 +1,7 @@
 # virtual machines
 ifeq (vm,$(IMAGE_CLASS))
 
-vm/mate-a11y: vm/systemd mixin/regular-vm-base mixin/regular-x11 \
+vm/mate-a11y: vm/systemd mixin/regular-vm-base \
 	mixin/regular-desktop mixin/mate-base mixin/vm-archdep-x11 \
 	use/deflogin/privileges use/deflogin/xgrp use/deflogin/hardware \
 	use/deflogin/root use/x11-autologin use/l10n/ru_RU use/x11/lightdm/gtk \
