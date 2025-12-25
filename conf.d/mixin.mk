@@ -208,11 +208,6 @@ mixin/office: use/fonts/ttf/google use/fonts/ttf/xo
 	@$(call add,THE_LISTS,$(call tags,desktop && (cups || office)))
 	@$(call add,THE_PACKAGES,apt-indicator)
 
-# NB: never ever use/syslinux/ui/gfxboot here as gfxboot mangles
-#     kernel cmdline resulting in method:disk instead of method:cdrom
-#     which will change propagator's behaviour to probe additional
-#     filesystems (ro but no loop) thus potentially writing to
-#     an unrecovered filesystem's journal
 mixin/regular-rescue: use/rescue use/isohybrid use/luks use/branding \
 	use/syslinux/ui/menu use/syslinux/timeout/600 \
 	use/rescue/.base use/syslinux/sdab.cfg use/grub/sdab_bios.cfg \

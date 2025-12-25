@@ -9,8 +9,7 @@ ifneq (,$(filter-out e2k%,$(ARCH)))
 endif
 
 # NB: not every distro might have all the branding of its own
-use/branding/full: use/branding/notes use/syslinux/ui/gfxboot \
-	use/grub/ui/gfxboot
+use/branding/full: use/branding/notes
 	@$(call add,THE_BRANDING,alterator graphics)
 	@$(call add,THE_BRANDING,indexhtml slideshow)
 ifeq (,$(filter-out i586 x86_64 aarch64,$(ARCH)))

@@ -17,12 +17,6 @@ endif
 # UI is overwritten
 use/syslinux/ui/%: use/syslinux
 	@$(call set,SYSLINUX_UI,$*)
-ifeq (,$(filter-out i586 x86_64,$(ARCH)))
-	@if [ "$*" == gfxboot ]; then \
-		$(call add,STAGE1_PACKAGES,gfxboot); \
-		$(call add,STAGE1_BRANDING,bootloader); \
-	fi
-endif
 
 # modules and config snippets just add up
 use/syslinux/%.com use/syslinux/%.c32: use/syslinux

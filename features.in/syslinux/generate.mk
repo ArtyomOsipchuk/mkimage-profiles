@@ -98,9 +98,7 @@ bootargs: clean
 	@sed -i "s,@LIVE_NAME@,$(LIVE_NAME),g" $(DSTCFGS)
 
 clean: copy
-	@if [ "$(SYSLINUX_UI)" = gfxboot ]; then \
-		sed -i "s/\^//;/menu label /d" $(DSTCFGS); \
-	fi
+	@
 
 copy: prep
 	@cp -pLt $(DSTDIR) -- $(sort \
