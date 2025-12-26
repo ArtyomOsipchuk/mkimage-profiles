@@ -12,4 +12,10 @@ vm/mate-a11y: vm/systemd mixin/regular-vm-base \
 	@$(call add,THE_LISTS,a11y)
 	@$(call add,THE_PACKAGES,theme-mate-windows)
 
+vm/console-a11y: vm/systemd mixin/regular-vm-base use/l10n/ru_RU +vmguest \
+	use/deflogin/root use/sound +nm; @:
+	@$(call add,BASE_PACKAGES,espeakup)
+	@$(call add,USERS,altlinux:altlinux:1:1)
+	@$(call add,BASE_BOOTARGS,quiet)
+
 endif
