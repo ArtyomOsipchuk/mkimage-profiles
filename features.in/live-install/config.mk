@@ -10,7 +10,7 @@ use/live-install: use/live use/metadata use/repo/main \
 	@$(call set,STAGE2_LIVE_INST,yes)
 	@$(call try,MAIN_KERNEL_SAVE,no)
 	@$(call xport,MAIN_KERNEL_SAVE)
-	@$(call try,LIVE_INSTALLER,installer-common-stage2)
+	@$(call try,LIVE_INSTALLER,installer-common-stage2 xterm)
 	@$(call add,INSTALL2_PACKAGES,$$(LIVE_INSTALLER))
 	@$(call add,THE_PACKAGES,alterator-wizardface)
 	@$(call add,THE_LISTS,$(call tags,basesystem && !alterator))
@@ -19,7 +19,6 @@ use/live-install: use/live use/metadata use/repo/main \
 	@$(call add,BASE_PACKAGES,make-initrd-luks)
 	@$(call add,INSTALL2_PACKAGES,$$(LIVE_INSTALL_PKG))
 	@$(call add,THE_PACKAGES,alterator-postinstall) # for auto install
-	@$(call add,INSTALL2_PACKAGES,xterm) # for vnc support
 	@$(call try,INSTALLER,regular)	# might be replaced later
 	@$(call add,INSTALL2_PACKAGES,installer-distro-$$(INSTALLER)-stage2)
 	@$(call add,INSTALL2_PACKAGES,branding-$$(BRANDING)-alterator)
@@ -42,7 +41,7 @@ use/live-install/pkg: use/live-install
 
 ifneq (,$(filter-out p10,$(BRANCH)))
 use/live-install/wayland: use/live-install
-	@$(call set,LIVE_INSTALLER,installer-common-x11-stage2 installer-common-wayland-stage2)
+	@$(call set,LIVE_INSTALLER,installer-common-x11-stage2 installer-common-wayland-stage2 xterm)
 	@$(call add,STAGE2_BOOTARGS,wayland)
 
 use/live-install/wayland/only: use/live-install/wayland
