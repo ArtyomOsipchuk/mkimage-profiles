@@ -150,6 +150,7 @@ ifneq (,$(filter-out p10,$(BRANCH)))
 	@$(call add,THE_PACKAGES,papers)
 	@$(call add,THE_PACKAGES,userpasswd-gnome)
 	@$(call set,THE_IMAGEWRITER,impression)
+	@$(call add,THE_PACKAGES,dconf-profile-gdm)
 else
 	@$(call add,PINNED_PACKAGES,gnome-terminal:Required)
 	@$(call add,THE_PACKAGES,gnome-terminal)
