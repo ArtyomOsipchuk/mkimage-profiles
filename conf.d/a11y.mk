@@ -14,7 +14,8 @@ vm/mate-a11y: vm/systemd mixin/regular-vm-base \
 
 vm/console-a11y: vm/systemd mixin/regular-vm-base use/l10n/ru_RU +vmguest \
 	use/deflogin/root use/sound +nm; @:
-	@$(call add,BASE_PACKAGES,espeakup)
+	@$(call add,BASE_PACKAGES,espeakup espeak-ng)
+	@$(call add,DEFAULT_SERVICES_ENABLE,espeakup)
 	@$(call add,USERS,altlinux:altlinux:1:1)
 	@$(call add,BASE_BOOTARGS,quiet)
 
