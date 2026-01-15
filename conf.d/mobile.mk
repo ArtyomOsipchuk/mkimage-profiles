@@ -31,6 +31,7 @@ endif
 	@$(call add,THE_LISTS,mobile/AD)
 ifneq (sisyphus,$(BRANCH))
 	@$(call add,THE_LISTS,mobile/cups)
+	@$(call add,DEFAULT_SERVICES_ENABLE,cups.service)
 endif
 	@$(call add,THE_LISTS,tagged/base+smartcard)
 	@$(call add,THE_PACKAGES,polkit-rule-mobile)
