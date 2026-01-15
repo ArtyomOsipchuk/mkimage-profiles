@@ -29,7 +29,9 @@ endif
 	@$(call add,THE_LISTS,mobile/base)
 	@$(call add,THE_LISTS,mobile/apps)
 	@$(call add,THE_LISTS,mobile/AD)
+ifneq (sisyphus,$(BRANCH))
 	@$(call add,THE_LISTS,mobile/cups)
+endif
 	@$(call add,THE_LISTS,tagged/base+smartcard)
 	@$(call add,THE_PACKAGES,polkit-rule-mobile)
 	@$(call add,THE_PACKAGES,mesa-dri-drivers)
