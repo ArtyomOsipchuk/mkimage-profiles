@@ -24,6 +24,11 @@ all: | $(TARGET) $(GLOBAL_DEBUG) copy-lists copy-groups save_packages_to_lists g
 
 create_lists_groups:
 	@if [ -z "$(EDITION_IS_USED)" ]; then exit 0; fi; \
+	if ! type -t editions2packages metadata2directory base2list > /dev/null 2>&1; then \
+		echo "** error: scripts for working with editions are not available" >&2; \
+		echo "install the alterator-entry package, which contains" >&2; \
+		echo "editions2packages, metadata2directory, base2list" >&2; \
+		exit 1; fi; \
 	if [ "$(CHECK)" = 0 ]; then exit 0; fi; \
 	APTBOX=$(BUILDDIR)/.work/pkgbox/aptbox; \
 	RPMFILES=`$$APTBOX/apt-get install -d -y --print-uris $(EDITION_PACKAGES) 2>&1 | grep 'file:' \
