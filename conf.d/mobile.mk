@@ -29,6 +29,7 @@ endif
 	@$(call add,THE_LISTS,mobile/base)
 	@$(call add,THE_LISTS,mobile/apps)
 	@$(call add,THE_LISTS,mobile/AD)
+	@$(call add,THE_LISTS,mobile/cups)
 	@$(call add,THE_LISTS,tagged/base+smartcard)
 	@$(call add,THE_PACKAGES,polkit-rule-mobile)
 	@$(call add,THE_PACKAGES,mesa-dri-drivers)
