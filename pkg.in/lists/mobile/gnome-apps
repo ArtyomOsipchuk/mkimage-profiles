@@ -10,8 +10,8 @@ gnome-console
 nautilus
 
 # web
-epiphany
-dconf-epiphany-mobile-user-agent
+#epiphany
+#dconf-epiphany-mobile-user-agent
 
 # mail
 geary

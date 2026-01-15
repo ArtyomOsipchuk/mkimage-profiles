@@ -32,6 +32,8 @@ endif
 ifneq (sisyphus,$(BRANCH))
 	@$(call add,THE_LISTS,mobile/cups)
 	@$(call add,DEFAULT_SERVICES_ENABLE,cups.service)
+else
+	@$(call add,THE_PACKAGES,epiphany dconf-epiphany-mobile-user-agent)
 endif
 	@$(call add,THE_LISTS,tagged/base+smartcard)
 	@$(call add,THE_PACKAGES,polkit-rule-mobile)
