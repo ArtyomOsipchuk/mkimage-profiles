@@ -11,6 +11,7 @@ mixin/mobile-base: use/ntp/chrony use/repo use/branding/notes use/x11-autostart 
 	use/drm use/firmware mixin/ttyescape +plymouth +pipewire \
 	use/services/bluetooth-enable use/luks/touchscreen \
 	use/browser/firefox use/wireless
+	@$(call try,VM_SIZE,9663676416)
 ifeq (sisyphus,$(BRANCH))
 	@$(call set,BRANDING,alt-mobile-sisyphus)
 	@$(call set,VM_FSTYPE,f2fs)
