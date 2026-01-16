@@ -19,6 +19,7 @@ ifeq (sisyphus,$(BRANCH))
 	@$(call add,USERS,altlinux:271828:1:1)
 else
 	@$(call set,BRANDING,alt-mobile)
+	@$(call add,THE_PACKAGES,docs-alt-mobile)
 ifneq (,$(filter-out riscv64,$(ARCH)))
 	@$(call set,FX_FLAVOUR,-esr)
 endif
