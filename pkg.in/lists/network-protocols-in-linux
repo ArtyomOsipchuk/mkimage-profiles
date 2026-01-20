@@ -1,3 +1,5 @@
+livecd-netloom
+livecd-virtualbox-fetch-cdrom
 jot
 rs
 openssl
@@ -63,7 +65,6 @@ agetty
 alt-os-release
 openssh-server
 diffutils
-libprocps
 libgpm
 vim-console
 pciutils
