@@ -10,6 +10,8 @@ vm/protocols-jeos: vm/.base-grub use/init/systemd \
 ifneq (,$(filter-out i586 x86_64,$(ARCH)))
 	@$(call add,DEFAULT_SERVICES_DISABLE,multipathd)
 endif
+	@$(call add,DEFAULT_SERVICES_ENABLE,livecd-virtualbox-fetch-cdrom)
+	@$(call add,DEFAULT_SERVICES_ENABLE,livecd-netloom)
 	@$(call add,DEFAULT_SERVICES_ENABLE,sshd)
 	@$(call add,DEFAULT_SERVICES_ENABLE,sethostname)
 	@$(call add,DEFAULT_SERVICES_ENABLE,getty@tty1)
