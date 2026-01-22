@@ -89,6 +89,11 @@ use/x11/glvnd: use/x11
 use/x11/nvidia:: use/x11/nouveau; @:
 use/x11/nvidia/optimus:: use/x11/nvidia; @:
 
+use/x11/nvidia/biarch: use/x11/nvidia; @:
+ifeq (,$(filter-out x86_64,$(ARCH)))
+	@$(call add,THE_PACKAGES_REGEXP,i586-nvidia_glx_.*)
+endif
+
 ifeq (,$(filter-out i586 x86_64 aarch64,$(ARCH)))
 use/x11/nvidia:: use/drm/nvidia
 	@$(call set,NVIDIA_PACKAGES,nvidia-settings)
