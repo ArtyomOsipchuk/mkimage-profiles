@@ -43,7 +43,7 @@ endif
 distro/.regular-desktop-base: distro/.regular-base use/branding/full \
 	mixin/regular-desktop mixin/regular-desktop-install +wireless \
 	use/live/rw use/live/x11 use/live/repo use/vmguest/kvm \
-	use/live/suspend use/live/rescue
+	use/live/suspend use/grub/ui/gfxboot use/live/rescue
 	@$(call add,THE_BRANDING,bootloader)
 	@$(call add,LIVE_PACKAGES,livecd-rescue-base-utils)
 	@$(call set,GRUB_DEFAULT,live)
