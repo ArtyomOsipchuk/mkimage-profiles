@@ -232,3 +232,9 @@ mixin/opennebula-context:
 	@$(call add,DEFAULT_SERVICES_ENABLE,one-context-local one-context)
 
 mixin/icewm: use/x11/lightdm/gtk +icewm; @:
+
+### a11y
+mixin/a11y:
+	@$(call add,THE_PACKAGES,orca)
+
+mixin/a11y-install: mixin/a11y use/grub/live-install-a11y.cfg; @:
