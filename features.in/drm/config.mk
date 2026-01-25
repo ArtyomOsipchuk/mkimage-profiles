@@ -19,9 +19,6 @@ use/drm/nvidia/optimus:: use/drm/nvidia; @:
 ifeq (,$(filter-out i586 x86_64 aarch64,$(ARCH)))
 use/drm/nvidia::
 	@$(call set,NVIDIA_KMODULES,nvidia)
-
-use/drm/nvidia/optimus::
-	@$(call add,NVIDIA_KMODULES,bbswitch)
 endif
 
 use/drm/full: use/drm/ancient use/drm/radeon \

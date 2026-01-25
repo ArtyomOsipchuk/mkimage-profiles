@@ -93,9 +93,6 @@ ifeq (,$(filter-out i586 x86_64 aarch64,$(ARCH)))
 use/x11/nvidia:: use/drm/nvidia
 	@$(call set,NVIDIA_PACKAGES,nvidia-settings)
 	@$(call add,RESCUE_BOOTARGS,module_blacklist=nvidia)
-
-use/x11/nvidia/optimus:: use/drm/nvidia/optimus
-	@$(call add,NVIDIA_PACKAGES,bumblebee)
 endif
 
 use/x11/wacom: use/x11; @:
