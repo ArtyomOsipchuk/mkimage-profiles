@@ -6,7 +6,6 @@ f=$2
 [ -n "$f" ] || exit 0
 
 metapkgs="$(grep -e @META "$f" | grep -v '^#')"
-[ -n "metapkgs" ] || exit 0
 
 for metapkg in $metapkgs; do
 	metapkg=${metapkg%@META}
@@ -27,5 +26,25 @@ done
 
 # Cleanup not available metapackages
 sed -i "/@META/d" "$f"
+
+# add i586 nvidia drivers
+[ "$ARCH" = x86_64 ] || exit 0
+nvidia_kmodules="$(grep ^kernel-modules-nvidia "$f")"
+[ -n "$nvidia_kmodules" ] || exit 0
+t="`mktemp`"
+for i in "$nvidia_kmodules"; do
+	LANG=C "$APT_CACHE" depends "$i"| grep 'Depends:' | cut -f4 -d ' ' |
+		grep -v '<' |grep nvidia_glx_[1-9] |sed 's/^/i586-/;s/$/.32bit/' > "$t"
+done
+if [ -s "$t" ]; then
+	for i in $(cat "$t"| sort -u); do
+		if ! "$APT_CACHE" show "$i" > /dev/null 2>&1; then
+			echo "** warning: Package '$i' not available!!!" 1>&2
+			continue
+		fi
+		echo "$i" >> "$f"
+	done
+fi
+rm -f "$t"
 
 exit 0
