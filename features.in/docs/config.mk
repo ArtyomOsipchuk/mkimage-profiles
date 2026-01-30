@@ -13,7 +13,7 @@ use/docs/indexhtml: use/docs use/branding
 
 use/docs/manual: use/docs/indexhtml
 	@$(call xport,DOCS)
-	@$(call add,THE_PACKAGES,docs-$$(DOCS))
+	@$(call add,THE_PACKAGES,$$(foreach var,$$(DOCS),docs-$$(var)))
 
 ifneq (,$(filter-out e2k%,$(ARCH)))
 use/docs/license: use/docs use/branding/notes
