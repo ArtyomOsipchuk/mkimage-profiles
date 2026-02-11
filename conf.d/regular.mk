@@ -123,7 +123,7 @@ distro/regular-gnome: distro/.regular-desktop mixin/regular-gnome \
 
 distro/regular-lxqt: distro/.regular-desktop mixin/regular-lxqt +plymouth; @:
 
-distro/regular-kde: distro/.regular-desktop mixin/a11y +nm \
+distro/regular-kde: distro/.regular-desktop mixin/a11y-install +nm \
 	mixin/regular-kde +plymouth; @:
 
 distro/regular-rescue: distro/.regular-base mixin/regular-rescue use/rescue/rw \
