@@ -141,6 +141,9 @@ mixin/regular-cinnamon: use/x11/cinnamon use/x11/xorg use/x11/lightdm/slick \
 mixin/regular-gnome: use/x11/gnome use/fonts/ttf/redhat +nm-gtk4 \
 	+vmguest-wayland
 	@$(call add,BASE_PACKAGES,gnome-software)
+ifeq (,$(filter-out sisyphus,$(BRANCH)))
+	@$(call add,BASE_PACKAGES,gnome-software-plugin-packagekit)
+endif
 	@$(call add,BASE_PACKAGES,gnome-tour)
 ifneq (,$(filter-out p10,$(BRANCH)))
 	@$(call add,THE_PACKAGES,gnome-extension-manager)
