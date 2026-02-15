@@ -25,7 +25,7 @@ else
 				else
 					VBoxManage createvm --name "$Name" --register
 				fi
-				VBoxManage modifyvm "$Name" --memory $Memory --vram $Vram --groups "/LinuxNetwork2025" ‑‑graphicscontroller=qemuramfb
+				VBoxManage modifyvm "$Name" --memory $Memory --vram $Vram --groups "/LinuxNetwork$(date +"%Y")" ‑‑graphicscontroller=qemuramfb
 				if [ "$3" = "mac" ]; then
 					VBoxManage modifyvm "$Name" ‑‑graphicscontroller=qemuramfb
 				else
