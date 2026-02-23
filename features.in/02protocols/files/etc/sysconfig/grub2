@@ -42,7 +42,7 @@ GRUB_CMDLINE_LINUX_DEFAULT='panic=30 splash net.ifnames=0 biosdevname=0 ipv6.dis
 GRUB_CMDLINE_LINUX='vga=normal net.ifnames=0 biosdevname=0 ipv6.disable=1 console=tty0 console=ttyS0,9600'
 GRUB_TERMINAL_OUTPUT='gfxterm serial'
 GRUB_TERMINAL_INPUT='console serial'
-GRUB_SERIAL_COMMAND="serial --unit=0 --speed=115200"
+#GRUB_SERIAL_COMMAND="serial --unit=0 --speed=115200"
 GRUB_GFXMODE='auto'
 GRUB_DEFAULT='saved'
 GRUB_SAVEDEFAULT=true
@@ -61,5 +61,4 @@ GRUB_DISTRIBUTOR="ALT Linux"
 GRUB_BOOTLOADER_ID="altlinux"
 GRUB_TERMINAL_OUTPUT='serial console'
 GRUB_TERMINAL_INPUT='serial console'
-GRUB_SERIAL_COMMAND='serial --unit=0 --speed=115200'
-GRUB_TIMEOUT=30
+# doubled command GRUB_SERIAL_COMMAND='serial --unit=0 --speed=115200'
