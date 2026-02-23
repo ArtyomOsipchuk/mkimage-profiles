@@ -3,7 +3,7 @@
 
 
 # make ROOTPW=root vm/protocols-jeos.vdi BRANCH=sisyphus VM_SIZE=4294967296
-vm/protocols-jeos: vm/.base-grub use/init/systemd \
+vm/protocolsIPv6-jeos: vm/.base-grub use/init/systemd \
 	use/deflogin use/02protocols \
 	use/services/lvm2-disable \
 	use/tty/S0
