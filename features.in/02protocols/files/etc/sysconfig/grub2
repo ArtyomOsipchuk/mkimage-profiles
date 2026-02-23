@@ -62,4 +62,3 @@ GRUB_BOOTLOADER_ID="altlinux"
 GRUB_TERMINAL_OUTPUT='serial console'
 GRUB_TERMINAL_INPUT='serial console'
 GRUB_SERIAL_COMMAND='serial --unit=0 --speed=115200'
-GRUB_TIMEOUT=30
