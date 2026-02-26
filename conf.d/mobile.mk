@@ -66,6 +66,9 @@ ifeq (sisyphus,$(BRANCH))
 else
 	@$(call add,DEFAULT_SERVICES_ENABLE,phrog)
 	@$(call add,THE_PACKAGES,phrog ready-set-on-phrog)
+ifeq (aarch64,$(ARCH))
+	@$(call add,THE_PACKAGES,phrog-gsk-renderer-gl)
+endif
 endif
 	@$(call set,DEFAULT_SESSION,phosh)
 ifeq (sisyphus,$(BRANCH))
