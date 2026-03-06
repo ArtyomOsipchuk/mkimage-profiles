@@ -27,6 +27,7 @@ endif
 endif
 	@$(call try,CAMERA,snapshot)
 	@$(call add,THE_PACKAGES,$$(CAMERA))
+	@$(call add,THE_PACKAGES,udev-rules-goodix-touchpad)
 	@$(call add,THE_BRANDING,graphics notes indexhtml)
 	@$(call add,THE_LISTS,mobile/base)
 	@$(call add,THE_LISTS,mobile/apps)
@@ -110,7 +111,6 @@ endif
 	@$(call set,CAMERA,megapixels)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,eg25-manager.service)
 	@$(call add,THE_PACKAGES,alsa-ucm-conf-pinephone-pro-workaround)
-	@$(call add,THE_PACKAGES,udev-rules-goodix-touchpad)
 
 ifeq (sisyphus,$(BRANCH))
 mixin/mobile-lt11i: mixin/uboot-extlinux use/tty/S0
@@ -132,7 +132,6 @@ endif
 	@$(call add,THE_PACKAGES,settings-alsa-sof-force)
 	@$(call add,THE_PACKAGES,rg552-hw-control)
 	@$(call add,THE_PACKAGES,rg552-fancontrol-quick-setting)
-	@$(call add,THE_PACKAGES,udev-rules-goodix-touchpad)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,rg552-fancontrol.service)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,rg552-wifi.service)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,arc-d-touchscreen.service)
