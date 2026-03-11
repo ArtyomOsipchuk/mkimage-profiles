@@ -27,7 +27,7 @@ endif
 endif
 	@$(call try,CAMERA,snapshot)
 	@$(call add,THE_PACKAGES,$$(CAMERA))
-	@$(call add,THE_PACKAGES,udev-rules-goodix-touchpad)
+	@$(call add,THE_PACKAGES,udev-rules-goodix-touchscreen)
 	@$(call add,THE_BRANDING,graphics notes indexhtml)
 	@$(call add,THE_LISTS,mobile/base)
 	@$(call add,THE_LISTS,mobile/apps)
