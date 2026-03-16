@@ -402,10 +402,17 @@ grub-efi)
 	mkdir -p "$ROOTFS"/boot/efi/EFI/BOOT
 	case "$ARCH" in
 		x86_64)
-			chroot "$ROOTFS" grub-install --target=i386-efi --recheck \
-			  --removable --uefi-secure-boot
-			chroot "$ROOTFS" grub-install --target=x86_64-efi --recheck \
-			  --removable --uefi-secure-boot
+			if [ -x "$ROOTFS"/usr/sbin/grub-efi-install ]; then
+			  chroot "$ROOTFS" grub-efi-install --mode secure-boot \
+			    --target i386 --removable
+			  chroot "$ROOTFS" grub-efi-install --mode secure-boot \
+			    --target x86_64 --removable
+			else
+			  chroot "$ROOTFS" grub-install --target=i386-efi \
+			    --recheck --removable --uefi-secure-boot
+			  chroot "$ROOTFS" grub-install --target=x86_64-efi \
+			    --recheck --removable --uefi-secure-boot
+			fi
 			sed -i 's/initrd16/initrd/g' "$ROOTFS/boot/grub/grub.cfg"
 			sed -i 's/linux16/linux/g' "$ROOTFS/boot/grub/grub.cfg"
 			[ -n "$BIOSPART" ] &&
