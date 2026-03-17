@@ -28,7 +28,7 @@ distro/.regular-base: distro/.regular-bare use/vmguest use/memtest \
 	use/luks use/volumes/regular; @:
 
 # Network install
-ifeq (,$(filter-out i586 x86_64 aarch64 riscv64 loongarch64,$(ARCH)))
+ifneq (,$(grub_arch))
 distro/regular-net-install: distro/grub-net-install use/grub/safe-mode.cfg use/tty; @:
 ifeq (sisyphus,$(BRANCH))
 ifeq (,$(filter-out i586 x86_64,$(ARCH)))
