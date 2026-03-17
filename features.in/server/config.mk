@@ -35,7 +35,9 @@ use/server/groups/services: use/server
 	@$(call add,MAIN_GROUPS,server/mariadb server/pgsql)
 	@$(call add,MAIN_GROUPS,server/php8.2)
 	@$(call add,MAIN_GROUPS,server/ftp server/rsync)
+ifneq (,$(virt_arch))
 	@$(call add,MAIN_GROUPS,server/kvm)
+endif
 	@$(call add,DEFAULT_SERVICES_ENABLE,libvirtd)
 	@$(call add,DEFAULT_SERVICES_DISABLE,php8.2-fpm)
 
