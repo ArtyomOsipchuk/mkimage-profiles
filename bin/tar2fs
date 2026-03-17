@@ -404,9 +404,9 @@ grub-efi)
 		x86_64)
 			if [ -x "$ROOTFS"/usr/sbin/grub-efi-install ]; then
 			  chroot "$ROOTFS" grub-efi-install --mode secure-boot \
-			    --target i386 --removable
+			    --target i386 --removable --verbose
 			  chroot "$ROOTFS" grub-efi-install --mode secure-boot \
-			    --target x86_64 --removable
+			    --target x86_64 --removable --verbose
 			else
 			  chroot "$ROOTFS" grub-install --target=i386-efi \
 			    --recheck --removable --uefi-secure-boot
