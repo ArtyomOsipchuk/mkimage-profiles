@@ -7,7 +7,7 @@ endif
 
 mixin/mobile-base: use/ntp/chrony use/repo use/branding/notes use/x11-autostart \
 	use/deflogin/privileges use/deflogin/xgrp use/deflogin/hardware \
-	use/l10n/ru_RU use/xdg-user-dirs \
+	use/l10n use/xdg-user-dirs \
 	use/drm use/firmware mixin/ttyescape +plymouth +pipewire \
 	use/services/bluetooth-enable use/luks/touchscreen \
 	use/browser/firefox use/wireless
@@ -18,6 +18,9 @@ ifeq (sisyphus,$(BRANCH))
 	@$(call add,THE_PACKAGES,gnome-software-plugin-flatpak)
 	@$(call try,ROOTPW,altlinux)
 	@$(call add,USERS,altlinux:271828:1:1)
+	@$(call add,LOCALES,ru_RU)
+	@$(call set,LOCALE,ru_RU)
+	@$(call add,XKB_KEYMAPS,ru)
 else
 	@$(call set,BRANDING,alt-mobile)
 	@$(call add,THE_PACKAGES,docs-alt-mobile)
