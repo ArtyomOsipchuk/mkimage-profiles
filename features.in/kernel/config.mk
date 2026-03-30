@@ -7,9 +7,6 @@ else
 ifeq (,$(filter-out riscv64,$(ARCH)))
 	@$(call try,KFLAVOURS,un-def)
 else
-ifeq (,$(filter-out loongarch64,$(ARCH)))
-	@$(call try,KFLAVOURS,6.12)
-else
 ifeq (,$(filter-out sisyphus,$(BRANCH)))
 	@$(call try,KFLAVOURS,6.18)
 else
@@ -17,7 +14,6 @@ ifeq (,$(filter-out p11 c11% c10%,$(BRANCH)))
 	@$(call try,KFLAVOURS,6.12)
 else
 	@$(call try,KFLAVOURS,un-def)
-endif
 endif
 endif
 endif
