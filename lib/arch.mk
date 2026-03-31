@@ -6,7 +6,9 @@ virt_arch = $(filter $(ARCH_VIRT),$(filter-out $(ARCH_NOVM),$(ARCH)))
 # ditto for grub
 ARCH_GRUB = i586 x86_64 aarch64 riscv64 loongarch64
 grub_arch = $(filter $(ARCH_GRUB),$(ARCH))
+export grub_arch
 
 # UEFI
 ARCH_EFI = x86_64 aarch64 riscv64 loongarch64
 efi_arch = $(filter $(ARCH_EFI),$(ARCH))
+export efi_arch
