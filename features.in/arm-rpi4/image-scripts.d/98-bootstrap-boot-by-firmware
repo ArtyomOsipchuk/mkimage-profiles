@@ -65,13 +65,17 @@ kernel=uboot-rpi_4.bin
 #dtoverlay=vc4-fkms-v3d
 #max_framebuffers=2
 
+[pi5]
+#dtoverlay=vc4-kms-v3d-pi5
+#max_framebuffers=2
+
 [all]
 EOF
 
 # Enable bootloading without u-boot
 if [ -n "${GLOBAL_RPI_NOUBOOT-}" ]; then
 	rpi4-boot-nouboot $kflavour
-	sed -i '/#dtoverlay=vc4-fkms-v3d/s/#//' /boot/efi/config.txt
+	sed -i '/#dtoverlay=vc4/s/#//' /boot/efi/config.txt
 fi
 
 exit 0
