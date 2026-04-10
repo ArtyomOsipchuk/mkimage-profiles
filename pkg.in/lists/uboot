@@ -4,4 +4,5 @@ u-boot-meson@aarch64
 u-boot-sunxi@ARM
 u-boot-rockchip@aarch64
 u-boot-sifive@riscv64
+u-boot-starfive@riscv64
 u-boot-sunxi-riscv@riscv64
