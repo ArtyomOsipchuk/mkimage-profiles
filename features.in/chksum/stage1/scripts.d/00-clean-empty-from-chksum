@@ -1,3 +1,0 @@
-#!/bin/sh
-
-rm /.image/chksum/files/chksum/.empty
