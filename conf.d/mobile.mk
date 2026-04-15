@@ -139,8 +139,10 @@ endif
 	@$(call add,THE_PACKAGES,settings-alsa-sof-force)
 	@$(call add,THE_PACKAGES,rg552-hw-control)
 	@$(call add,THE_PACKAGES,rg552-fancontrol-quick-setting)
+	@$(call add,THE_PACKAGES,gptokeyb-handheld-control)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,rg552-fancontrol.service)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,rg552-wifi.service)
+	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,gptokeyb.service)
 
 vm/alt-mobile-phosh-pine: vm/.phosh mixin/mobile-pine; @:
 vm/alt-mobile-phosh-lt11i: vm/.phosh mixin/mobile-lt11i; @:
