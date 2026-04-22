@@ -38,6 +38,7 @@ VBoxManage modifyvm "$Name" --nic1 nat --nictype1 Am79C970A
 VBoxManage modifyvm "$Name" --nic2 null --nicpromisc2 allow-all
 VBoxManage modifyvm "$Name" --nic3 null --nicpromisc3 allow-all
 VBoxManage modifyvm "$Name" --nic4 null --nicpromisc4 allow-all
+VBoxManage modifyvm "$Name" --audio none
 # VBoxManage modifyvm "$Name" --nat-pf1 "guestssh,tcp,,2222,,22"
 echo "Пробрасываем соединение через COM-порт"
 VBoxManage modifyvm "$Name" --uartmode1 tcpserver 2325 --uart1=0x03f8 4

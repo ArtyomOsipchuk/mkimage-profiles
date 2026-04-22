@@ -3,15 +3,13 @@
 
 
 # make ROOTPW=root vm/protocols-jeos.vdi BRANCH=sisyphus VM_SIZE=4294967296
-vm/protocols-jeos: vm/.base-grub use/init/systemd \
+vm/regular-protocols-jeos: vm/.base-grub use/init/systemd \
 	use/deflogin use/02protocols \
 	use/services/lvm2-disable \
 	use/tty/S0
 ifneq (,$(filter-out i586 x86_64,$(ARCH)))
 	@$(call add,DEFAULT_SERVICES_DISABLE,multipathd)
 endif
-	@$(call add,DEFAULT_SERVICES_ENABLE,livecd-virtualbox-fetch-cdrom)
-	@$(call add,DEFAULT_SERVICES_ENABLE,livecd-netloom)
 	@$(call add,DEFAULT_SERVICES_ENABLE,sshd)
 	@$(call add,DEFAULT_SERVICES_ENABLE,sethostname)
 	@$(call add,DEFAULT_SERVICES_ENABLE,getty@tty1)
