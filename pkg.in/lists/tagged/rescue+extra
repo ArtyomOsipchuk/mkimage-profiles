@@ -93,7 +93,6 @@ squashfs-tools
 bindfs
 dosfstools
 exfatprogs
-fatback
 fatresize
 fuse-chunkfs
 fuse-ciopfs
