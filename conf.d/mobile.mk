@@ -73,6 +73,7 @@ mixin/phosh: use/services +nm-gtk4 +nm-native
 	@$(call add,THE_LISTS,mobile/gnome-apps)
 ifeq (sisyphus,$(BRANCH))
 	@$(call add,DEFAULT_SERVICES_ENABLE,phosh)
+	@$(call add,THE_PACKAGES,tuner-mobile-tweaks)
 else
 	@$(call add,DEFAULT_SERVICES_ENABLE,phrog)
 	@$(call add,THE_PACKAGES,phrog ready-set-on-phrog)
