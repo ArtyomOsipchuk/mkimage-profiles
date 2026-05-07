@@ -105,6 +105,7 @@ vm/.sway: vm/systemd mixin/mobile-base mixin/sway +systemd \
 
 vm/alt-mobile-phosh-tablet-def: vm/.phosh-base mixin/mobile-def
 	@$(call add,THE_PACKAGES,udev-rules-da280-accelerometer)
+	@$(call add,THE_PACKAGES,wireplumber-config-MIG-cameras)
 
 vm/alt-mobile-phosh-def: vm/.phosh mixin/mobile-def; @:
 
