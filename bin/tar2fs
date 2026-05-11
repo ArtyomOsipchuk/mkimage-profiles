@@ -324,16 +324,16 @@ fi
 
 # mount and populate it
 mkdir -pm755 "$ROOTFS"
-mount "$LOOPROOT" "$ROOTFS"
+mount -t "$ROOTFSTYPE" "$LOOPROOT" "$ROOTFS"
 
 if [ -n "$BOOTPART" ]; then
 	mkdir -pm700 "$BOOTFS"
-	mount "$LOOPBOOT" "$BOOTFS"
+	mount -t "$BOOTFSTYPE" "$LOOPBOOT" "$BOOTFS"
 fi
 
 if [ -n "$EFIPART" ]; then
 	mkdir -pm751 "$EFIPARTFS"
-	mount "$LOOPEFI" "$EFIPARTFS"
+	mount -t vfat "$LOOPEFI" "$EFIPARTFS"
 fi
 
 tar -C "$ROOTFS" --numeric-owner -xf "$TAR"
