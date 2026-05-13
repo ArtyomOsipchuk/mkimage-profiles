@@ -18,6 +18,7 @@ ifeq (sisyphus,$(BRANCH))
 	@$(call set,VM_FSTYPE,f2fs)
 	@$(call add,THE_PACKAGES,gnome-software-plugin-flatpak)
 	@$(call add,THE_PACKAGES,gnome-software-plugin-packagekit)
+	@$(call add,THE_PACKAGES,planify)
 	@$(call try,ROOTPW,altlinux)
 	@$(call add,USERS,altlinux:271828:1:1)
 	@$(call set,LOCALE,ru_RU)
@@ -25,6 +26,7 @@ ifeq (sisyphus,$(BRANCH))
 else
 	@$(call set,BRANDING,alt-mobile)
 	@$(call add,THE_PACKAGES,docs-alt-mobile)
+	@$(call add,THE_PACKAGES,errands)
 ifneq (,$(filter-out riscv64,$(ARCH)))
 	@$(call set,FX_FLAVOUR,-esr)
 endif
@@ -71,6 +73,7 @@ mixin/phosh: use/services +nm-gtk4 +nm-native
 	@$(call add,THE_LISTS,mobile/gnome-apps)
 ifeq (sisyphus,$(BRANCH))
 	@$(call add,DEFAULT_SERVICES_ENABLE,phosh)
+	@$(call add,THE_PACKAGES,tuner-mobile-tweaks)
 else
 	@$(call add,DEFAULT_SERVICES_ENABLE,phrog)
 	@$(call add,THE_PACKAGES,phrog ready-set-on-phrog)
@@ -102,6 +105,7 @@ vm/.sway: vm/systemd mixin/mobile-base mixin/sway +systemd \
 
 vm/alt-mobile-phosh-tablet-def: vm/.phosh-base mixin/mobile-def
 	@$(call add,THE_PACKAGES,udev-rules-da280-accelerometer)
+	@$(call add,THE_PACKAGES,wireplumber-config-MIG-cameras)
 
 vm/alt-mobile-phosh-def: vm/.phosh mixin/mobile-def; @:
 
@@ -112,9 +116,9 @@ ifeq (sisyphus,$(BRANCH))
 mixin/mobile-pine: mixin/uboot-extlinux use/tty/S2
 else
 mixin/mobile-pine: mixin/uboot-extlinux
+	@$(call set,CAMERA,megapixels)
 endif
 	@$(call set,KFLAVOURS,pine)
-	@$(call set,CAMERA,megapixels)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,eg25-manager.service)
 	@$(call add,THE_PACKAGES,alsa-ucm-conf-pinephone-pro-workaround)
 

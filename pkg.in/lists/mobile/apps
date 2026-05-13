@@ -32,7 +32,6 @@ fonts-ttf-lxgw-wenkai
 
 # notes & organizers
 iotas
-errands
 
 # translation
 dialect
@@ -43,5 +42,8 @@ grim
 wl-clipboard
 wallpapers-mobile
 
-# flatpack for hub
+# flatpak for hub
 flatpak
+
+# GNSS
+satellite
