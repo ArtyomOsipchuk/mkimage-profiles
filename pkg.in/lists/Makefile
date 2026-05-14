@@ -44,7 +44,7 @@ create_lists_groups:
 	OUTDIR=$(BUILDDIR)/pkg; \
 	editions2packages --kflavours $(KFLAVOURS) --arch $(ARCH) > $$OUTDIR/lists/.alt-components; \
 	metadata2directory --kflavours $(KFLAVOURS) --arch $(ARCH) --outdir $$OUTDIR; \
-	base2list --baselists $(EDITION_BASE) --sections $(EDITION_BASE_SECTIONS) \
+	base2list --baselists $(EDITION_BASE_LSTS) --sections $(EDITION_BASE_SECTIONS) \
 		--kflavours $(KFLAVOURS) --arch $(ARCH) --outdir $$OUTDIR; \
 	rm -rf $(BUILDDIR)/pkg/editions/ $(LOG)
 
