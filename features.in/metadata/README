@@ -9,8 +9,4 @@ SYSTEM_PACKAGES, COMMON_PACKAGES, BASE_PACKAGES, BASE_LISTS,
 THE_PACKAGES, THE_LISTS и передаются инсталятору посредством
 Metadata/pkg-groups.tar (файл .base).
 
-Переменная EDITION_BASE_LSTS содержит имена файлов со списками пакетов
-для базовой системы каждой из редакций.
-Эти файлы должны быть переданы инсталятору в архиве pkg-groups.tar
-
 См. тж. фичу main.

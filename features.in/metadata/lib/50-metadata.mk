@@ -40,7 +40,7 @@ metadata-.base:
 metadata: metadata-.base
 	@mkdir -p $(METADIR); \
 	tar -C $(PKGDIR) -cvf - \
-		$(call rlist,.base $(EDITION_BASE_LSTS) $(call groups2lists)) \
+		$(call rlist,.base $(call groups2lists)) \
 		$(call rgroup,$(THE_GROUPS) $(MAIN_GROUPS)) \
 		$(call rprofile,$(THE_PROFILES)) \
 	> $(METADIR)/pkg-groups.tar
