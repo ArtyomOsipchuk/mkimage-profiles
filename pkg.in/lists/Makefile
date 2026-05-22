@@ -18,7 +18,8 @@ include $(BUILDDIR)/functions.mk
 SUFFIX := pkg/lists
 TARGET := $(BUILDDIR)/$(SUFFIX)
 
-all: | $(TARGET) $(GLOBAL_DEBUG) copy-lists copy-groups save_packages_to_lists grep-kflavours grep-metadep grep-archdep check-lists
+all: | $(TARGET) $(GLOBAL_DEBUG) copy-lists copy-groups save_packages_to_lists \
+	grep-branding grep-kflavours grep-metadep grep-archdep check-lists
 	@mp-commit "$(TARGET)" "requested $(SUFFIX) copied over"
 
 # env | grep _LISTS | sort -u | xargs -r cp -t
@@ -49,6 +50,10 @@ copy-groups: PKGDIR = ..
 copy-groups:
 	@echo $(sort $(call groups2lists)) \
 	| xargs -r -- cp --parents -at $(TARGET) -- || exit 1
+
+grep-branding:
+	@[ -z "$(BRANDING)" ] ||  \
+	sed -i "s/@BRANDING@/$(BRANDING)/" `find $(TARGET) -type f`
 
 grep-archdep:
 	@find $(TARGET) -type f \
