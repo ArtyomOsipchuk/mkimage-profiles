@@ -105,7 +105,7 @@ bootargs: clean
 		sed -i "s|@GRUB_GFXMODE@|$(GRUB_GFXMODE)|g" $(DSTCFGS); \
 	fi
 	@GRUBTHEME=$(GRUBTHEME); \
-	[ -n "$$GRUBTHEME" ] || GRUBTHEME=$$(cut -d "-" -f2 <<< $(BRANDING)); \
+	[ -n "$$GRUBTHEME" ] || GRUBTHEME=$$(echo $(BRANDING) | sed 's/^[^-]*-//'); \
 	sed -i "s,@grubtheme@,$$GRUBTHEME,g" $(DSTCFGS)
 	@sed -i "s,@initrd@,initrd," $(DSTCFGS)
 	@sed -i "s,@initrd_ext@,img," $(DSTCFGS)
