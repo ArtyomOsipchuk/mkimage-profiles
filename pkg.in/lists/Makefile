@@ -67,7 +67,7 @@ grep-metadep:
 	fi
 
 grep-kflavours:
-	@find $(TARGET) -type f \
+	@[ -z "$(KFLAVOURS)" ] || find $(TARGET) -type f \
 	| xargs -r -I __ -- kflavours-expander "$(KFLAVOURS)" __
 
 # do beforehand as foreach gets expanded before recipe execution
