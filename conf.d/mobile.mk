@@ -40,7 +40,9 @@ endif
 	@$(call add,THE_BRANDING,graphics notes indexhtml)
 	@$(call add,THE_LISTS,mobile/base)
 	@$(call add,THE_LISTS,mobile/apps)
+ifneq (,$(filter-out riscv64,$(ARCH)))
 	@$(call add,THE_LISTS,mobile/AD)
+endif
 ifneq (sisyphus,$(BRANCH))
 	@$(call add,THE_LISTS,mobile/cups)
 	@$(call add,DEFAULT_SERVICES_ENABLE,cups.service)
