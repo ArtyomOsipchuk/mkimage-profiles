@@ -1,0 +1,6 @@
+podman
+buildah
+go-containerregistry-crane
+regclient
+trivy
+zot

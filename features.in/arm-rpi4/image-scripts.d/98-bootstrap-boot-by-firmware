@@ -7,18 +7,17 @@ mkdir -p /boot/efi
 
 cp /usr/share/raspberrypi-firmware/*.{bin,dat,elf} /boot/efi/
 
-[ -f /usr/share/u-boot/rpi_3/kernel8.img ] &&
+if [ -f /usr/share/u-boot/rpi_arm64/kernel8.img ]; then
+	cp /usr/share/u-boot/rpi_arm64/kernel8.img \
+	   /boot/efi/
+else
+	[ -f /usr/share/u-boot/rpi_3/kernel8.img ] &&
 	cp /usr/share/u-boot/rpi_3/kernel8.img \
 	   /boot/efi/uboot-rpi_3.bin
-[ -f /usr/share/u-boot/rpi_3_32b/kernel7.img ] &&
-	cp /usr/share/u-boot/rpi_3_32b/kernel7.img \
-	   /boot/efi/uboot-rpi_3_32b.bin
-[ -f /usr/share/u-boot/rpi_4/kernel8.img ] &&
+	[ -f /usr/share/u-boot/rpi_4/kernel8.img ] &&
 	cp /usr/share/u-boot/rpi_4/kernel8.img \
 	   /boot/efi/uboot-rpi_4.bin
-[ -f /usr/share/u-boot/rpi_4_32b/kernel7.img ] &&
-	cp /usr/share/u-boot/rpi_4_32b/kernel7.img \
-	   /boot/efi/uboot-rpi_4_32b.bin
+fi
 
 # copy actualy dtb's for default kernel
 if [ -d /boot/dtb/broadcom ]; then
@@ -47,14 +46,15 @@ cp "$DTB_DIR"/bcm27*-rpi-*.dtb /boot/efi/ || :
 [ -d "$DTB_DIR"/overlays ] &&
 	cp -r "$DTB_DIR"/dtb/overlays /boot/efi/ || :
 
-[ "$GLOBAL_ARCH" = aarch64 ] && \
-	echo "arm_64bit=1" > /boot/efi/config.txt
-
 cat >> /boot/efi/config.txt <<EOF
+arm_64bit=1
 enable_uart=1
 disable_overscan=1
 dtparam=audio=on
 hdmi_ignore_edid_audio=1
+EOF
+
+[ -f /boot/efi/kernel8.img ] || cat >> /boot/efi/config.txt <<EOF
 
 [pi3]
 kernel=uboot-rpi_3.bin
@@ -65,13 +65,17 @@ kernel=uboot-rpi_4.bin
 #dtoverlay=vc4-fkms-v3d
 #max_framebuffers=2
 
+[pi5]
+#dtoverlay=vc4-kms-v3d-pi5
+#max_framebuffers=2
+
 [all]
 EOF
 
 # Enable bootloading without u-boot
 if [ -n "${GLOBAL_RPI_NOUBOOT-}" ]; then
 	rpi4-boot-nouboot $kflavour
-	sed -i '/#dtoverlay=vc4-fkms-v3d/s/#//' /boot/efi/config.txt
+	sed -i '/#dtoverlay=vc4/s/#//' /boot/efi/config.txt
 fi
 
 exit 0

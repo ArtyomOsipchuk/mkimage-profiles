@@ -121,8 +121,10 @@ $(FEATURES):
 		fi; \
 		mp-commit "$(BUILDDIR)/$$dst/" "$$feat feature: $$the part added"; \
 	done; \
-	if [ -x "generate.sh" ]; then sh generate.sh; fi; \
-	if [ -s "generate.mk" ]; then $(MAKE) -f generate.mk; fi; \
+	if [ "$(SUBPROFILES)" != main ]; then \
+		if [ -x "generate.sh" ]; then sh generate.sh; fi; \
+		if [ -s "generate.mk" ]; then $(MAKE) -f generate.mk; fi; \
+	fi; \
 	mp-commit "$(BUILDDIR)" "$$feat feature generation complete"; \
 	popd >/dev/null
 

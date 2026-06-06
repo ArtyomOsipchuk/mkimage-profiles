@@ -8,7 +8,9 @@ BOOTCHAIN_CFG := $(BUILDDIR)/stage1/files/.disk/bootchain
 
 all: debug
 	@[ -s "$(BOOTCHAIN_CFG)" ] || exit 1; \
-	if [ -n "$(META_VOL_ID)" ]; then \
+	if [ -n "$(ISO_BOOT_DISTRO_NAME)" ]; then \
+		DISTRO="$(ISO_BOOT_DISTRO_NAME)"; \
+	elif [ -n "$(META_VOL_ID)" ]; then \
 		DISTRO="$(META_VOL_ID)"; \
 	else \
 		DISTRO="$(RELNAME)"; \

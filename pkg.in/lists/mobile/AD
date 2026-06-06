@@ -7,3 +7,7 @@ gpupdate
 
 # Alt Mobile domain input tool
 mobile-auth
+
+# AD clients
+samba-client
+freeipa-client

@@ -1,5 +1,6 @@
 # various VM guest modules/tools
 +vmguest: use/vmguest/complete; @:
++vmguest-wayland: use/vmguest/dri; @:
 
 use/vmguest:
 	@$(call add_feature)
@@ -11,17 +12,17 @@ use/vmguest/dri: use/vmguest/vbox/dri use/vmguest/vmware/dri \
 use/vmguest/complete: use/vmguest/vbox/x11 use/vmguest/vmware/x11 \
 	use/vmguest/kvm/x11; @:
 
-ifeq (,$(filter-out i586 x86_64 aarch64 loongarch64 riscv64,$(ARCH)))
+ifneq (,$(virt_arch))
 # NB: only reasonable for X11-bearing images
 # see also use/install2/kvm
 use/vmguest/kvm: use/vmguest; @:
-	@$(call add,THE_PACKAGES,qemu-guest-agent)
+	@$(call add,THE_PACKAGES,qemu-guest-agent spice-vdagent)
 
 use/vmguest/kvm/dri: use/vmguest
 	@$(call add,THE_PACKAGES,xorg-dri-virtio)
 
 use/vmguest/kvm/x11: use/vmguest/kvm use/vmguest/kvm/dri
-	@$(call add,THE_PACKAGES,spice-vdagent xorg-drv-qxl xorg-drv-spiceqxl)
+	@$(call add,THE_PACKAGES,xorg-drv-qxl xorg-drv-spiceqxl)
 else
 use/vmguest/kvm: ; @:
 use/vmguest/kvm/%: ; @:

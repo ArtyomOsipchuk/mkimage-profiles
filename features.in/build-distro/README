@@ -12,5 +12,10 @@ META_SYSTEM_ID, META_PUBLISHER, META_PREPARER, META_APP_ID,
 META_VOL_ID, META_VOL_SET, META_BIBLIO, META_ABSTRACT;
 см. тж. genisoimagerc(5) из пакета genisoimage.
 
+Для управления наименованием дистрибутива, отображаемым во время загрузки образа,
+можно воспользоваться переменной ISO_BOOT_DISTRO_NAME.
+Это позволяет указывать длинные имена, не ограниченные 32 символами.
+Если не задано, используется META_VOL_ID / META_VOL_SET / RELNAME.
+
 При необходимости задать своё содержимое файла .disk/info,
 который также используется propagator, см. META_DISK_INFO.

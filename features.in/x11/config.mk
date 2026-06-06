@@ -64,7 +64,7 @@ endif
 use/x11/3d: use/x11/intel use/x11/radeon use/x11/amdgpu use/x11/nvidia; @:
 
 # somewhat lacking compared to radeon but still
-use/x11/nouveau: use/x11 use/firmware use/drm/nouveau
+use/x11/nouveau: use/x11 use/firmware/nouveau use/drm/nouveau
 	@$(call try,NVIDIA_PACKAGES,xorg-drv-nouveau)
 	@$(call add,THE_PACKAGES,$$(NVIDIA_PACKAGES))
 
@@ -93,13 +93,10 @@ ifeq (,$(filter-out i586 x86_64 aarch64,$(ARCH)))
 use/x11/nvidia:: use/drm/nvidia
 	@$(call set,NVIDIA_PACKAGES,nvidia-settings)
 	@$(call add,RESCUE_BOOTARGS,module_blacklist=nvidia)
-
-use/x11/nvidia/optimus:: use/drm/nvidia/optimus
-	@$(call add,NVIDIA_PACKAGES,bumblebee)
+	@$(call add,THE_LISTS,nvidia)
 endif
 
-use/x11/wacom: use/x11
-	@$(call add,THE_PACKAGES,xorg-drv-wacom)
+use/x11/wacom: use/x11; @:
 
 ## display managers
 use/x11/dm: use/x11-autostart use/pkgpriorities

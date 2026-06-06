@@ -1,0 +1,3 @@
+blacklist-nouveau
+nvidia-settings
+kernel-modules-nvidia-@KFLAVOUR

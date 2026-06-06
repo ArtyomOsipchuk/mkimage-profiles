@@ -93,7 +93,6 @@ squashfs-tools
 bindfs
 dosfstools
 exfatprogs
-fatback
 fatresize
 fuse-chunkfs
 fuse-ciopfs
@@ -199,7 +198,6 @@ udis86@X86
 hivex@X86,aarch64
 libldm@X86,aarch64
 libevt-tools@X86
-libevtx-tools@X86
 liblnk-tools@X86
 libpff-tools@X86
 libregf-tools@X86

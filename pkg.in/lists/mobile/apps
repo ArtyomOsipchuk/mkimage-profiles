@@ -2,8 +2,7 @@
 telegram-desktop
 
 # web
-chromium@x86_64,aarch64,riscv64
-firefox
+chromium@x86_64,aarch64
 mobile-config-firefox
 
 # Messaging app
@@ -33,7 +32,6 @@ fonts-ttf-lxgw-wenkai
 
 # notes & organizers
 iotas
-errands
 
 # translation
 dialect
@@ -43,3 +41,9 @@ grim
 
 wl-clipboard
 wallpapers-mobile
+
+# flatpak for hub
+flatpak
+
+# GNSS
+satellite

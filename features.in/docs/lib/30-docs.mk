@@ -1,8 +1,8 @@
 # step 4: build the distribution image
 
 ifneq (,$(DOCS))
-DOT_BASE += docs-$(DOCS)
-CHROOT_PACKAGES += docs-$(DOCS)
+DOT_BASE += $(foreach var,$(DOCS),docs-$(var))
+CHROOT_PACKAGES += $(foreach var,$(DOCS),docs-$(var))
 endif
 
 ifneq (,$(findstring notes,$(THE_BRANDING) $(INSTALL2_BRANDING)))

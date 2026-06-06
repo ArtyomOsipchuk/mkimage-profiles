@@ -4,6 +4,12 @@
 [ ! "$GLOBAL_OEM_NO_CLEANUP" = yes ] ||
 	sed -i 's/^REMOVE_SELF=.*/REMOVE_SELF=0/' /etc/alterator-setup/config
 
+# Enable wayland compositor
+if [ "$GLOBAL_OEM_WAYLAND" = yes ]; then
+	sed -i 's/#ALTERATOR_SETUP_WAYLAND=.*/ALTERATOR_SETUP_WAYLAND=1/' \
+		/etc/alterator-setup/config
+fi
+
 # Set alterator-setup steps
 if [ -n "$GLOBAL_OEM_STEPS" ]; then
 	rm -f /etc/alterator-setup/steps

@@ -7,6 +7,19 @@ mixin/desktop-installer: +vmguest \
 		$(call tags,(base || desktop) && (l10n || network)))
 	@$(call add,INSTALL2_PACKAGES,ntfs-3g)
 
+### installer-feature-nfs-server
+mixin/nfs-server-base: use/control
+	@$(call add,BASE_PACKAGES,rpcbind, nfs-clients)
+	@$(call add,CONTROL,rpcbind:server)
+	@$(call add,DEFAULT_SERVICES_ENABLE,rpcbind)
+	@$(call add,DEFAULT_SERVICES_ENABLE,nfslock)
+
+### installer-feature-nfs-client
+mixin/nfs-client-base: use/control
+	@$(call add,BASE_PACKAGES,rpcbind)
+	@$(call add,CONTROL,rpcbind:local)
+	@$(call add,DEFAULT_SERVICES_ENABLE,rpcbind)
+
 ### e2k.mk
 mixin/e2k-base: use/tty/S0 use/net-eth/dhcp; @:
 
@@ -40,7 +53,8 @@ mixin/e2k-mate: use/e2k/x11 use/x11/xorg use/fonts/install2 \
 mixin/vm-archdep: use/auto-resize use/uboot use/arm-rpi4 +efi
 	@$(call add,THE_LISTS,uboot)
 
-mixin/vm-archdep-x11: mixin/vm-archdep use/vmguest/kvm/x11; @:
+mixin/vm-archdep-x11: mixin/vm-archdep +vmguest; @:
+mixin/vm-archdep-wayland: mixin/vm-archdep +vmguest-wayland; @:
 
 mixin/uboot-extlinux: use/uboot
 	@$(call set,EFI_BOOTLOADER,)
@@ -61,14 +75,11 @@ endif
 
 ### regular.mk
 mixin/regular-desktop: +alsa +nm +nm-native use/x11/lightdm/gtk \
-	use/x11/xorg use/xdg-user-dirs use/l10n use/l10n/xkb/switch/alt_shift \
+	use/xdg-user-dirs use/l10n use/l10n/xkb/switch/alt_shift \
 	use/fonts/otf/adobe use/fonts/otf/mozilla use/branding/notes \
 	use/services/bluetooth-enable use/browser/chromium \
 	use/branding use/ntp/chrony use/services/lvm2-disable \
 	use/firmware/laptop
-ifeq (,$(filter-out i586 x86_64,$(ARCH)))
-	@$(call add,THE_PACKAGES,xorg-drv-vmware) # for virtualbox with VMSVGA
-endif
 	@$(call set,LOCALES,en_US ru_RU pt_BR)
 	@$(call add,THE_LISTS,task-common/system-base)
 	@$(call add,THE_LISTS,task-common/desktop-base)
@@ -109,35 +120,40 @@ mixin/regular-desktop-install: +live-installer use/live-install/desktop \
 mixin/desktop-extra:
 	@$(call add,BASE_LISTS,$(call tags,(archive || base) && extra))
 
-mixin/regular-wmaker: use/fonts/ttf/redhat use/x11/wmaker +nm-gtk
+mixin/regular-wmaker: use/fonts/ttf/redhat use/x11/wmaker +nm-gtk use/x11/xorg
 	@$(call add,LIVE_PACKAGES,installer-feature-no-xconsole-stage3)
 	@$(call add,MAIN_PACKAGES,wmgtemp wmhdaps wmxkbru xxkb)
 
-mixin/regular-icewm: use/fonts/ttf/redhat +icewm +nm-gtk
+mixin/regular-icewm: use/fonts/ttf/redhat use/x11/xorg +icewm +nm-gtk
 	@$(call add,THE_LISTS,$(call tags,regular icewm))
 	@$(call add,THE_PACKAGES,icewm-startup-networkmanager)
 	@$(call add,THE_PACKAGES,mnt)
 
-mixin/regular-gnustep: use/x11/gnustep
+mixin/regular-gnustep: use/x11/gnustep use/x11/xorg +vmguest
 	@$(call add,THE_BRANDING,graphics)
 
-mixin/regular-cinnamon: use/x11/cinnamon use/x11/lightdm/slick +nm-gtk \
-	use/fonts/ttf/google use/im use/domain-client
+mixin/regular-cinnamon: use/x11/cinnamon use/x11/xorg use/x11/lightdm/slick \
+	 +vmguest +nm-gtk \
+	use/fonts/ttf/google use/im
 	@$(call add,THE_PACKAGES,xdg-user-dirs-gtk)
 	@$(call add,THE_PACKAGES,gnome-disk-utility gnome-system-monitor)
 
 mixin/regular-gnome: use/x11/gnome use/fonts/ttf/redhat +nm-gtk4 \
-	use/domain-client
+	+vmguest-wayland
 	@$(call add,BASE_PACKAGES,gnome-software)
+ifeq (,$(filter-out sisyphus,$(BRANCH)))
+	@$(call add,BASE_PACKAGES,gnome-software-plugin-packagekit)
+endif
 	@$(call add,BASE_PACKAGES,gnome-tour)
 ifneq (,$(filter-out p10,$(BRANCH)))
 	@$(call add,THE_PACKAGES,gnome-extension-manager)
 	@$(call add,PINNED_PACKAGES,gnome-console:Required)
-	@$(call add,THE_PACKAGES,tuner-tweaks)
+	@$(call add,THE_PACKAGES,tuner-tweaks tuner-osinfo)
 	@$(call add,THE_PACKAGES,gnome-console)
 	@$(call add,THE_PACKAGES,papers)
 	@$(call add,THE_PACKAGES,userpasswd-gnome)
 	@$(call set,THE_IMAGEWRITER,impression)
+	@$(call add,THE_PACKAGES,dconf-profile-gdm)
 else
 	@$(call add,PINNED_PACKAGES,gnome-terminal:Required)
 	@$(call add,THE_PACKAGES,gnome-terminal)
@@ -151,10 +167,9 @@ endif
 	@$(call add,THE_PACKAGES,fonts-ttf-lxgw-wenkai)
 	@$(call add,THE_PACKAGES,xdg-user-dirs-gtk)
 
-mixin/regular-kde: use/x11/kde \
+mixin/regular-kde: use/x11/kde use/x11/xorg +vmguest \
 	use/x11/kde-display-manager-lightdm \
-	use/fonts/ttf/google use/fonts/ttf/redhat use/fonts/zerg \
-	use/domain-client
+	use/fonts/ttf/google use/fonts/ttf/redhat use/fonts/zerg
 ifneq (,$(filter-out p10,$(BRANCH)))
 	@$(call add,THE_PACKAGES,xdg-desktop-portal-kde)
 	@$(call add,BASE_PACKAGES,plasma-discover)
@@ -171,40 +186,32 @@ endif
 	@$(call add,THE_PACKAGES,accountsservice)
 	@$(call add,THE_PACKAGES,gtk-theme-breeze)
 
-mixin/xfce-base: use/x11/xfce +nm-gtk \
+mixin/xfce-base: use/x11/xfce use/x11/xorg +nm-gtk +vmguest \
 	use/fonts/ttf/redhat use/fonts/ttf/google/extra
 	@$(call add,THE_PACKAGES,xfce4-regular)
 	@$(call add,THE_PACKAGES,xreader)
 	@$(call add,THE_PACKAGES,xdg-user-dirs-gtk)
 	@$(call add,THE_PACKAGES,xkill)
 
-mixin/regular-xfce: mixin/xfce-base use/domain-client +pipewire
+mixin/regular-xfce: mixin/xfce-base +pipewire +vmguest
 	@$(call add,THE_PACKAGES,pavucontrol xscreensaver-frontend)
 	@$(call add,THE_PACKAGES,xfce4-pulseaudio-plugin xfce-polkit)
 	@$(call set,DEFAULT_SESSION,xfce)
 
-mixin/regular-lxde: use/x11/lxde use/im +nm-gtk
+mixin/regular-lxde: use/x11/lxde use/x11/xorg use/im +nm-gtk +vmguest
 	@$(call add,THE_PACKAGES,qasmixer qpdfview)
 
-mixin/regular-lxqt: use/x11/lxqt +nm-gtk use/domain-client; @:
+mixin/regular-lxqt: use/x11/lxqt use/x11/xorg +nm-gtk +vmguest; @:
 
-mixin/mate-base: use/x11/mate use/fonts/ttf/google +nm-gtk
+mixin/mate-base: use/x11/mate use/fonts/ttf/google +nm-gtk +vmguest
 	@$(call add,THE_LISTS,$(call tags,mobile mate))
 
-mixin/regular-mate: mixin/mate-base use/domain-client; @:
-ifneq (,$(filter-out riscv64,$(ARCH)))
-	@$(call add,THE_LISTS,$(call tags,base smartcard))
-endif
+mixin/regular-mate: mixin/mate-base use/x11/xorg; @:
 
 mixin/office: use/fonts/ttf/google use/fonts/ttf/xo
 	@$(call add,THE_LISTS,$(call tags,desktop && (cups || office)))
 	@$(call add,THE_PACKAGES,apt-indicator)
 
-# NB: never ever use/syslinux/ui/gfxboot here as gfxboot mangles
-#     kernel cmdline resulting in method:disk instead of method:cdrom
-#     which will change propagator's behaviour to probe additional
-#     filesystems (ro but no loop) thus potentially writing to
-#     an unrecovered filesystem's journal
 mixin/regular-rescue: use/rescue use/isohybrid use/luks use/branding \
 	use/syslinux/ui/menu use/syslinux/timeout/600 \
 	use/rescue/.base use/syslinux/sdab.cfg use/grub/sdab_bios.cfg \
@@ -223,8 +230,17 @@ mixin/cloud-init:
 	@$(call add,DEFAULT_SERVICES_ENABLE,cloud-init cloud-init-local)
 	@$(call set,GLOBAL_NET_ETH,)
 
+mixin/netplan:
+	@$(call add,DEFAULT_SERVICES_ENABLE,netplan-configure)
+
 mixin/opennebula-context:
 	@$(call add,BASE_PACKAGES,opennebula-context)
 	@$(call add,DEFAULT_SERVICES_ENABLE,one-context-local one-context)
 
 mixin/icewm: use/x11/lightdm/gtk +icewm; @:
+
+### a11y
+mixin/a11y:
+	@$(call add,THE_PACKAGES,orca)
+
+mixin/a11y-install: mixin/a11y use/grub/live-install-a11y.cfg; @:

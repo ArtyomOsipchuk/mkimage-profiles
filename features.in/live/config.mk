@@ -52,7 +52,7 @@ use/live/desktop-common: use/live/x11 use/syslinux/localboot.cfg \
 
 # this target specifically pulls free xorg drivers in (and a few more bits);
 # a browser is requested too, the recommended one can be overridden downstream
-use/live/desktop: use/live/desktop-common use/x11/xorg use/x11/wacom +vmguest; @:
+use/live/desktop: use/live/desktop-common use/x11/xorg +vmguest; @:
 
 # preconfigure apt for both live and installed-from-live systems
 use/live/repo: use/live
@@ -109,6 +109,9 @@ use/live/rescue: use/live use/grub/live-rescue.cfg use/syslinux/live-rescue.cfg
 	@$(call set,STAGE2_LIVE_RESCUE,yes)
 	@$(call add,LIVE_PACKAGES,livecd-rescue)
 	@$(call add,LIVE_PACKAGES,livecd-rescue-base-utils)
+
+use/live/rescue/default: use/live/rescue use/deflogin use/live/no-cleanup
+	@$(call set,ROOTPW_EMPTY,1)
 
 use/live/rescue/extra: use/live/rescue
 	@$(call add,LIVE_LISTS,\

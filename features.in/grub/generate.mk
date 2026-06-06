@@ -73,7 +73,9 @@ timeout: distro
 	sed -i "s,@timeout@,$$TIMEOUT," $(DSTCFGS)
 
 distro: bootargs
-	@if [ -n "$(META_VOL_ID)" ]; then \
+	@if [ -n "$(ISO_BOOT_DISTRO_NAME)" ]; then \
+		DISTRO="$(ISO_BOOT_DISTRO_NAME)"; \
+	elif [ -n "$(META_VOL_ID)" ]; then \
 		DISTRO="$(META_VOL_ID)"; \
 	else \
 		DISTRO="$(RELNAME)"; \
@@ -99,8 +101,11 @@ bootargs: clean
 	@if [ -n "$(LOCALES)" ]; then \
 		sed -i "s,@LOCALES@,$(LOCALES),g" $(DSTCFGS); \
 	fi
+	@if [ -n "$(GRUB_GFXMODE)" ]; then \
+		sed -i "s|@GRUB_GFXMODE@|$(GRUB_GFXMODE)|g" $(DSTCFGS); \
+	fi
 	@GRUBTHEME=$(GRUBTHEME); \
-	[ -n "$$GRUBTHEME" ] || GRUBTHEME=$$(cut -d "-" -f2 <<< $(BRANDING)); \
+	[ -n "$$GRUBTHEME" ] || GRUBTHEME=$$(echo $(BRANDING) | sed 's/^[^-]*-//'); \
 	sed -i "s,@grubtheme@,$$GRUBTHEME,g" $(DSTCFGS)
 	@sed -i "s,@initrd@,initrd," $(DSTCFGS)
 	@sed -i "s,@initrd_ext@,img," $(DSTCFGS)

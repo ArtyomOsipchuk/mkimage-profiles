@@ -1,7 +1,15 @@
 #!/bin/sh -efu
 
-EFI_SHELL=/usr/lib64/efi/shell.efi
-[ -s "$EFI_SHELL" ] || exit 0
+[ $GLOBAL_ARCH = x86_64 ] || exit 0
+
+EFI_SHELL=
+
+[ ! -s /usr/lib64/efi/shell.efi ] || EFI_SHELL=/usr/lib64/efi/shell.efi
+
+[ -n "$EFI_SHELL" ] || [ ! -s /usr/share/efi/shellx64.efi ] ||
+	EFI_SHELL=/usr/share/efi/shellx64.efi
+
+[ -n "$EFI_SHELL" ] || exit 0
 
 mkdir -p "$WORKDIR"/boot
-cp "$EFI_SHELL" "$WORKDIR"/boot/
+cp "$EFI_SHELL" "$WORKDIR"/boot/shell.efi

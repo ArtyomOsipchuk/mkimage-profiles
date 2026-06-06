@@ -28,7 +28,7 @@ distro/.regular-base: distro/.regular-bare use/vmguest use/memtest \
 	use/luks use/volumes/regular; @:
 
 # Network install
-ifeq (,$(filter-out i586 x86_64 aarch64 riscv64 loongarch64,$(ARCH)))
+ifneq (,$(grub_arch))
 distro/regular-net-install: distro/grub-net-install use/grub/safe-mode.cfg use/tty; @:
 ifeq (sisyphus,$(BRANCH))
 ifeq (,$(filter-out i586 x86_64,$(ARCH)))
@@ -43,7 +43,7 @@ endif
 distro/.regular-desktop-base: distro/.regular-base use/branding/full \
 	mixin/regular-desktop mixin/regular-desktop-install +wireless \
 	use/live/rw use/live/x11 use/live/repo use/vmguest/kvm \
-	use/live/suspend use/grub/ui/gfxboot
+	use/live/suspend use/grub/ui/gfxboot use/live/rescue
 	@$(call add,THE_BRANDING,bootloader)
 	@$(call add,LIVE_PACKAGES,livecd-rescue-base-utils)
 
@@ -55,7 +55,7 @@ distro/.regular-wm: distro/.regular-x11 \
 	@$(call set,GRUB_DEFAULT,live)
 	@$(call set,SYSLINUX_DEFAULT,live)
 
-distro/.regular-desktop: distro/.regular-desktop-base use/x11/wacom +vmguest \
+distro/.regular-desktop: distro/.regular-desktop-base \
 	+systemd +plymouth; @:
 
 # common base for the very bare distros
@@ -123,12 +123,13 @@ distro/regular-enlightenment: distro/.regular-desktop use/x11/enlightenment; @:
 distro/regular-cinnamon: distro/.regular-desktop mixin/regular-cinnamon; @:
 
 distro/regular-gnome: distro/.regular-desktop mixin/regular-gnome \
-	+plymouth use/browser/epiphany \
-	use/live-install/vnc/listen; @:
+	+plymouth use/browser/epiphany mixin/a11y-install \
+	use/live-install/vnc/listen use/live-install/oem/wayland \
+	use/live-install/wayland/only; @:
 
 distro/regular-lxqt: distro/.regular-desktop mixin/regular-lxqt +plymouth; @:
 
-distro/regular-kde: distro/.regular-desktop +nm \
+distro/regular-kde: distro/.regular-desktop mixin/a11y-install +nm \
 	mixin/regular-kde +plymouth; @:
 
 distro/regular-rescue: distro/.regular-base mixin/regular-rescue use/rescue/rw \

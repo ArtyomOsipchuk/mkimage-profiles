@@ -7,27 +7,54 @@ endif
 
 mixin/mobile-base: use/ntp/chrony use/repo use/branding/notes use/x11-autostart \
 	use/deflogin/privileges use/deflogin/xgrp use/deflogin/hardware \
-	use/deflogin/root use/l10n/ru_RU use/xdg-user-dirs \
+	use/l10n use/xdg-user-dirs \
 	use/drm use/firmware mixin/ttyescape +plymouth +pipewire \
 	use/services/bluetooth-enable use/luks/touchscreen \
-	use/wireless
+	use/browser/firefox use/wireless
+	@$(call try,VM_SIZE,9663676416)
+	@$(call add,LOCALES,ru_RU)
 ifeq (sisyphus,$(BRANCH))
 	@$(call set,BRANDING,alt-mobile-sisyphus)
+	@$(call set,VM_FSTYPE,f2fs)
+	@$(call add,THE_PACKAGES,gnome-software-plugin-flatpak)
+	@$(call add,THE_PACKAGES,gnome-software-plugin-packagekit)
+	@$(call add,THE_PACKAGES,planify)
+	@$(call try,ROOTPW,altlinux)
+	@$(call add,USERS,altlinux:271828:1:1)
+	@$(call set,LOCALE,ru_RU)
+	@$(call add,XKB_KEYMAPS,ru)
 else
 	@$(call set,BRANDING,alt-mobile)
+	@$(call add,THE_PACKAGES,docs-alt-mobile)
+	@$(call add,THE_PACKAGES,errands)
+ifneq (,$(filter-out riscv64,$(ARCH)))
+	@$(call set,FX_FLAVOUR,-esr)
+endif
 endif
 	@$(call try,CAMERA,snapshot)
 	@$(call add,THE_PACKAGES,$$(CAMERA))
+ifeq (,$(filter-out aarch64 x86_64,$(ARCH)))
+	@$(call add,THE_PACKAGES,udev-rules-goodix-touchscreen)
+	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,goodix-touchscreen.service)
+endif
 	@$(call add,THE_BRANDING,graphics notes indexhtml)
 	@$(call add,THE_LISTS,mobile/base)
 	@$(call add,THE_LISTS,mobile/apps)
+ifneq (,$(filter-out riscv64,$(ARCH)))
 	@$(call add,THE_LISTS,mobile/AD)
+endif
+ifneq (sisyphus,$(BRANCH))
+	@$(call add,THE_LISTS,mobile/cups)
+	@$(call add,DEFAULT_SERVICES_ENABLE,cups.service)
+else
+	@$(call add,THE_PACKAGES,epiphany dconf-epiphany-mobile-user-agent)
+endif
+	@$(call add,THE_LISTS,tagged/base+smartcard)
 	@$(call add,THE_PACKAGES,polkit-rule-mobile)
 	@$(call add,THE_PACKAGES,mesa-dri-drivers)
 	@$(call add,THE_PACKAGES,eg25-manager)
 	@$(call add,THE_PACKAGES,udev-rules-modem-power)
 	@$(call set,UBOOT_TIMEOUT,5)
-	@$(call add,USERS,altlinux:271828:1:1)
 	@$(call set,LOCALES,ru_RU en_US)
 	@$(call set,LOCALE,ru_RU)
 	@$(call add,CONTROL,fusermount:public)
@@ -46,13 +73,19 @@ mixin/phosh: use/services +nm-gtk4 +nm-native
 	@$(call add,THE_BRANDING,phosh-settings)
 	@$(call add,THE_LISTS,mobile/phosh)
 	@$(call add,THE_LISTS,mobile/gnome-apps)
+ifeq (sisyphus,$(BRANCH))
 	@$(call add,DEFAULT_SERVICES_ENABLE,phosh)
+	@$(call add,THE_PACKAGES,tuner-mobile-tweaks)
+else
+	@$(call add,DEFAULT_SERVICES_ENABLE,phrog)
+	@$(call add,THE_PACKAGES,phrog ready-set-on-phrog)
+ifeq (aarch64,$(ARCH))
+	@$(call add,THE_PACKAGES,phrog-gsk-renderer-gl)
+endif
+endif
 	@$(call set,DEFAULT_SESSION,phosh)
 ifeq (sisyphus,$(BRANCH))
 	@$(call add,THE_PACKAGES,gnome-maps)
-endif
-ifeq (x86_64,$(ARCH))
-	@$(call add,THE_PACKAGES,udev-rules-MIG-goodix-touchpad)
 endif
 
 mixin/sway: use/services +nm-gtk +nm-native
@@ -70,10 +103,12 @@ vm/.phosh: vm/.phosh-base
 	@$(call add,THE_LISTS,mobile/gnome-apps-connect)
 
 vm/.sway: vm/systemd mixin/mobile-base mixin/sway +systemd \
-	mixin/waydroid use/fonts/ttf/google \
-	use/auto-resize; @:
+	use/fonts/ttf/google use/auto-resize; @:
 
-vm/alt-mobile-phosh-tablet-def: vm/.phosh-base mixin/mobile-def; @:
+vm/alt-mobile-phosh-tablet-def: vm/.phosh-base mixin/mobile-def
+	@$(call add,THE_PACKAGES,udev-rules-da280-accelerometer)
+	@$(call add,THE_PACKAGES,wireplumber-config-MIG-cameras)
+
 vm/alt-mobile-phosh-def: vm/.phosh mixin/mobile-def; @:
 
 vm/alt-mobile-sway-def: vm/.sway mixin/mobile-def; @:
@@ -83,12 +118,11 @@ ifeq (sisyphus,$(BRANCH))
 mixin/mobile-pine: mixin/uboot-extlinux use/tty/S2
 else
 mixin/mobile-pine: mixin/uboot-extlinux
+	@$(call set,CAMERA,megapixels)
 endif
 	@$(call set,KFLAVOURS,pine)
-	@$(call set,CAMERA,megapixels)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,eg25-manager.service)
 	@$(call add,THE_PACKAGES,alsa-ucm-conf-pinephone-pro-workaround)
-	@$(call add,THE_PACKAGES,udev-rules-goodix-touchpad)
 
 ifeq (sisyphus,$(BRANCH))
 mixin/mobile-lt11i: mixin/uboot-extlinux use/tty/S0
@@ -110,10 +144,10 @@ endif
 	@$(call add,THE_PACKAGES,settings-alsa-sof-force)
 	@$(call add,THE_PACKAGES,rg552-hw-control)
 	@$(call add,THE_PACKAGES,rg552-fancontrol-quick-setting)
-	@$(call add,THE_PACKAGES,udev-rules-goodix-touchpad)
+	@$(call add,THE_PACKAGES,gptokeyb-handheld-control)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,rg552-fancontrol.service)
 	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,rg552-wifi.service)
-	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,arc-d-touchscreen.service)
+	@$(call add,DEFAULT_SYSTEMD_SERVICES_ENABLE,gptokeyb.service)
 
 vm/alt-mobile-phosh-pine: vm/.phosh mixin/mobile-pine; @:
 vm/alt-mobile-phosh-lt11i: vm/.phosh mixin/mobile-lt11i; @:

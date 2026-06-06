@@ -10,7 +10,8 @@ use/live-install: use/live use/metadata use/repo/main \
 	@$(call set,STAGE2_LIVE_INST,yes)
 	@$(call try,MAIN_KERNEL_SAVE,no)
 	@$(call xport,MAIN_KERNEL_SAVE)
-	@$(call add,INSTALL2_PACKAGES,installer-common-stage2)
+	@$(call try,LIVE_INSTALLER,installer-common-stage2 xterm)
+	@$(call add,INSTALL2_PACKAGES,$$(LIVE_INSTALLER))
 	@$(call add,THE_PACKAGES,alterator-wizardface)
 	@$(call add,THE_LISTS,$(call tags,basesystem && !alterator))
 	@$(call add,THE_PACKAGES,e2fsprogs mdadm lvm2 cryptsetup)
@@ -18,7 +19,6 @@ use/live-install: use/live use/metadata use/repo/main \
 	@$(call add,BASE_PACKAGES,make-initrd-luks)
 	@$(call add,INSTALL2_PACKAGES,$$(LIVE_INSTALL_PKG))
 	@$(call add,THE_PACKAGES,alterator-postinstall) # for auto install
-	@$(call add,INSTALL2_PACKAGES,xterm) # for vnc support
 	@$(call try,INSTALLER,regular)	# might be replaced later
 	@$(call add,INSTALL2_PACKAGES,installer-distro-$$(INSTALLER)-stage2)
 	@$(call add,INSTALL2_PACKAGES,branding-$$(BRANDING)-alterator)
@@ -40,11 +40,19 @@ use/live-install/pkg: use/live-install
 	@$(call set,GLOBAL_LIVE_INSTALL,)
 
 ifneq (,$(filter-out p10,$(BRANCH)))
+use/live-install/wayland: use/live-install
+	@$(call set,LIVE_INSTALLER,installer-common-x11-stage2 installer-common-wayland-stage2 xterm)
+	@$(call add,STAGE2_BOOTARGS,wayland)
+
+use/live-install/wayland/only: use/live-install/wayland
+	@$(call set,LIVE_INSTALLER,installer-common-wayland-stage2)
+
 use/live-install/desktop: use/live-install
 	@$(call add,INSTALL2_PACKAGES,installer-common-desktop)
 	@$(call add,BASE_PACKAGES,installer-alterator-livecd-stage3)
 else
-use/live-install/desktop: use/live-install; @:
+use/live-install/desktop use/live-install/wayland use/live-install/wayland/only: \
+	use/live-install; @:
 endif
 # deleted @$(call add,LIVE_PACKAGES,installer-common-desktop)
 
@@ -69,5 +77,14 @@ use/live-install/suspend:
 
 use/live-install/oem: use/live-install
 	@$(call add,INSTALL2_PACKAGES,installer-feature-oem-stage2)
-	@$(call add,MAIN_PACKAGES,alterator-setup)
+	@$(call add,MAIN_PACKAGES,$$(OEM_MAIN_PACKAGES))
+	@$(call try,OEM_MAIN_PACKAGES,alterator-setup)
 	@$(call add,MAIN_PACKAGES,installer-feature-alterator-setup-stage2)
+
+ifneq (,$(filter-out p10,$(BRANCH)))
+use/live-install/oem/wayland: use/live-install/oem
+	@$(call set,OEM_MAIN_PACKAGES,alterator-setup-wayland)
+	@$(call add,INSTALL2_PACKAGES,installer-feature-oem-wayland-only-stage2)
+else
+use/live-install/oem/wayland: use/live-install/oem; @:
+endif

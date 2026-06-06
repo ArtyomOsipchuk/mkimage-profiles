@@ -8,9 +8,10 @@ ifeq (distro,$(IMAGE_CLASS))
 boot/iso: use/uuid-iso
 ifeq (,$(filter-out i586 x86_64,$(ARCH)))
 	@$(call try,BOOTLOADER,grubpcboot)
-endif
-ifeq (,$(filter-out aarch64 riscv64 loongarch64,$(ARCH)))
+else
+ifneq (,$(efi_arch))
 	@$(call try,BOOTLOADER,efiboot)
+endif
 endif
 ifeq (,$(filter-out e2k%,$(ARCH)))
 	@$(call set,IMAGE_PACKTYPE,isodata)

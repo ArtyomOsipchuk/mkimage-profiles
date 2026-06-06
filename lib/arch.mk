@@ -1,0 +1,14 @@
+# return $(ARCH) value iff it is known to support virtualization
+ARCH_VIRT = i586 x86_64 ppc64le aarch64 loongarch64 riscv64 e2k%
+ARCH_NOVM = e2k e2kv4 e2kv5
+virt_arch = $(filter $(ARCH_VIRT),$(filter-out $(ARCH_NOVM),$(ARCH)))
+
+# ditto for grub
+ARCH_GRUB = i586 x86_64 aarch64 riscv64 loongarch64
+grub_arch = $(filter $(ARCH_GRUB),$(ARCH))
+export grub_arch
+
+# UEFI
+ARCH_EFI = x86_64 aarch64 riscv64 loongarch64
+efi_arch = $(filter $(ARCH_EFI),$(ARCH))
+export efi_arch

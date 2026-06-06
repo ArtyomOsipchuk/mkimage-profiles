@@ -68,7 +68,9 @@ timeout: distro
 	sed -i "s,@timeout@,$$TIMEOUT," $(DSTCFGS)
 
 distro: bootargs
-	@if [ -n "$(META_VOL_SET)" ]; then \
+	@if [ -n "$(ISO_BOOT_DISTRO_NAME)" ]; then \
+		DISTRO="$(ISO_BOOT_DISTRO_NAME)"; \
+	elif [ -n "$(META_VOL_SET)" ]; then \
 		DISTRO="$(META_VOL_SET)"; \
 	else \
 		DISTRO="ALT"; \
@@ -98,9 +100,7 @@ bootargs: clean
 	@sed -i "s,@LIVE_NAME@,$(LIVE_NAME),g" $(DSTCFGS)
 
 clean: copy
-	@if [ "$(SYSLINUX_UI)" = gfxboot ]; then \
-		sed -i "s/\^//;/menu label /d" $(DSTCFGS); \
-	fi
+	@
 
 copy: prep
 	@cp -pLt $(DSTDIR) -- $(sort \

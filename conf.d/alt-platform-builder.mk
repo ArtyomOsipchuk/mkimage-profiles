@@ -3,6 +3,8 @@ distro/alt-platform-builder: \
 	distro/.base use/live-install/pkg \
 	use/cleanup \
 	+systemd \
+	use/live/rescue/default \
+	use/syslinux/localboot.cfg use/grub/localboot_bios.cfg \
 	use/memtest +efi \
 	use/dev/builder/base \
 	use/net/dhcp use/ntp/chrony \
@@ -41,6 +43,7 @@ endif
 	@$(call add,BASE_LISTS,platform-builder/base.pkgs)
 	@$(call add,BASE_LISTS,platform-builder/alterator)
 	@$(call add,BASE_LISTS,platform-builder/build.pkgs)
+	@$(call add,BASE_LISTS,platform-builder/containers.pkgs)
 	@$(call add,BASE_LISTS,server-base openssh)
 	@$(call add,BASE_PACKAGES,eepm etersoft-build-utils)
 	@$(call add,COMMON_PACKAGES,vim-console)

@@ -1,7 +1,7 @@
 # default is plain text prompt
 # NB: might be usbflash-ready hybrid iso
 
-ifeq (,$(filter-out i586 x86_64 aarch64 riscv64 loongarch64,$(ARCH)))
+ifneq (,$(grub_arch))
 
 use/grub: sub/stage1 $(ISOHYBRID:%=use/isohybrid)
 	@$(call add_feature)
@@ -10,14 +10,15 @@ use/grub: sub/stage1 $(ISOHYBRID:%=use/isohybrid)
 
 # UI is overwritten
 use/grub/ui/%: use/grub
-ifeq (,$(filter-out i586 x86_64 aarch64 loongarch64,$(ARCH)))
+ifneq (,$(filter riscv64,$(ARCH)))
+	@:
+else
 	@$(call set,GRUB_UI,$*)
+	@$(call try,GRUB_GFXMODE,auto)
 	@if [ "$*" == gfxboot ]; then \
 		$(call add,STAGE1_BRANDING,bootloader); \
 		$(call add,STAGE1_PACKAGES,grub-common); \
 	fi
-else
-	@:
 endif
 
 use/grub/%.cfg: use/grub

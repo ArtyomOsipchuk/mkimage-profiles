@@ -56,13 +56,13 @@ include::../features.in/00example/README[]
 
 include::../features.in/alternatives/README[]
 
-include::../features.in/alt-components/README[]
-
 include::../features.in/apt-conf/README[]
 
 include::../features.in/arm-rpi4/README[]
 
 include::../features.in/auto-resize/README[]
+
+include::../features.in/blacklist-pkgs/README[]
 
 include::../features.in/bootloader/README[]
 
@@ -78,6 +78,10 @@ include::../features.in/build-vm/README[]
 
 include::../features.in/cleanup/README[]
 
+include::../features.in/chksum/README[]
+
+include::../features.in/containers/README[]
+
 include::../features.in/control/README[]
 
 include::../features.in/datetime/README[]
@@ -87,8 +91,6 @@ include::../features.in/deflogin/README[]
 include::../features.in/dev/README[]
 
 include::../features.in/docs/README[]
-
-include::../features.in/domain-client/README[]
 
 include::../features.in/dos/README[]
 
@@ -185,8 +187,6 @@ include::../features.in/rescue/README[]
 include::../features.in/server/README[]
 
 include::../features.in/services/README[]
-
-include::../features.in/slinux/README[]
 
 include::../features.in/sound/README[]
 

@@ -6,8 +6,6 @@
 
 # NB: "mysterious" conflicts if BASE_BOOTLOADER is empty
 
-GRUB_ARCHES := i586 x86_64 aarch64 riscv64 loongarch64
-
 use/bootloader: use/pkgpriorities
 ifneq (,$(filter-out e2k%,$(ARCH)))
 	@$(call add_feature)
@@ -22,7 +20,7 @@ ifeq (distro,$(IMAGE_CLASS))
 endif
 endif
 
-ifeq (,$(filter-out $(GRUB_ARCHES),$(ARCH)))
+ifneq (,$(grub_arch))
 use/bootloader/grub: \
 	use/bootloader/%: use/bootloader
 	@$(call set,BASE_BOOTLOADER,$*)

@@ -23,7 +23,7 @@ endif
 
 vm/.regular-desktop: vm/systemd +systemd +plymouth \
 	mixin/regular-vm-base \
-	mixin/regular-desktop use/oem/vnc \
+	mixin/regular-desktop use/oem \
 	use/services/bluetooth-enable
 	@$(call add,THE_PACKAGES,bluez)
 	@$(call try,VM_SIZE,8589934592)
@@ -45,7 +45,8 @@ vm/regular-builder: vm/regular-jeos-systemd mixin/regular-builder; @:
 
 vm/regular-cinnamon: vm/.regular-desktop mixin/regular-cinnamon mixin/vm-archdep-x11; @:
 
-vm/regular-gnome: vm/.regular-desktop mixin/regular-gnome mixin/vm-archdep-x11; @:
+vm/regular-gnome: vm/.regular-desktop mixin/regular-gnome \
+	mixin/vm-archdep-wayland use/oem/wayland; @:
 
 vm/regular-mate: vm/.regular-gtk mixin/mate-base mixin/vm-archdep-x11; @:
 ifeq (,$(filter-out riscv64,$(ARCH)))

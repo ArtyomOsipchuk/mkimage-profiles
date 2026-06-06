@@ -10,8 +10,8 @@ distro/syslinux: distro/.boot \
 	@$(call set,BOOTLOADER,isolinux)
 endif
 
-ifeq (,$(filter-out i586 x86_64 aarch64 riscv64 loongarch64,$(ARCH)))
-distro/grub: distro/.boot use/grub use/hdt use/memtest use/efi/shell +efi \
+ifneq (,$(grub_arch))
+distro/grub: distro/.boot use/grub use/hdt use/memtest use/efi/shell use/efi/signed \
 	use/grub/localboot_bios.cfg use/grub/sdab_bios.cfg; @:
 ifeq (,$(filter-out i586 x86_64,$(ARCH)))
 	@$(call set,BOOTLOADER,grubpcboot)
