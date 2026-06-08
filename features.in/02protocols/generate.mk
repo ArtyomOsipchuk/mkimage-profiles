@@ -11,7 +11,7 @@
 include $(BUILDDIR)/distcfg.mk
 
 ifeq (,$(02NPL))
-$(warning this is a "network-protocols-in-linux" feature, who might want to include it? :])
+$(warning Building regular profile of "network protocols in linux" course )
 endif
 
 all:
