@@ -42,6 +42,7 @@ use/.05cmcldap: use/05cmcldap
 	@$(call add,CLEANUP_PACKAGES,etcnet)
 	@$(call add,THE_LISTS,prac-ldap)
 	@$(call add,CONTROL,system-auth:ldap)
+	@$(call add,CONTROL,system-check-localuser:legacy)
 	@$(call add,CONTROL,lightdm-greeter-hide-users:hide)
 
 use/.06workshop: use/06workshop
