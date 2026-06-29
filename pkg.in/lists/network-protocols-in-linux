@@ -1,6 +1,6 @@
 livecd-network-style
-livecd-netloom
-livecd-virtualbox-fetch-cdrom
+unbound
+nsd
 sipcalc
 frr
 jot
