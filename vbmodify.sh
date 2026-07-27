@@ -22,7 +22,7 @@ echo "Создаём машину с нуля..."
 if [ "$3" = "mac" ]; then
 	VBoxManage createvm --name "$Name" --register ‑‑platform‑architecture=arm
 else
-	VBoxManage createvm --name "$Name" --register
+	VBoxManage createvm --name "$Name" --ostype "Linux_64" --register
 fi
 VBoxManage modifyvm "$Name" --memory $Memory --vram $Vram --groups "/LinuxNetwork$(date +"%Y")" ‑‑graphicscontroller=vboxvga
 if [ "$3" = "mac" ]; then
@@ -33,6 +33,7 @@ fi
 echo "Подключаем наш образ"
 VBoxManage storagectl "$Name" --name "Disks" --add sata 
 VBoxManage storageattach "$Name" --storagectl "Disks" --port 0 --device 0 --type hdd --medium $Path
+VBoxManage modifyvm "$Name" --audio-enabled=off
 VBoxManage modifyvm "$Name" --usb on
 VBoxManage modifyvm "$Name" --nic1 nat --nictype1 Am79C970A
 VBoxManage modifyvm "$Name" --nic2 null --nicpromisc2 allow-all
