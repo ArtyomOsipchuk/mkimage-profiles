@@ -31,7 +31,7 @@ else
 	VBoxManage setextradata "$Name" GUI/ScaleFactor 2.0
 fi
 echo "Подключаем наш образ"
-VBoxManage storagectl "$Name" --name "Disks" --add virtio
+VBoxManage storagectl "$Name" --name "Disks" --add sata 
 VBoxManage storageattach "$Name" --storagectl "Disks" --port 0 --device 0 --type hdd --medium $Path
 VBoxManage modifyvm "$Name" --usb on
 VBoxManage modifyvm "$Name" --nic1 nat --nictype1 Am79C970A
