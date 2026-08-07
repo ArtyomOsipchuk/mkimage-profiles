@@ -24,7 +24,7 @@ if [ "$3" = "mac" ]; then
 else
 	VBoxManage createvm --name "$Name" --ostype "Linux_64" --register
 fi
-VBoxManage modifyvm "$Name" --memory $Memory --vram $Vram --groups "/LinuxNetwork$(date +"%Y")" ‑‑graphicscontroller=vboxvga
+VBoxManage modifyvm "$Name" --memory $Memory --vram $Vram --groups "/LinuxNetwork$(date +"%Y")" --graphicscontroller=vmsvga
 if [ "$3" = "mac" ]; then
 	VBoxManage modifyvm "$Name" --memory $MacMemory ‑‑graphicscontroller=qemuramfb
 else
