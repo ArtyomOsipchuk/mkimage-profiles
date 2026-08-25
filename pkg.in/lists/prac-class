@@ -1,13 +1,6 @@
 # security
 efivar
 
-# newly added
-codeblocks-contrib
-python3-module-flake8
-
-shared-desktop-icons
-socat
-
 # progs for linux development
 bc
 xterm
@@ -37,6 +30,11 @@ cowsay
 meld
 patch
 patchutils
+python3
+codeblocks-contrib
+python3-module-flake8
+shared-desktop-icons
+socat
 
 # more
 autoconf
@@ -81,8 +79,13 @@ vncshare-installers
 installer-alterator-livecd-stage2
 
 # artos_repo
-livecd-uuid-mount
-livecd-replace-localdomain
+livecd-cmdline-mount
+livecd-cmdline-password
+livecd-module-switcher
 livecd-netuser-services
+livecd-prac-style
+livecd-replace-localdomain
+livecd-practicum-doc
+
 # only local packages
 livecd-cmc-ldap

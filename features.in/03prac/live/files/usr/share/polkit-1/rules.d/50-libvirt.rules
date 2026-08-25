@@ -1,0 +1,8 @@
+// Allow any user in the 'vmusers' group to connect to system libvirtd
+// without entering a password.
+
+polkit.addRule(function(action, subject) {
+	    if (action.id == "org.libvirt.unix.manage") {
+        return polkit.Result.YES;
+    }
+});

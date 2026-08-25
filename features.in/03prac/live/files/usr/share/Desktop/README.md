@@ -1,1 +1,0 @@
-/usr/share/doc/FEATURES/README.md
